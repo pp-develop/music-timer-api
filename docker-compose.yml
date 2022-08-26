@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  app:
+    image: golang:1.19.0
+    container_name: go
+    ports:
+      - "80:80"
+    volumes:
+      - .:/go/src/
+    working_dir: /go/src/
+    tty: true
