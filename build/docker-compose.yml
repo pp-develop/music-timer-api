@@ -7,6 +7,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - .:/go/src/
+      - ..:/go/src/
     working_dir: /go/src/
     tty: true
