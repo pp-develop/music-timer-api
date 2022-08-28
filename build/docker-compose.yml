@@ -5,7 +5,7 @@ services:
     image: golang:1.19.0
     container_name: go
     ports:
-      - "80:80"
+      - "8080:8080"
     volumes:
       - ..:/go/src/
     working_dir: /go/src/
