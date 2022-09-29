@@ -28,7 +28,7 @@ const ONEMINUTE_TO_MSEC = 60000
 func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
-	router.GET("/playlist", makePlaylist)
+	router.GET("/playlist", getPlaylist)
 
 	router.Run(":8080")
 }
@@ -38,8 +38,8 @@ func getAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, albums)
 }
 
-func makePlaylist(c *gin.Context) {
+func getPlaylist(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	playlist := make_playlist.Main(minute * ONEMINUTE_TO_MSEC)
+	playlist := get_playlist.Main(minute * ONEMINUTE_TO_MSEC)
 	c.IndentedJSON(http.StatusOK, playlist)
 }

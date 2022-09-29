@@ -1,4 +1,4 @@
-package make_playlist
+package get_playlist
 
 import (
 	"database/sql"
