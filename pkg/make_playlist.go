@@ -88,13 +88,12 @@ func makePlaylist(db *sql.DB, allTracks []Tracks, specify_ms int) (bool, []Track
 	}
 
 	// 差分を埋めるtrackを取得
-	var getTrack []Tracks
 	var isGetTrack bool
-	getTrack = getTrackBySpecifyTime(db, diff_ms)
+	getTrack := getTrackBySpecifyTime(db, diff_ms)
 	if len(getTrack) > 0 {
 		isGetTrack = true
+		tracks = append(tracks, getTrack...)
 	}
-	tracks = append(tracks, getTrack...)
 	return isGetTrack, tracks
 }
 
