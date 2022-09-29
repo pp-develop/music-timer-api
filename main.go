@@ -29,6 +29,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/albums", getAlbums)
 	router.GET("/playlist", getPlaylist)
+	router.GET("/user", getUserProfile)
 
 	router.Run(":8080")
 }
@@ -42,4 +43,8 @@ func getPlaylist(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
 	playlist := pkg.GetPlaylist(minute * ONEMINUTE_TO_MSEC)
 	c.IndentedJSON(http.StatusOK, playlist)
+}
+
+func getUserProfile(c *gin.Context) {
+	pkg.GetUserProfile()
 }
