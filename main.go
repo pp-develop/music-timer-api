@@ -40,6 +40,6 @@ func getAlbums(c *gin.Context) {
 
 func getPlaylist(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	playlist := get_playlist.Main(minute * ONEMINUTE_TO_MSEC)
+	playlist := pkg.GetPlaylist(minute * ONEMINUTE_TO_MSEC)
 	c.IndentedJSON(http.StatusOK, playlist)
 }

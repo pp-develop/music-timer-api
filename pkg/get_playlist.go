@@ -1,4 +1,4 @@
-package get_playlist
+package pkg
 
 import (
 	"database/sql"
@@ -97,7 +97,7 @@ func makePlaylist(db *sql.DB, allTracks []Tracks, specify_ms int) (bool, []Track
 	return isGetTrack, tracks
 }
 
-func Main(specify_ms int) []Tracks {
+func GetPlaylist(specify_ms int) []Tracks {
 	db := MysqlConecct()
 	var playlist []Tracks
 	var isMakePlaylist bool
