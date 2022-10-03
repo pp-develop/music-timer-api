@@ -17,7 +17,7 @@ func main() {
 	router.GET("/user", getUserProfile)
 	router.GET("/playlist", getPlaylist)
 	router.POST("playlist", createPlaylist)
-	// router.PUT("playlist", updatePlaylist)
+	router.PUT("playlist", addItemsPlaylist)
 	router.Run(":8080")
 }
 
@@ -37,4 +37,8 @@ func getPlaylist(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	internal.CreatePlaylist("", "")
+}
+
+func addItemsPlaylist(c *gin.Context) {
+	internal.AddItemsPlaylist("", "")
 }
