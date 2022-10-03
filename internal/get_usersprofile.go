@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 )
 
-var userID = flag.String("user", "xxxx", "the Spotify user ID to look up")
+var userID = flag.String("user", "", "the Spotify user ID to look up")
 
 func GetUserProfile() {
 	flag.Parse()
@@ -26,8 +26,8 @@ func GetUserProfile() {
 	}
 
 	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		ClientID:     "",
+		ClientSecret: "",
 		TokenURL:     spotifyauth.TokenURL,
 	}
 	token, err := config.Token(context.Background())

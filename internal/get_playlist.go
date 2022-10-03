@@ -1,4 +1,4 @@
-package pkg
+package internal
 
 import (
 	"database/sql"
@@ -107,3 +107,10 @@ func GetPlaylist(specify_ms int) []Tracks {
 	}
 	return playlist
 }
+
+// 全件取得
+//　配列に指定した分数に達するまでループ回してuri格納
+//　配列から1件削除
+//　指定した分数と配列の合計分数の差分を求める
+//　差分の分数を埋めるuriを取得
+//　配列に格納

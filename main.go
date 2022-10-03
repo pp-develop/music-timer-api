@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/internal"
 )
 
 // 1minute = 60000ms
@@ -16,25 +16,25 @@ func main() {
 	router.GET("/authz", authz)
 	router.GET("/user", getUserProfile)
 	router.GET("/playlist", getPlaylist)
-	router.POST("playlist", postPlaylist)
-
+	router.POST("playlist", createPlaylist)
+	// router.PUT("playlist", updatePlaylist)
 	router.Run(":8080")
 }
 
 func authz(c *gin.Context) {
-	pkg.Authz()
+	internal.Authz()
 }
 
 func getUserProfile(c *gin.Context) {
-	pkg.GetUserProfile()
+	internal.GetUserProfile()
 }
 
 func getPlaylist(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	playlist := pkg.GetPlaylist(minute * ONEMINUTE_TO_MSEC)
+	playlist := internal.GetPlaylist(minute * ONEMINUTE_TO_MSEC)
 	c.IndentedJSON(http.StatusOK, playlist)
 }
 
-func postPlaylist(c *gin.Context) {
-	pkg.CreatePlaylist("", "")
+func createPlaylist(c *gin.Context) {
+	internal.CreatePlaylist("", "")
 }

@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/pp-develop/make-playlist-by-specify-time-api/pkg v0.0.0-00010101000000-000000000000
+	github.com/pp-develop/make-playlist-by-specify-time-api/internal v0.0.0-00010101000000-000000000000
 	github.com/zmb3/spotify/v2 v2.3.0
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 )
@@ -33,4 +33,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg => ./pkg
+replace github.com/pp-develop/make-playlist-by-specify-time-api/internal => ./internal
