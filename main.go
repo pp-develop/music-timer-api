@@ -31,8 +31,8 @@ func getUserProfile(c *gin.Context) {
 
 func getTracks(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	playlist := internal.GetTracks(minute * ONEMINUTE_TO_MSEC)
-	c.IndentedJSON(http.StatusOK, playlist)
+	tracks := internal.GetTracks(minute * ONEMINUTE_TO_MSEC)
+	c.IndentedJSON(http.StatusOK, tracks)
 }
 
 func createPlaylist(c *gin.Context) {
