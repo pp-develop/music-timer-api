@@ -15,7 +15,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/authz", authz)
 	router.GET("/user", getUserProfile)
-	router.GET("/playlist", getPlaylist)
+	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
 	router.PUT("playlist", addItemsPlaylist)
 	router.Run(":8080")
@@ -29,9 +29,9 @@ func getUserProfile(c *gin.Context) {
 	internal.GetUserProfile()
 }
 
-func getPlaylist(c *gin.Context) {
+func getTracks(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	playlist := internal.GetPlaylist(minute * ONEMINUTE_TO_MSEC)
+	playlist := internal.GetTracks(minute * ONEMINUTE_TO_MSEC)
 	c.IndentedJSON(http.StatusOK, playlist)
 }
 

@@ -24,7 +24,7 @@ func MysqlConecct() *sql.DB {
 	return db
 }
 
-func getTracks(db *sql.DB) ([]Tracks, error) {
+func getAllTracks(db *sql.DB) ([]Tracks, error) {
 	var tracks []Tracks
 	rows, err := db.Query("SELECT uri, duration_ms FROM tracks WHERE isrc like 'JP%' ORDER BY rand()")
 	if err != nil {
@@ -57,7 +57,7 @@ func getTrackBySpecifyTime(db *sql.DB, ms int) []Tracks {
 	return tracks
 }
 
-func makePlaylist(db *sql.DB, allTracks []Tracks, specify_ms int) (bool, []Tracks) {
+func getTracksBySpecifyTime(db *sql.DB, allTracks []Tracks, specify_ms int) (bool, []Tracks) {
 	var tracks []Tracks
 	var sum_ms int
 
@@ -97,14 +97,14 @@ func makePlaylist(db *sql.DB, allTracks []Tracks, specify_ms int) (bool, []Track
 	return isGetTrack, tracks
 }
 
-func GetPlaylist(specify_ms int) []Tracks {
+func GetTracks(specify_ms int) []Tracks {
 	db := MysqlConecct()
-	var playlist []Tracks
-	var isMakePlaylist bool
-	for !isMakePlaylist {
-		tracks, _ := getTracks(db)
-		isMakePlaylist, playlist = makePlaylist(db, tracks, specify_ms)
+	var tracks []Tracks
+	var isGetTracks bool
+	for !isGetTracks {
+		allTracks, _ := getAllTracks(db)
+		isGetTracks, tracks = getTracksBySpecifyTime(db, allTracks, specify_ms)
 	}
-	return playlist
+	return tracks
 }
 
