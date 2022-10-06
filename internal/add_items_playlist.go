@@ -1,29 +1,35 @@
 package internal
 
 import (
-	"fmt"
-	"log"
 	"net/http"
-	"net/http/httputil"
+	"strings"
 )
 
-func AddItemsPlaylist(playlistId string, token string) {
+func AddItemsPlaylist(playlistId string, tracks []Tracks, token string) bool {
 	endpoints := "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks"
 	req, _ := http.NewRequest("POST", endpoints, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 
+	var uris []string
+	for _, v := range tracks {
+		uri := strings.Replace(v.URI, "https://open.spotify.com/track/", "spotify:track:", 1)
+		uris = append(uris, uri)
+	}
+
 	q := req.URL.Query()
-	q.Add("uris", "spotify:track:4iV5W9uYEdYUVa79Axb7Rh,spotify:track:1301WleyT98MSxVHPZCA6M")
+	q.Add("uris", strings.Join(uris, ","))
 	q.Add("position", "0")
 	req.URL.RawQuery = q.Encode()
-
 	client := new(http.Client)
 	resp, err := client.Do(req)
-	dumpResp, _ := httputil.DumpResponse(resp, true)
-	fmt.Printf("%s", dumpResp)
-
 	if err != nil {
-		log.Println("httprequest error", err)
+		return false
+	}
+
+	if resp.StatusCode != 201{
+		return false
 	}
 	defer resp.Body.Close()
+
+	return true
 }
