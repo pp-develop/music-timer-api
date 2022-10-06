@@ -17,7 +17,6 @@ func main() {
 	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
-	router.PUT("playlist", addItemsPlaylist)
 	router.Run(":8080")
 }
 
@@ -36,9 +35,11 @@ func getTracks(c *gin.Context) {
 }
 
 func createPlaylist(c *gin.Context) {
-	internal.CreatePlaylist("", "")
-}
-
-func addItemsPlaylist(c *gin.Context) {
-	internal.AddItemsPlaylist("", "")
+	minute, _ := strconv.Atoi(c.Query("minute"))
+	isCreate, playlistId := internal.CreatePlaylistBySpecifyTime(minute * ONEMINUTE_TO_MSEC)
+	if isCreate {
+		c.IndentedJSON(http.StatusCreated, playlistId)
+	} else {
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	}
 }
