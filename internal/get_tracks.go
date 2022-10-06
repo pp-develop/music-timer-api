@@ -2,7 +2,6 @@ package internal
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -80,7 +79,6 @@ func getTracksBySpecifyTime(db *sql.DB, allTracks []Tracks, specify_ms int) (boo
 		sum_ms += v.DURATION_MS
 	}
 	diff_ms = specify_ms - sum_ms
-	fmt.Println(diff_ms)
 
 	// 誤差が30秒以内は許容
 	if diff_ms < 30000 {
