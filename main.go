@@ -13,15 +13,20 @@ const ONEMINUTE_TO_MSEC = 60000
 
 func main() {
 	router := gin.Default()
-	router.GET("/authz", authz)
+	router.GET("/authz-url", getAuthzUrl)
 	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
 	router.Run(":8080")
 }
 
-func authz(c *gin.Context) {
-	internal.Authz()
+func getAuthzUrl(c *gin.Context) {
+	success, url := internal.Authz()
+	if success {
+		c.JSON(http.StatusOK, gin.H{"url": url})
+	} else {
+		c.JSON(http.StatusInternalServerError, "")
+	}
 }
 
 func getUserProfile(c *gin.Context) {
