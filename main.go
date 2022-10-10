@@ -1,10 +1,13 @@
 package main
 
 import (
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/internal"
 )
 
@@ -14,6 +17,7 @@ const ONEMINUTE_TO_MSEC = 60000
 func main() {
 	router := gin.Default()
 	router.GET("/authz-url", getAuthzUrl)
+	router.GET("/callback", callback)
 	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
@@ -26,6 +30,20 @@ func getAuthzUrl(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	} else {
 		c.JSON(http.StatusInternalServerError, "")
+	}
+}
+
+func callback(c *gin.Context) {
+	code := c.Query("code")
+	success := internal.Callback(code)
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	if !success {
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
+	} else {
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_ERROR_URL"))
 	}
 }
 

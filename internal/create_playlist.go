@@ -8,17 +8,17 @@ import (
 	"strconv"
 )
 
-type RequestBody struct {
+type CreatePlaylistReqBody struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
-type Response struct {
+type CreatePlaylistResponse struct {
 	Id string `json:"id"`
 }
 
 func CreatePlaylist(userid string, ms int, token string) (bool, string) {
-	requestBody := &RequestBody{
+	requestBody := &CreatePlaylistReqBody{
 		Name:        strconv.Itoa(ms/60000) + "分",
 		Description: "",
 	}
@@ -39,7 +39,7 @@ func CreatePlaylist(userid string, ms int, token string) (bool, string) {
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	var response Response
+	var response CreatePlaylistResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return false, ""
