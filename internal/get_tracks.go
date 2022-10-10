@@ -15,7 +15,7 @@ type Tracks struct {
 	DURATION_MS int    `json:"duration_ms"`
 }
 
-func MysqlConecct() *sql.DB {
+func MysqlConect() *sql.DB {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -111,7 +111,7 @@ func getTracksBySpecifyTime(db *sql.DB, allTracks []Tracks, specify_ms int) (boo
 }
 
 func GetTracks(specify_ms int) (bool, []Tracks) {
-	db := MysqlConecct()
+	db := MysqlConect()
 	var tracks []Tracks
 
 	c1 := make(chan []Tracks, 1)
