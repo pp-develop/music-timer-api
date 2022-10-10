@@ -3,6 +3,7 @@ package internal
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -95,14 +96,25 @@ func getTracksBySpecifyTime(db *sql.DB, allTracks []Tracks, specify_ms int) (boo
 	return isGetTrack, tracks
 }
 
-func GetTracks(specify_ms int) []Tracks {
+func GetTracks(specify_ms int) (bool, []Tracks) {
 	db := MysqlConecct()
 	var tracks []Tracks
-	var isGetTracks bool
-	for !isGetTracks {
-		allTracks, _ := getAllTracks(db)
-		isGetTracks, tracks = getTracksBySpecifyTime(db, allTracks, specify_ms)
+	
+	c1 := make(chan []Tracks, 1)
+	go func() {
+		var isGetTracks bool
+		for !isGetTracks {
+			allTracks, _ := getAllTracks(db)
+			isGetTracks, tracks = getTracksBySpecifyTime(db, allTracks, specify_ms)
+		}
+		c1 <- tracks
+	}()
+
+	select {
+	case <-c1:
+		return true, tracks
+	case <-time.After(30 * time.Second):
+		return false, tracks
 	}
-	return tracks
 }
 

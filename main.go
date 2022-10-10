@@ -35,8 +35,12 @@ func getUserProfile(c *gin.Context) {
 
 func getTracks(c *gin.Context) {
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	tracks := internal.GetTracks(minute * ONEMINUTE_TO_MSEC)
-	c.IndentedJSON(http.StatusOK, tracks)
+	success, tracks := internal.GetTracks(minute * ONEMINUTE_TO_MSEC)
+	if success {
+		c.IndentedJSON(http.StatusOK, tracks)
+	} else {
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	}
 }
 
 func createPlaylist(c *gin.Context) {

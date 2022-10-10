@@ -10,13 +10,16 @@ func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 	// tokenを使用してUser取得
 
 	// トラックを取得
-	tracks := GetTracks(ms)
+	isGetTracks, tracks := GetTracks(ms)
 	fmt.Println(tracks)
+	if !isGetTracks {
+		return false, ""
+	}
 
 	// プレイリスト作成
 	isCreate, playlistId := CreatePlaylist("", ms, "")
 	if !isCreate {
-		return false, playlistId
+		return false, ""
 	}
 	fmt.Println(isCreate)
 
