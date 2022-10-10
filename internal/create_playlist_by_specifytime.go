@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"fmt"
+	"log"
 )
 
 const playlistId = ""
@@ -11,7 +11,7 @@ func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 
 	// トラックを取得
 	isGetTracks, tracks := GetTracks(ms)
-	fmt.Println(tracks)
+	log.Println(tracks)
 	if !isGetTracks {
 		return false, ""
 	}
@@ -21,11 +21,11 @@ func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 	if !isCreate {
 		return false, ""
 	}
-	fmt.Println(isCreate)
+	log.Println(isCreate)
 
 	// プレイリストにトラックを追加
 	isAddItems := AddItemsPlaylist(playlistId, tracks, "")
-	fmt.Println(isAddItems)
+	log.Println(isAddItems)
 	if !isAddItems {
 		// 作成したプレイリストを削除
 		return false, playlistId

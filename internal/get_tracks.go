@@ -3,9 +3,11 @@ package internal
 import (
 	"database/sql"
 	"log"
+	"os"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 type Tracks struct {
@@ -14,7 +16,19 @@ type Tracks struct {
 }
 
 func MysqlConecct() *sql.DB {
-	db, err := sql.Open("mysql", "dev:dev@tcp(line_bot_mysql:3306)/line_bot")
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
+
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	database_name := os.Getenv("DB_NAME")
+
+	dbconf := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database_name + "?charset=utf8mb4"
+	db, err := sql.Open("mysql", dbconf)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -99,7 +113,7 @@ func getTracksBySpecifyTime(db *sql.DB, allTracks []Tracks, specify_ms int) (boo
 func GetTracks(specify_ms int) (bool, []Tracks) {
 	db := MysqlConecct()
 	var tracks []Tracks
-	
+
 	c1 := make(chan []Tracks, 1)
 	go func() {
 		var isGetTracks bool
