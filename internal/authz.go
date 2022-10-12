@@ -1,9 +1,15 @@
 package internal
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
