@@ -8,8 +8,9 @@ import (
 	"log"
 	"os"
 
-	"golang.org/x/oauth2/clientcredentials"
+	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify/v2"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 var userID = flag.String("user", "", "the Spotify user ID to look up")
@@ -25,9 +26,13 @@ func GetUserProfile() {
 		return
 	}
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
 	config := &clientcredentials.Config{
-		ClientID:     "",
-		ClientSecret: "",
+		ClientID:     os.Getenv("CLIENT_ID"),
+		ClientSecret: os.Getenv("CLIENT_SECRET"),
 		TokenURL:     spotifyauth.TokenURL,
 	}
 	token, err := config.Token(context.Background())
