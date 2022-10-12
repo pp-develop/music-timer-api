@@ -4,8 +4,6 @@ import (
 	"log"
 )
 
-const playlistId = ""
-
 func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 	// トラックを取得
 	isGetTracks, tracks := GetTracks(ms)
@@ -16,18 +14,18 @@ func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 
 	// tokenを使用してUser取得
 	// プレイリスト作成
-	isCreate, playlistId := CreatePlaylist("", ms, "")
+	isCreate, playlist := CreatePlaylist("", ms, "")
 	if !isCreate {
 		return false, ""
 	}
 	log.Println(isCreate)
 
 	// プレイリストにトラックを追加
-	isAddItems := AddItemsPlaylist(playlistId, tracks, "")
+	isAddItems := AddItemsPlaylist(playlist.ID, tracks, "")
 	log.Println(isAddItems)
 	if !isAddItems {
 		// 作成したプレイリストを削除
-		return false, playlistId
+		return false, playlist.ID
 	}
-	return isAddItems, playlistId
+	return isAddItems, playlist.ID
 }

@@ -6,23 +6,20 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-type CreatePlaylistReqBody struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
+// 1minute = 60000ms
+const ONEMINUTE_TO_MSEC = 60000
 
-type CreatePlaylistResponse struct {
-	Id string `json:"id"`
-}
-
-func CreatePlaylist(userid string, ms int, token string) (bool, string) {
-	requestBody := &CreatePlaylistReqBody{
-		Name:        strconv.Itoa(ms/60000) + "分",
+func CreatePlaylist(userid string, ms int, token string) (bool, model.CreatePlaylistResponse) {
+	requestBody := &model.CreatePlaylistReqBody{
+		Name:        strconv.Itoa(ms/ONEMINUTE_TO_MSEC) + "分",
 		Description: "",
 	}
 	jsonString, _ := json.Marshal(requestBody)
+	var response model.CreatePlaylistResponse
 
 	endopint := "https://api.spotify.com/v1/users/" + userid + "/playlists"
 	req, _ := http.NewRequest("POST", endopint, bytes.NewBuffer(jsonString))
@@ -30,19 +27,18 @@ func CreatePlaylist(userid string, ms int, token string) (bool, string) {
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		return false, ""
+		return false, response
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 201 {
-		return false, ""
+		return false, response
 	}
 
 	body, _ := io.ReadAll(resp.Body)
-	var response CreatePlaylistResponse
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return false, ""
+		return false, response
 	}
-	return true, response.Id
+	return true, response
 }

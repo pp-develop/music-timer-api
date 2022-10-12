@@ -37,3 +37,7 @@ require (
 replace github.com/pp-develop/make-playlist-by-specify-time-api/api => ./api
 
 replace github.com/pp-develop/make-playlist-by-specify-time-api/router => ./router
+
+replace github.com/pp-develop/make-playlist-by-specify-time-api/model => ./model
+
+replace github.com/pp-develop/make-playlist-by-specify-time-api/database => ./database

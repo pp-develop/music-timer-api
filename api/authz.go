@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 func Authz() (bool, string) {
@@ -33,14 +34,8 @@ func Authz() (bool, string) {
 	return true, url
 }
 
-type RequestAccessTokenResponse struct {
-	Access_token  string `json:"access_token"`
-	Refresh_token string `json:"refresh_token"`
-	Expires_in    int    `json:"expires_in"`
-}
-
-func RequestAccessToken(code string) (bool, RequestAccessTokenResponse) {
-	var response RequestAccessTokenResponse
+func RequestApiToken(code string) (bool, model.ApiTokenResponse) {
+	var response model.ApiTokenResponse
 
 	err := godotenv.Load()
 	if err != nil {
