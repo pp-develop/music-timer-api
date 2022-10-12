@@ -7,8 +7,6 @@ import (
 const playlistId = ""
 
 func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
-	// tokenを使用してUser取得
-
 	// トラックを取得
 	isGetTracks, tracks := GetTracks(ms)
 	log.Println(tracks)
@@ -16,6 +14,7 @@ func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
 		return false, ""
 	}
 
+	// tokenを使用してUser取得
 	// プレイリスト作成
 	isCreate, playlistId := CreatePlaylist("", ms, "")
 	if !isCreate {
