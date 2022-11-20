@@ -1,4 +1,0 @@
-Successful:
-  $ref: "./successful.yml"
-Error:
-  $ref: "./error.yml"
