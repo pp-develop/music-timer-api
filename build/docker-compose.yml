@@ -10,3 +10,17 @@ services:
       - ..:/go/src/
     working_dir: /go/src/
     tty: true
+
+  mysql:
+    image: mysql:8.0
+    container_name: go_mysql
+    volumes:
+      - ./mysql:/var/lib/mysql
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: develop_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
