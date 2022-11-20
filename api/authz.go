@@ -11,12 +11,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func Authz() (bool, string) {
+func Authz(c *gin.Context) (bool, string) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -25,12 +27,17 @@ func Authz() (bool, string) {
 
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(os.Getenv("REDIRECT_URI")),
-		spotifyauth.WithScopes(spotifyauth.ScopePlaylistModifyPublic),
+		spotifyauth.WithScopes(spotifyauth.ScopePlaylistModifyPublic, spotifyauth.ScopePlaylistModifyPrivate),
 		spotifyauth.WithClientID(os.Getenv("CLIENT_ID")),
 		spotifyauth.WithClientSecret(os.Getenv("CLIENT_SECRET")),
 	)
 	state := uuid.New()
 	url := auth.AuthURL(state.String())
+
+	// sessionにstateを格納
+	session := sessions.Default(c)
+	session.Set("state", state.String())
+	session.Save()
 	return true, url
 }
 
