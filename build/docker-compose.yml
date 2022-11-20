@@ -3,6 +3,7 @@ version: "3.9"
 services:
   app:
     image: golang:1.19.0
+    build: .
     container_name: go
     ports:
       - "8080:8080"
