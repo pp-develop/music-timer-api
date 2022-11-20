@@ -1,0 +1,11 @@
+type: object
+properties:
+  code:
+    type: integer
+    enum: 
+      - 00000
+    description: ''
+  message:
+    type: string
+    enum:
+      - パラメータに不正があります

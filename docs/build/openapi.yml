@@ -1,0 +1,106 @@
+openapi: 3.0.0
+info:
+  title: API Documents
+  description: '### <h1>[make-playlist-by-specify-time-api](https://github.com/pp-develop/make-playlist-by-specify-time-api) API DOCS</h1>'
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080'
+    description: 開発環境
+tags:
+  - name: tracks
+    description: ''
+  - name: playlist
+    description: ''
+paths:
+  /playlist:
+    post:
+      tags:
+        - playlist
+      summary: プレイリストを作成
+      description: 指定した時間のプレイリストを作成
+      operationId: makePlaylist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                minute:
+                  type: int
+                  description: 作成するプレイリストの時間
+              required:
+                - minute
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  playlist_id:
+                    type: string
+                    description: 作成したプレイリストID
+                    enum:
+                      - xxxxxxx
+        '500':
+          description: ''
+  /track:
+    get:
+      tags:
+        - tracks
+      summary: トラックリストを取得
+      description: 指定した時間のトラックリストを取得
+      operationId: getTrack
+      parameters:
+        - in: query
+          name: minute
+          description: 取得するトラックリストの時間
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sample:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                  select_group_ids:
+                    type: object
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        enum:
+                          - error message
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        enum:
+                          - error message

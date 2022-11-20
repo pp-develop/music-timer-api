@@ -1,0 +1,57 @@
+tags:
+  - tracks
+summary: トラックリストを取得
+description: 指定した時間のトラックリストを取得
+operationId: getTrack
+parameters:
+  - in: query
+    name: minute
+    description: 取得するトラックリストの時間
+    schema:
+      type: string
+    required: true
+responses:
+  "200":
+    description: ""
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            sample:
+              type: object
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+            select_group_ids:
+              type: object
+  "400":
+    description: ""
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            errors:
+              type: object
+              properties:
+                message:
+                  type: string
+                  enum:
+                    - "error message"
+  "500":
+    description: ""
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            errors:
+              type: object
+              properties:
+                message:
+                  type: string
+                  enum:
+                    - "error message"

@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: API Documents
+  description: |-
+    ### <h1>[make-playlist-by-specify-time-api](https://github.com/pp-develop/make-playlist-by-specify-time-api) API DOCS</h1>
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 開発環境
+  # - url: https://example.com
+  #   description: ステージング環境
+  # - url: https://example.com
+  #   description: 本番環境
+tags:
+  - name: tracks
+    description: ''
+  - name: playlist
+    description: ''
+paths:
+  /playlist:
+    $ref: "./paths/playlist/api.yml"
+  /track:
+    $ref: "./paths/tracks/api.yml"

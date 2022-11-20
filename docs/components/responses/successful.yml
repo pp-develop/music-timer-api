@@ -1,0 +1,16 @@
+description: Success
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        access_status:
+          type: object
+          properties:
+            access_status:
+              type: integer
+              example: 20000
+              description: ''
+            message:
+              type: string
+              example: アクセスに成功しました

@@ -1,0 +1,13 @@
+type: object
+properties:
+  access_status:
+    type: object
+    properties:
+      code:
+        type: integer
+        enum:
+          - 200
+      message:
+        type: string
+        enum:
+          - 成功しました

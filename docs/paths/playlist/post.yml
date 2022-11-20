@@ -1,0 +1,31 @@
+tags:
+  - playlist
+summary: プレイリストを作成
+description: 指定した時間のプレイリストを作成
+operationId: makePlaylist
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        properties:
+          minute:
+            type: int
+            description: 作成するプレイリストの時間
+        required:
+          - minute
+responses:
+  "200":
+    description: ""
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            playlist_id:
+              type: string
+              description: 作成したプレイリストID
+              enum:
+                - xxxxxxx
+  "500":
+    description: ""

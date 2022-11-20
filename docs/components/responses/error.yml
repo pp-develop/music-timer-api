@@ -1,0 +1,13 @@
+description: Error
+content:
+  application/json:
+    schema:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 10
+        message:
+          type: string
+          example: sample

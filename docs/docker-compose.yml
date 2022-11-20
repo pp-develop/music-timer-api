@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    volumes:
+      - ./build/.:/usr/share/nginx/html/
+    ports:
+      - 80:80
+
+  node:
+    build: ./build/docker/
+    image: node
+    container_name: node
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    tty: true
+    depends_on:
+      - nginx

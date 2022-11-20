@@ -1,0 +1,10 @@
+successful:
+  $ref: "./successful.yml"
+serverError:
+  $ref: "./server_error.yml"
+parameterError:
+  $ref: "./parameter_error.yml"
+sampleSuccessful:
+  $ref: "./sample_successful.yml"
+sampleError:
+  $ref: "./sample_error.yml"

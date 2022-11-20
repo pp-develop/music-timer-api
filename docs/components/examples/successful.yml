@@ -1,0 +1,4 @@
+access_status:
+  code: 20000
+  description: ""
+  message: "アクセスに成功しました"
