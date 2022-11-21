@@ -12,14 +12,14 @@ import (
 func Callback(c *gin.Context) bool {
 	code := c.Query("code")
 	state := c.Query("state")
-	// api/tokenエンドポイントへhttpリクエスト
+	// TODO stateの検証
+	log.Println(state)
+
+	// AccessTokenを取得
 	success, response := spotify.GetApiToken(code)
 	if !success {
 		return false
 	}
-
-	// TODO stateの検証
-	log.Println(state)
 
 	// userid取得
 	isGet, user := spotify.GetMe(response.AccessToken)
@@ -27,8 +27,8 @@ func Callback(c *gin.Context) bool {
 		return false
 	}
 
-	// リフレッシュトークンをDBに保存
-	success = database.SaveRefreshToken(response, user.Id)
+	// AccessTokenをDBに保存
+	success = database.SaveAccessToken(response, user.Id)
 	if !success {
 		return false
 	}
