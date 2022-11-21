@@ -15,19 +15,19 @@ func Callback(c *gin.Context) bool {
 	// TODO stateの検証
 	log.Println(state)
 
-	// AccessTokenを取得
+	// accessTokenを取得
 	success, response := spotify.GetApiToken(code)
 	if !success {
 		return false
 	}
 
-	// userid取得
+	// userId取得
 	isGet, user := spotify.GetMe(response.AccessToken)
 	if !isGet {
 		return false
 	}
 
-	// AccessTokenをDBに保存
+	// accessTokenをDBに保存
 	success = database.SaveAccessToken(response, user.Id)
 	if !success {
 		return false
