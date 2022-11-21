@@ -21,20 +21,20 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 
 	// トラックを取得
 	isGetTracks, tracks := GetTracks(specify_ms)
-	log.Println(tracks)
 	if !isGetTracks {
 		return false, ""
 	}
 
-	// userIdからtokenを取得
+	// sessionからuserIdを取得
 	session := sessions.Default(c)
 	var userId string
 	v := session.Get("userId")
 	if v == nil {
-		userId = ""
-	} else {
-		userId = v.(string)
+		return false, ""
 	}
+	userId = v.(string)
+
+	// userIdからtokenを取得
 	user := database.GetUser(userId)
 
 	// プレイリスト作成
@@ -45,7 +45,6 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 
 	// プレイリストにトラックを追加
 	isAddItems := AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
-	log.Println(isAddItems)
 	if !isAddItems {
 		// TODO 作成したプレイリストを削除
 		return false, playlist.ID
