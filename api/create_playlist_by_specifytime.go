@@ -21,7 +21,7 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 	}
 	specify_ms := json.Minute * ONEMINUTE_TO_MSEC
 
-	// トラックを取得
+	// トラックリストを取得
 	isGetTracks, tracks := GetTracks(specify_ms)
 	if !isGetTracks {
 		return false, ""
@@ -36,7 +36,7 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 	}
 	userId = v.(string)
 
-	// userIdからtokenを取得
+	// userを取得
 	user := database.GetUser(userId)
 
 	// プレイリスト作成
