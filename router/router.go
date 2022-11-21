@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 )
 
 // 1minute = 60000ms
@@ -57,7 +58,7 @@ func callback(c *gin.Context) {
 }
 
 func getUserProfile(c *gin.Context) {
-	api.GetUserProfile()
+	spotify.GetUserProfile()
 }
 
 func getTracks(c *gin.Context) {

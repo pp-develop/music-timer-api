@@ -3,8 +3,12 @@ package api
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
+
+// 1minute = 60000ms
+const ONEMINUTE_TO_MSEC = 60000
 
 type RequestJson struct {
 	Minute int `json:"minute"`
@@ -36,13 +40,13 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 	user := database.GetUser(userId)
 
 	// プレイリスト作成
-	isCreate, playlist := CreatePlaylist(user.Id, specify_ms, user.AccessToken)
+	isCreate, playlist := spotify.CreatePlaylist(user.Id, specify_ms, user.AccessToken)
 	if !isCreate {
 		return false, ""
 	}
 
 	// プレイリストにトラックを追加
-	isAddItems := AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
+	isAddItems := spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
 	if !isAddItems {
 		// TODO 作成したプレイリストを削除
 		return false, playlist.ID
