@@ -1,14 +1,18 @@
 package router
 
 import (
+	// "fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 )
 
 // 1minute = 60000ms
@@ -16,6 +20,11 @@ const ONEMINUTE_TO_MSEC = 60000
 
 func Create() *gin.Engine {
 	router := gin.Default()
+
+	// sessionの発行
+	store := cookie.NewStore([]byte("secret")) // TODO envを参照する
+	router.Use(sessions.Sessions("mysession", store))
+
 	router.GET("/authz-url", getAuthzUrl)
 	router.GET("/callback", callback)
 	router.GET("/user", getUserProfile)
@@ -25,7 +34,7 @@ func Create() *gin.Engine {
 }
 
 func getAuthzUrl(c *gin.Context) {
-	success, url := api.Authz()
+	success, url := api.Authz(c)
 	if success {
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	} else {
@@ -34,21 +43,22 @@ func getAuthzUrl(c *gin.Context) {
 }
 
 func callback(c *gin.Context) {
-	code := c.Query("code")
-	success := api.Callback(code)
+	success := api.Callback(c)
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	if !success {
+
+	if success {
 		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
 	} else {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_ERROR_URL"))
+		c.Redirect(http.StatusInternalServerError, os.Getenv("AUTHZ_ERROR_URL"))
 	}
 }
 
 func getUserProfile(c *gin.Context) {
-	api.GetUserProfile()
+	spotify.GetUserProfile()
 }
 
 func getTracks(c *gin.Context) {
@@ -62,8 +72,7 @@ func getTracks(c *gin.Context) {
 }
 
 func createPlaylist(c *gin.Context) {
-	minute, _ := strconv.Atoi(c.Query("minute"))
-	isCreate, playlistId := api.CreatePlaylistBySpecifyTime(minute * ONEMINUTE_TO_MSEC)
+	isCreate, playlistId := api.CreatePlaylistBySpecifyTime(c)
 	if isCreate {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	} else {

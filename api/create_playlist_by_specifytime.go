@@ -1,30 +1,54 @@
 package api
 
 import (
-	"log"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
 
-func CreatePlaylistBySpecifyTime(ms int) (bool, string) {
-	// トラックを取得
-	isGetTracks, tracks := GetTracks(ms)
-	log.Println(tracks)
+// 1minute = 60000ms
+const ONEMINUTE_TO_MSEC = 60000
+
+type RequestJson struct {
+	Minute int `json:"minute"`
+}
+
+func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
+	var json RequestJson
+	if err := c.ShouldBindJSON(&json); err != nil {
+		return false, ""
+	}
+	specify_ms := json.Minute * ONEMINUTE_TO_MSEC
+
+	// トラックリストを取得
+	isGetTracks, tracks := GetTracks(specify_ms)
 	if !isGetTracks {
 		return false, ""
 	}
 
-	// tokenを使用してUser取得
+	// sessionからuserIdを取得
+	session := sessions.Default(c)
+	var userId string
+	v := session.Get("userId")
+	if v == nil {
+		return false, ""
+	}
+	userId = v.(string)
+
+	// userを取得
+	user := database.GetUser(userId)
+
 	// プレイリスト作成
-	isCreate, playlist := CreatePlaylist("", ms, "")
+	isCreate, playlist := spotify.CreatePlaylist(user.Id, specify_ms, user.AccessToken)
 	if !isCreate {
 		return false, ""
 	}
-	log.Println(isCreate)
 
 	// プレイリストにトラックを追加
-	isAddItems := AddItemsPlaylist(playlist.ID, tracks, "")
-	log.Println(isAddItems)
+	isAddItems := spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
 	if !isAddItems {
-		// 作成したプレイリストを削除
+		// TODO 作成したプレイリストを削除
 		return false, playlist.ID
 	}
 	return isAddItems, playlist.ID
