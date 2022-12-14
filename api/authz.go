@@ -20,10 +20,10 @@ func Authz(c *gin.Context) (bool, string) {
 	}
 
 	auth := spotifyauth.New(
-		spotifyauth.WithRedirectURL(os.Getenv("REDIRECT_URI")),
+		spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI")),
 		spotifyauth.WithScopes(spotifyauth.ScopePlaylistModifyPublic, spotifyauth.ScopePlaylistModifyPrivate),
-		spotifyauth.WithClientID(os.Getenv("CLIENT_ID")),
-		spotifyauth.WithClientSecret(os.Getenv("CLIENT_SECRET")),
+		spotifyauth.WithClientID(os.Getenv("SPOTIFY_ID")),
+		spotifyauth.WithClientSecret(os.Getenv("SPOTIFY_SECRET")),
 	)
 	state := uuid.New()
 	url := auth.AuthURL(state.String())

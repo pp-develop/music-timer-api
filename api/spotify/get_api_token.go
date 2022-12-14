@@ -14,7 +14,8 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func GetApiToken(code string) (bool, model.ApiTokenResponse) {
+// https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
+func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
 	var response model.ApiTokenResponse
 
 	err := godotenv.Load()
@@ -25,13 +26,13 @@ func GetApiToken(code string) (bool, model.ApiTokenResponse) {
 
 	values := url.Values{}
 	values.Add("code", code)
-	values.Add("redirect_uri", os.Getenv("REDIRECT_URI"))
+	values.Add("SPOTIFY_REDIRECT_URI", os.Getenv("SPOTIFY_REDIRECT_URI"))
 	values.Add("grant_type", "authorization_code")
 
 	endopint := "https://accounts.spotify.com/api/token"
 	req, _ := http.NewRequest("POST", endopint, strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(os.Getenv("CLIENT_ID")+":"+os.Getenv("CLIENT_SECRET"))))
+	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(os.Getenv("SPOTIFY_ID")+":"+os.Getenv("SPOTIFY_SECRET"))))
 
 	client := new(http.Client)
 	resp, err := client.Do(req)

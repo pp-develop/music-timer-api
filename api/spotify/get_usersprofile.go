@@ -31,8 +31,8 @@ func GetUserProfile() {
 		log.Println("Error loading .env file")
 	}
 	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("CLIENT_ID"),
-		ClientSecret: os.Getenv("CLIENT_SECRET"),
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
 		TokenURL:     spotifyauth.TokenURL,
 	}
 	token, err := config.Token(context.Background())
