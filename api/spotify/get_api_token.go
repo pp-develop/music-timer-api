@@ -26,7 +26,7 @@ func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
 
 	values := url.Values{}
 	values.Add("code", code)
-	values.Add("SPOTIFY_REDIRECT_URI", os.Getenv("SPOTIFY_REDIRECT_URI"))
+	values.Add("redirect_uri", os.Getenv("SPOTIFY_REDIRECT_URI"))
 	values.Add("grant_type", "authorization_code")
 
 	endopint := "https://accounts.spotify.com/api/token"
@@ -37,20 +37,20 @@ func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Print(err)
+		log.Println(err)
 		return false, response
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Print(err)
+		log.Println(err)
 		return false, response
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Print(err)
+		log.Println(err)
 		return false, response
 	}
 	return true, response
