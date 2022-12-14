@@ -14,7 +14,8 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func GetApiToken(code string) (bool, model.ApiTokenResponse) {
+// https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
+func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
 	var response model.ApiTokenResponse
 
 	err := godotenv.Load()
