@@ -69,7 +69,7 @@ func validateTrack(track *spotifylibrary.FullTrack) bool {
 }
 
 func validateTime(msec int) bool {
-	for minute := 0; minute <= 8; minute++ {
+	for minute := 1; minute <= 8; minute++ {
 		if msec >= minute*ONEMINUTE_TO_MSEC-ALLOWANCE_MSEC &&
 			msec <= minute*ONEMINUTE_TO_MSEC+ALLOWANCE_MSEC {
 			return true
