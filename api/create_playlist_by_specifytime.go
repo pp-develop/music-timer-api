@@ -45,7 +45,7 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 
 	isAddItems := spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
 	if !isAddItems {
-		// TODO 作成したプレイリストを削除
+		database.DeletePlaylists(playlist.ID, user.Id)
 		return false, playlist.ID
 	}
 	database.SavePlaylist(playlist, userId)
