@@ -29,6 +29,7 @@ func Create() *gin.Engine {
 	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
+	router.GET("playlist", deletePlaylists)
 	return router
 }
 
@@ -77,4 +78,17 @@ func createPlaylist(c *gin.Context) {
 	} else {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	}
+
 }
+func deletePlaylists(c *gin.Context) {
+	err := api.DeletePlaylists(c)	
+	if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, "")
+	}
+}
+
+
+// errorをrouterで処理する
