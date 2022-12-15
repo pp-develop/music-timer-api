@@ -9,11 +9,9 @@ create table tracks(
 create table playlists(
     `id` VARCHAR(255),
     index id_index (id),
+    `user_id` VARCHAR(255),
+    FOREIGN KEY fk_user_id(user_id) REFERENCES users(id)
 );
--- create table playlist(
---     `id` int not null auto_increment primary key,
---     `msec` int
--- );
 
 create table users(
     `id` VARCHAR(255) primary key,
