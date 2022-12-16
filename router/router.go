@@ -81,7 +81,7 @@ func createPlaylist(c *gin.Context) {
 
 }
 func deletePlaylists(c *gin.Context) {
-	err := api.DeletePlaylists(c)	
+	err := api.DeletePlaylists(c)
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -89,6 +89,3 @@ func deletePlaylists(c *gin.Context) {
 		c.IndentedJSON(http.StatusCreated, "")
 	}
 }
-
-
-// errorをrouterで処理する
