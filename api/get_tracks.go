@@ -1,8 +1,8 @@
 package api
 
 import (
-	"time"
 	"errors"
+	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -53,10 +53,10 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
-		var isGetTracks bool
-		for !isGetTracks {
+		successGetTracks := false
+		for !successGetTracks {
 			allTracks, _ := database.GetAllTracks()
-			isGetTracks, tracks = getTracksBySpecifyTime(allTracks, specify_ms)
+			successGetTracks, tracks = getTracksBySpecifyTime(allTracks, specify_ms)
 		}
 		c1 <- tracks
 	}()
