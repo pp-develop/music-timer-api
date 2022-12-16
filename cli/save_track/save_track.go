@@ -16,7 +16,12 @@ func main() {
 		Usage: "search spotify tracks to DB save",
 		Action: func(*cli.Context) error {
 			log.Println("start save track")
-			Invoke()
+
+			err := Invoke()
+			if err != nil {
+				log.Println(err)
+			}
+			
 			log.Println("end save track")
 			return nil
 		},
@@ -27,21 +32,22 @@ func main() {
 	}
 }
 
-func Invoke() {
+func Invoke() error {
 	searchResult, err := spotify.SearchTracks()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = SaveTracks(searchResult)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = NextSearchTracks(searchResult)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 func SaveTracks(tracks *spotifylibrary.SearchResult) error {
