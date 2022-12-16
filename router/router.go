@@ -14,9 +14,6 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 )
 
-// 1minute = 60000ms
-const ONEMINUTE_TO_MSEC = 60000
-
 func Create() *gin.Engine {
 	router := gin.Default()
 
@@ -29,31 +26,32 @@ func Create() *gin.Engine {
 	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
-	router.GET("playlist", deletePlaylists)
+	router.DELETE("playlist", deletePlaylists)
 	return router
 }
 
 func getAuthzUrl(c *gin.Context) {
-	success, url := api.Authz(c)
-	if success {
-		c.JSON(http.StatusOK, gin.H{"url": url})
-	} else {
+	url, err := api.Authz(c)
+	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, "")
+	} else {
+		c.JSON(http.StatusOK, gin.H{"url": url})
 	}
 }
 
 func callback(c *gin.Context) {
-	success := api.Callback(c)
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	if success {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
-	} else {
+	err = api.Callback(c)
+	if err != nil {
+		log.Println(err)
 		c.Redirect(http.StatusInternalServerError, os.Getenv("AUTHZ_ERROR_URL"))
+	} else {
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
 	}
 }
 
@@ -62,21 +60,26 @@ func getUserProfile(c *gin.Context) {
 }
 
 func getTracks(c *gin.Context) {
+	// 1minute = 60000ms
+	oneminuteToMsec := 60000
+	
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	success, tracks := api.GetTracks(minute * ONEMINUTE_TO_MSEC)
-	if success {
-		c.IndentedJSON(http.StatusOK, tracks)
-	} else {
+	tracks, err := api.GetTracks(minute * oneminuteToMsec)
+	if err != nil {
+		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusOK, tracks)
 	}
 }
 
 func createPlaylist(c *gin.Context) {
-	isCreate, playlistId := api.CreatePlaylistBySpecifyTime(c)
-	if isCreate {
-		c.IndentedJSON(http.StatusCreated, playlistId)
-	} else {
+	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
+	if err != nil {
+		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 
 }
@@ -86,6 +89,6 @@ func deletePlaylists(c *gin.Context) {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
-		c.IndentedJSON(http.StatusCreated, "")
+		c.IndentedJSON(http.StatusOK, "")
 	}
 }

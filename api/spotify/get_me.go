@@ -4,19 +4,17 @@ import (
 	"encoding/json"
 	"github.com/joho/godotenv"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func GetMe(code string) (bool, model.User) {
+func GetMe(code string) (model.User, error) {
 	var response model.User
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
-		return false, response
+		return response, err
 	}
 
 	endopint := "https://api.spotify.com/v1/me"
@@ -28,21 +26,18 @@ func GetMe(code string) (bool, model.User) {
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Print(err)
-		return false, response
+		return response, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Print(err)
-		return false, response
+		return response, err
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Print(err)
-		return false, response
+		return response, err
 	}
-	return true, response
+	return response, nil
 }

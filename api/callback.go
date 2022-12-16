@@ -9,25 +9,25 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
 
-func Callback(c *gin.Context) bool {
+func Callback(c *gin.Context) error {
 	code := c.Query("code")
 	state := c.Query("state")
 	// TODO stateの検証
 	log.Println(state)
 
-	success, response := spotify.GetApiTokenForAuthzCode(code)
-	if !success {
-		return false
+	response, err := spotify.GetApiTokenForAuthzCode(code)
+	if err != nil {
+		return err
 	}
 
-	isGet, user := spotify.GetMe(response.AccessToken)
-	if !isGet {
-		return false
+	user, err := spotify.GetMe(response.AccessToken)
+	if err != nil {
+		return err
 	}
 
-	success = database.SaveAccessToken(response, user.Id)
-	if !success {
-		return false
+	err = database.SaveAccessToken(response, user.Id)
+	if err != nil {
+		return err
 	}
 
 	// sessionにuseridを格納
@@ -35,5 +35,5 @@ func Callback(c *gin.Context) bool {
 	session.Set("userId", user.Id)
 	session.Save()
 
-	return true
+	return nil
 }

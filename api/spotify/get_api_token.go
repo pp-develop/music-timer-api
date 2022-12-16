@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -15,13 +14,12 @@ import (
 )
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
-func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
+func GetApiTokenForAuthzCode(code string) (model.ApiTokenResponse, error) {
 	var response model.ApiTokenResponse
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
-		return false, response
+		return response, err
 	}
 
 	values := url.Values{}
@@ -37,21 +35,18 @@ func GetApiTokenForAuthzCode(code string) (bool, model.ApiTokenResponse) {
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
-		return false, response
+		return response, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Println(err)
-		return false, response
+		return response, err
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Println(err)
-		return false, response
+		return response, err
 	}
-	return true, response
+	return response, nil
 }

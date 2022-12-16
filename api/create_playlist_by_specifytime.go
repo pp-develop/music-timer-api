@@ -1,30 +1,31 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
 
-// 1minute = 60000ms
-const ONEMINUTE_TO_MSEC = 60000
-
 type RequestJson struct {
 	Minute int `json:"minute"`
 }
 
-func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
+func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	var json RequestJson
 	if err := c.ShouldBindJSON(&json); err != nil {
-		return false, ""
+		return "", err
 	}
-	specify_ms := json.Minute * ONEMINUTE_TO_MSEC
+	// 1minute = 60000ms
+	oneminuteToMsec := 60000
+	specify_ms := json.Minute * oneminuteToMsec
 
 	// DBからトラックリストを取得
-	isGetTracks, tracks := GetTracks(specify_ms)
-	if !isGetTracks {
-		return false, ""
+	tracks, err := GetTracks(specify_ms)
+	if err != nil {
+		return "", err
 	}
 
 	// sessionからuserIdを取得
@@ -32,22 +33,25 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (bool, string) {
 	var userId string
 	v := session.Get("userId")
 	if v == nil {
-		return false, ""
+		return "", errors.New("session: Failed to get userid")
 	}
 	userId = v.(string)
 
-	user := database.GetUser(userId)
-
-	isCreate, playlist := spotify.CreatePlaylist(user.Id, specify_ms, user.AccessToken)
-	if !isCreate {
-		return false, ""
+	user, err := database.GetUser(userId)
+	if err != nil {
+		return "", err
 	}
 
-	isAddItems := spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
-	if !isAddItems {
+	playlist, err := spotify.CreatePlaylist(user.Id, specify_ms, user.AccessToken)
+	if err != nil {
+		return "", err
+	}
+
+	err = spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
+	if err != nil {
 		database.DeletePlaylists(playlist.ID, user.Id)
-		return false, playlist.ID
+		return "", err
 	}
 	database.SavePlaylist(playlist, userId)
-	return true, playlist.ID
+	return playlist.ID, nil
 }

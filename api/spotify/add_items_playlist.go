@@ -7,7 +7,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func AddItemsPlaylist(playlistId string, tracks []model.Track, token string) bool {
+func AddItemsPlaylist(playlistId string, tracks []model.Track, token string) error {
 	endpoints := "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks"
 	req, _ := http.NewRequest("POST", endpoints, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -25,13 +25,13 @@ func AddItemsPlaylist(playlistId string, tracks []model.Track, token string) boo
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		return false
+		return err
 	}
 
 	if resp.StatusCode != 201{
-		return false
+		return err
 	}
 	defer resp.Body.Close()
 
-	return true
+	return nil
 }

@@ -23,7 +23,11 @@ func DeletePlaylists(c *gin.Context) error {
 		return err
 	}
 
-	user := database.GetUser(userId)
+	user, err := database.GetUser(userId)
+	if err != nil {
+		return err
+	}
+
 	err = spotify.UnfollowPlaylist(playlists, user)
 	if err != nil {
 		return err

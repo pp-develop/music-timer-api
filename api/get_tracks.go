@@ -2,6 +2,7 @@ package api
 
 import (
 	"time"
+	"errors"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -47,7 +48,7 @@ func getTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []mo
 	return isGetTrack, tracks
 }
 
-func GetTracks(specify_ms int) (bool, []model.Track) {
+func GetTracks(specify_ms int) ([]model.Track, error) {
 	var tracks []model.Track
 
 	c1 := make(chan []model.Track, 1)
@@ -62,8 +63,8 @@ func GetTracks(specify_ms int) (bool, []model.Track) {
 
 	select {
 	case <-c1:
-		return true, tracks
+		return tracks, nil
 	case <-time.After(30 * time.Second):
-		return false, tracks
+		return tracks, errors.New("get tracks: time out")
 	}
 }

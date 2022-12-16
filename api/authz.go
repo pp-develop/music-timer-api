@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
-	"log"
 	"os"
 
 	"github.com/gin-contrib/sessions"
@@ -12,11 +11,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func Authz(c *gin.Context) (bool, string) {
+func Authz(c *gin.Context) (string, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
-		return false, ""
+		return "", err
 	}
 
 	auth := spotifyauth.New(
@@ -34,5 +32,5 @@ func Authz(c *gin.Context) (bool, string) {
 	session.Save()
 
 	fmt.Println(url)
-	return true, url
+	return url, nil
 }
