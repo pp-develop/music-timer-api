@@ -1,8 +1,6 @@
 package database
 
 import (
-	"log"
-
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/zmb3/spotify/v2"
 )
@@ -40,9 +38,10 @@ func GetTrackByMsec(ms int) []model.Track {
 	return tracks
 }
 
-func SaveTrack(track *spotify.FullTrack) {
+func SaveTrack(track *spotify.FullTrack) error {
 	_, err := db.Exec("INSERT INTO tracks (uri, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, track.Duration, track.ExternalIDs["isrc"])
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }

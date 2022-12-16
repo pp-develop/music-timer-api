@@ -3,7 +3,6 @@ package spotify
 import (
 	"context"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
-	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -13,10 +12,10 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-func SearchTracks() *spotify.SearchResult {
+func SearchTracks() (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		return nil, err
 	}
 
 	ctx := context.Background()
@@ -27,7 +26,7 @@ func SearchTracks() *spotify.SearchResult {
 	}
 	token, err := config.Token(ctx)
 	if err != nil {
-		log.Fatalf("couldn't get token: %v", err)
+		return nil, err
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
@@ -35,10 +34,10 @@ func SearchTracks() *spotify.SearchResult {
 	options := []spotify.RequestOption{spotify.Market("JP")}
 	results, err := client.Search(ctx, getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return results
+	return results, nil
 }
 
 func getRandomQuery() string {
@@ -61,10 +60,10 @@ func getRandomQuery() string {
 	return random_query
 }
 
-func NextSearchTracks(items *spotify.SearchResult) (bool, *spotify.SearchResult) {
+func NextSearchTracks(items *spotify.SearchResult) (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		return nil, err
 	}
 
 	ctx := context.Background()
@@ -75,16 +74,15 @@ func NextSearchTracks(items *spotify.SearchResult) (bool, *spotify.SearchResult)
 	}
 	token, err := config.Token(ctx)
 	if err != nil {
-		log.Fatalf("couldn't get token: %v", err)
+		return nil, err
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
 	err = client.NextTrackResults(ctx, items)
 	if err != nil {
-		log.Print(err)
-		return false, nil
+		return nil, err
 	}
 
-	return true, items
+	return items, nil
 }

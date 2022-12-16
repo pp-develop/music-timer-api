@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -11,21 +10,14 @@ import (
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 
-// 1 minute ＝ 60000 msecond
-const ONEMINUTE_TO_MSEC = 60000
-
-// 任意の分数 +- ALLOWANCE_MSEC を許容する
-// 下記の値だと+-5秒を許容するため、n分55秒~n分05秒の曲を許容する
-const ALLOWANCE_MSEC = 5000
-
 func main() {
 	app := &cli.App{
 		Name:  "save_track",
 		Usage: "search spotify tracks to DB save",
 		Action: func(*cli.Context) error {
-			fmt.Println("start save track")
-			invoke()
-			fmt.Println("end save track")
+			log.Println("start save track")
+			Invoke()
+			log.Println("end save track")
 			return nil
 		},
 	}
@@ -35,49 +27,80 @@ func main() {
 	}
 }
 
-func invoke() {
-	searchResult := spotify.SearchTracks()
-	saveTracks(searchResult)
-	NextSearchTracks(searchResult)
-}
+func Invoke() {
+	searchResult, err := spotify.SearchTracks()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func saveTracks(tracks *spotifylibrary.SearchResult) {
-	for _, item := range tracks.Tracks.Tracks {
-		if validateTrack(&item) {
-			database.SaveTrack(&item)
-		}
+	err = SaveTracks(searchResult)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = NextSearchTracks(searchResult)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
-func NextSearchTracks(tracks *spotifylibrary.SearchResult) {
+func SaveTracks(tracks *spotifylibrary.SearchResult) error {
+	for _, item := range tracks.Tracks.Tracks {
+		if !ValidateTrack(&item) {
+			continue
+		}
+		err := database.SaveTrack(&item)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func NextSearchTracks(tracks *spotifylibrary.SearchResult) error {
 	searchSuccess := true
-	var items *spotifylibrary.SearchResult
 
 	for searchSuccess {
-		searchSuccess, items = spotify.NextSearchTracks(tracks)
-		if searchSuccess {
-			saveTracks(items)
+		items, err := spotify.NextSearchTracks(tracks)
+		if err != nil {
+			return err
+		}
+
+		err = SaveTracks(items)
+		if err != nil {
+			return err
 		}
 	}
+
+	return nil
 }
 
-func validateTrack(track *spotifylibrary.FullTrack) bool {
-	if isIsrcJp(track.ExternalIDs["isrc"]) && validateTime(track.Duration) {
+func ValidateTrack(track *spotifylibrary.FullTrack) bool {
+	if IsIsrcJp(track.ExternalIDs["isrc"]) && ValidateTime(track.Duration) {
 		return true
 	}
 	return false
 }
 
-func validateTime(msec int) bool {
+func ValidateTime(msec int) bool {
+	// 1minute = 60000ms
+	oneminuteToMsec := 60000
+
+	// 任意の分数 +- ALLOWANCE_MSEC を許容する
+	// 下記の値だと+-5秒を許容するため、n分55秒~n分05秒の曲を許容する
+	allowanceMsec := 5000
+
 	for minute := 1; minute <= 8; minute++ {
-		if msec >= minute*ONEMINUTE_TO_MSEC-ALLOWANCE_MSEC &&
-			msec <= minute*ONEMINUTE_TO_MSEC+ALLOWANCE_MSEC {
+		allowanceMsecMin := minute*oneminuteToMsec - allowanceMsec
+		allowanceMsecMax := minute*oneminuteToMsec + allowanceMsec
+		if msec >= allowanceMsecMin &&
+			msec <= allowanceMsecMax {
 			return true
 		}
 	}
 	return false
 }
 
-func isIsrcJp(isrc string) bool {
+func IsIsrcJp(isrc string) bool {
 	return isrc[0:2] == "JP"
 }
