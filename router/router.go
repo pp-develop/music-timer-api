@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 )
 
 func Create() *gin.Engine {
@@ -23,7 +22,6 @@ func Create() *gin.Engine {
 
 	router.GET("/authz-url", getAuthzUrl)
 	router.GET("/callback", callback)
-	router.GET("/user", getUserProfile)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
 	router.DELETE("playlist", deletePlaylists)
@@ -55,14 +53,20 @@ func callback(c *gin.Context) {
 	}
 }
 
-func getUserProfile(c *gin.Context) {
-	spotify.GetUserProfile()
+func createPlaylist(c *gin.Context) {
+	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
+	if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, playlistId)
+	}
 }
 
 func getTracks(c *gin.Context) {
 	// 1minute = 60000ms
 	oneminuteToMsec := 60000
-	
+
 	minute, _ := strconv.Atoi(c.Query("minute"))
 	tracks, err := api.GetTracks(minute * oneminuteToMsec)
 	if err != nil {
@@ -73,16 +77,6 @@ func getTracks(c *gin.Context) {
 	}
 }
 
-func createPlaylist(c *gin.Context) {
-	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-		c.IndentedJSON(http.StatusCreated, playlistId)
-	}
-
-}
 func deletePlaylists(c *gin.Context) {
 	err := api.DeletePlaylists(c)
 	if err != nil {
