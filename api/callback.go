@@ -15,17 +15,17 @@ func Callback(c *gin.Context) error {
 	// TODO stateの検証
 	log.Println(state)
 
-	response, err := spotify.GetApiTokenForAuthzCode(code)
+	token, err := spotify.GetApiTokenForAuthzCode(code)
 	if err != nil {
 		return err
 	}
 
-	user, err := spotify.GetMe(response.AccessToken)
+	user, err := spotify.GetMe(token.AccessToken)
 	if err != nil {
 		return err
 	}
 
-	err = database.SaveAccessToken(response, user.Id)
+	err = database.SaveAccessToken(token, user.Id)
 	if err != nil {
 		return err
 	}
