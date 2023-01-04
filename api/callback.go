@@ -15,24 +15,24 @@ func Callback(c *gin.Context) error {
 	// TODO stateの検証
 	log.Println(state)
 
-	response, err := spotify.GetApiTokenForAuthzCode(code)
+	token, err := spotify.GetApiTokenForAuthzCode(code)
 	if err != nil {
 		return err
 	}
 
-	user, err := spotify.GetMe(response.AccessToken)
+	user, err := spotify.GetMe(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.SaveAccessToken(response, user.Id)
+	err = database.SaveAccessToken(token, user.ID)
 	if err != nil {
 		return err
 	}
 
 	// sessionにuseridを格納
 	session := sessions.Default(c)
-	session.Set("userId", user.Id)
+	session.Set("userId", user.ID)
 	session.Save()
 
 	return nil

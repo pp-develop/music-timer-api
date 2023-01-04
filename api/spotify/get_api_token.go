@@ -1,52 +1,29 @@
 package spotify
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"io"
-	"net/http"
-	"net/url"
+	"context"
 	"os"
-	"strings"
 
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2"
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
-func GetApiTokenForAuthzCode(code string) (model.ApiTokenResponse, error) {
-	var response model.ApiTokenResponse
+func GetApiTokenForAuthzCode(code string) (*oauth2.Token, error) {
+	var token *oauth2.Token
 
 	err := godotenv.Load()
 	if err != nil {
-		return response, err
+		return token, err
 	}
 
-	values := url.Values{}
-	values.Add("code", code)
-	values.Add("redirect_uri", os.Getenv("SPOTIFY_REDIRECT_URI"))
-	values.Add("grant_type", "authorization_code")
-
-	endopint := "https://accounts.spotify.com/api/token"
-	req, _ := http.NewRequest("POST", endopint, strings.NewReader(values.Encode()))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(os.Getenv("SPOTIFY_ID")+":"+os.Getenv("SPOTIFY_SECRET"))))
-
-	client := new(http.Client)
-	resp, err := client.Do(req)
+	ctx := context.Background()
+	auth := spotifyauth.New(spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI")))
+	token, err = auth.Exchange(ctx, code)
 	if err != nil {
-		return response, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return response, err
+		return token, err
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return response, err
-	}
-	return response, nil
+	return token, nil
 }

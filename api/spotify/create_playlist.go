@@ -1,44 +1,33 @@
 package spotify
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"net/http"
+	"context"
 	"strconv"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/zmb3/spotify/v2"
+	"golang.org/x/oauth2"
 )
 
 // 1minute = 60000ms
 const ONEMINUTE_TO_MSEC = 60000
 
-func CreatePlaylist(userid string, ms int, token string) (model.CreatePlaylistResponse, error) {
-	requestBody := &model.CreatePlaylistReqBody{
-		Name:        strconv.Itoa(ms/ONEMINUTE_TO_MSEC) + "分",
-		Description: "",
-	}
-	jsonString, _ := json.Marshal(requestBody)
-	var response model.CreatePlaylistResponse
+func CreatePlaylist(user model.User, ms int) (*spotify.FullPlaylist, error) {
+	var playlist *spotify.FullPlaylist
 
-	endopint := "https://api.spotify.com/v1/users/" + userid + "/playlists"
-	req, _ := http.NewRequest("POST", endopint, bytes.NewBuffer(jsonString))
-	req.Header.Set("Authorization", "Bearer "+token)
-	client := new(http.Client)
-	resp, err := client.Do(req)
+	ctx := context.Background()
+	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+		&oauth2.Token{
+			AccessToken:  user.AccessToken,
+			RefreshToken: user.RefreshToken,
+		},
+	))
+	client := spotify.New(httpClient)
+
+	playlist, err := client.CreatePlaylistForUser(ctx, user.Id, strconv.Itoa(ms/ONEMINUTE_TO_MSEC)+"分", "", true, false)
 	if err != nil {
-		return response, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 201 {
-		return response, err
+		return playlist, err
 	}
 
-	body, _ := io.ReadAll(resp.Body)
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		return response, err
-	}
-	return response, nil
+	return playlist, nil
 }

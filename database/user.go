@@ -1,11 +1,12 @@
 package database
 
 import (
+	"golang.org/x/oauth2"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func SaveAccessToken(response model.ApiTokenResponse, id string) error {
-	_, err := db.Exec("INSERT INTO users (id, access_token, refresh_token, token_expiration, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE access_token = ?, refresh_token = ?, token_expiration=?, updated_at=NOW()", id, response.AccessToken, response.RefreshToken, response.ExpiresIn, response.AccessToken, response.RefreshToken, response.ExpiresIn)
+func SaveAccessToken(token *oauth2.Token, id string) error {
+	_, err := db.Exec("INSERT INTO users (id, access_token, refresh_token, token_expiration, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE access_token = ?, refresh_token = ?, token_expiration=?, updated_at=NOW()", id, token.AccessToken, token.RefreshToken, token.Expiry.Second(), token.AccessToken, token.RefreshToken, token.Expiry.Second())
 	if err != nil {
 		return err
 	}

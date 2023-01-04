@@ -1,16 +1,16 @@
 package database
 
 import (
-	"log"
-
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/zmb3/spotify/v2"
 )
 
-func SavePlaylist(playlist model.CreatePlaylistResponse, userId string) {
-	_, err := db.Exec("INSERT INTO playlists (id, user_id) VALUES (?, ?)", playlist.ID, userId)
+func SavePlaylist(playlist *spotify.FullPlaylist, userId string) error {
+	_, err := db.Exec("INSERT INTO playlists (id, user_id) VALUES (?, ?)", string(playlist.ID), userId)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 func GetAllPlaylists(userId string) ([]model.Playlist, error) {
