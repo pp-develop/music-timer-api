@@ -47,7 +47,7 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	err = spotify.AddItemsPlaylist(playlist.ID, tracks, user.AccessToken)
+	err = spotify.AddItemsPlaylist(playlist.ID, tracks, user)
 	if err != nil {
 		database.DeletePlaylists(playlist.ID, user.Id)
 		return "", err

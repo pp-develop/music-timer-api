@@ -1,37 +1,34 @@
 package spotify
 
 import (
-	"net/http"
+	"context"
 	"strings"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/zmb3/spotify/v2"
+	"golang.org/x/oauth2"
 )
 
-func AddItemsPlaylist(playlistId string, tracks []model.Track, token string) error {
-	endpoints := "https://api.spotify.com/v1/playlists/" + playlistId + "/tracks"
-	req, _ := http.NewRequest("POST", endpoints, nil)
-	req.Header.Set("Authorization", "Bearer "+token)
+func AddItemsPlaylist(playlistId string, tracks []model.Track, user model.User) error {
+	ctx := context.Background()
+	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+		&oauth2.Token{
+			AccessToken:  user.AccessToken,
+			RefreshToken: user.RefreshToken,
+		},
+	))
+	client := spotify.New(httpClient)
 
-	var uris []string
-	for _, v := range tracks {
-		uri := strings.Replace(v.Uri, "https://open.spotify.com/track/", "spotify:track:", 1)
-		uris = append(uris, uri)
+	var ids []spotify.ID
+	for _, item := range tracks {
+		uri := strings.Replace(item.Uri, "spotify:track:", "", 1)
+		ids = append(ids, spotify.ID(uri))
 	}
 
-	q := req.URL.Query()
-	q.Add("uris", strings.Join(uris, ","))
-	q.Add("position", "0")
-	req.URL.RawQuery = q.Encode()
-	client := new(http.Client)
-	resp, err := client.Do(req)
+	_, err := client.AddTracksToPlaylist(ctx, spotify.ID(playlistId), ids...)
 	if err != nil {
 		return err
 	}
-
-	if resp.StatusCode != 201{
-		return err
-	}
-	defer resp.Body.Close()
 
 	return nil
 }
