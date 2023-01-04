@@ -37,21 +37,21 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	}
 	userId = v.(string)
 
-	user, err := database.GetUser(userId)
+	playlist, err := spotify.CreatePlaylist(user, specify_ms)
 	if err != nil {
 		return "", err
 	}
 
-	playlist, err := spotify.CreatePlaylist(user.Id, specify_ms, user.AccessToken)
+	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
 	if err != nil {
+		database.DeletePlaylists(string(playlist.ID), user.Id)
 		return "", err
 	}
 
-	err = spotify.AddItemsPlaylist(playlist.ID, tracks, user)
+	err = database.SavePlaylist(playlist, userId)
 	if err != nil {
-		database.DeletePlaylists(playlist.ID, user.Id)
 		return "", err
 	}
-	database.SavePlaylist(playlist, userId)
-	return playlist.ID, nil
+	
+	return string(playlist.ID), nil
 }
