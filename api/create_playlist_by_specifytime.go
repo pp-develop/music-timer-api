@@ -37,6 +37,11 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	}
 	userId = v.(string)
 
+	user, err := database.GetUser(userId)
+	if err != nil {
+		return "", err
+	}
+
 	playlist, err := spotify.CreatePlaylist(user, specify_ms)
 	if err != nil {
 		return "", err
@@ -52,6 +57,6 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
+
 	return string(playlist.ID), nil
 }

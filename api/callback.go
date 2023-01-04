@@ -20,19 +20,19 @@ func Callback(c *gin.Context) error {
 		return err
 	}
 
-	user, err := spotify.GetMe(token.AccessToken)
+	user, err := spotify.GetMe(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.SaveAccessToken(token, user.Id)
+	err = database.SaveAccessToken(token, user.ID)
 	if err != nil {
 		return err
 	}
 
 	// sessionにuseridを格納
 	session := sessions.Default(c)
-	session.Set("userId", user.Id)
+	session.Set("userId", user.ID)
 	session.Save()
 
 	return nil
