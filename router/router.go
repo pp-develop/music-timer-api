@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -15,6 +17,30 @@ import (
 
 func Create() *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		// TODO envを参照
+		AllowOrigins: []string{
+			"http://localhost:19006",
+		},
+		AllowMethods: []string{
+			"POST",
+			"GET",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Access-Control-Allow-Credentials",
+			"Access-Control-Allow-Headers",
+			"Access-Control-Allow-Origin",
+			"Content-Type",
+			"Content-Length",
+			"Accept-Encoding",
+			"Authorization",
+		},
+		AllowCredentials: true,
+		MaxAge: 24 * time.Hour,
+	}))
 
 	// sessionの発行
 	store := cookie.NewStore([]byte("secret")) // TODO envを参照する
