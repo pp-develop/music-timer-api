@@ -30,12 +30,11 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 
 	// sessionからuserIdを取得
 	session := sessions.Default(c)
-	var userId string
 	v := session.Get("userId")
 	if v == nil {
 		return "", errors.New("session: Failed to get userid")
 	}
-	userId = v.(string)
+	userId := v.(string)
 
 	user, err := database.GetUser(userId)
 	if err != nil {

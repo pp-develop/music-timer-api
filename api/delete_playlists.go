@@ -11,12 +11,11 @@ import (
 
 func DeletePlaylists(c *gin.Context) error {
 	session := sessions.Default(c)
-	var userId string
 	v := session.Get("userId")
 	if v == nil {
 		return errors.New("session: Failed to get userid")
 	}
-	userId = v.(string)
+	userId := v.(string)
 
 	playlists, err := database.GetAllPlaylists(userId)
 	if err != nil {
