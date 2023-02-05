@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 func Create() *gin.Engine {
@@ -39,29 +40,33 @@ func Create() *gin.Engine {
 			"Authorization",
 		},
 		AllowCredentials: true,
-		MaxAge: 24 * time.Hour,
+		MaxAge:           24 * time.Hour,
 	}))
 
-	// sessionの発行
 	store := cookie.NewStore([]byte("secret")) // TODO envを参照する
 	router.Use(sessions.Sessions("mysession", store))
 
 	router.GET("/auth", getAuth)
 	router.GET("/authz-url", getAuthzUrl)
+	router.DELETE("/session", deleteSession)
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
-	router.POST("playlist", createPlaylist)
-	router.DELETE("playlist", deletePlaylists)
+	router.POST("/playlist", createPlaylist)
+	router.DELETE("/playlist", deletePlaylists)
 	return router
 }
 
 func getAuth(c *gin.Context) {
 	err := api.Auth(c)
+
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else if err == model.ErrFailedGetSession {
+		log.Println(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
 	} else {
-		c.IndentedJSON(http.StatusCreated, "")
+		c.IndentedJSON(http.StatusOK, "")
 	}
 }
 
@@ -75,10 +80,18 @@ func getAuthzUrl(c *gin.Context) {
 	}
 }
 
+func deleteSession(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete("userId")
+	session.Save()
+	c.JSON(http.StatusOK, "")
+}
+
 func callback(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
+		c.IndentedJSON(http.StatusInternalServerError, "")
 	}
 
 	err = api.Callback(c)
@@ -95,6 +108,9 @@ func createPlaylist(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else if err == model.ErrFailedGetSession {
+		log.Println(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
@@ -119,6 +135,9 @@ func deletePlaylists(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else if err == model.ErrFailedGetSession {
+		log.Println(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
 	}

@@ -1,12 +1,11 @@
 package api
 
 import (
-	"errors"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 type RequestJson struct {
@@ -32,7 +31,7 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	session := sessions.Default(c)
 	v := session.Get("userId")
 	if v == nil {
-		return "", errors.New("session: Failed to get userid")
+		return "", model.ErrFailedGetSession
 	}
 	userId := v.(string)
 
