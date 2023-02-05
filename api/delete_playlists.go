@@ -19,6 +19,8 @@ func DeletePlaylists(c *gin.Context) error {
 	playlists, err := database.GetAllPlaylists(userId)
 	if err != nil {
 		return err
+	} else if(len(playlists) == 0){
+		return model.ErrNotFoundPlaylist
 	}
 
 	user, err := database.GetUser(userId)

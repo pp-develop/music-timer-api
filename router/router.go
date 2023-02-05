@@ -135,6 +135,8 @@ func deletePlaylists(c *gin.Context) {
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")
+	} else if err == model.ErrNotFoundPlaylist {
+		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
