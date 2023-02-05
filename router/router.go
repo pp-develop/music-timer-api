@@ -46,12 +46,23 @@ func Create() *gin.Engine {
 	store := cookie.NewStore([]byte("secret")) // TODO envを参照する
 	router.Use(sessions.Sessions("mysession", store))
 
+	router.GET("/auth", getAuth)
 	router.GET("/authz-url", getAuthzUrl)
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
 	router.POST("playlist", createPlaylist)
 	router.DELETE("playlist", deletePlaylists)
 	return router
+}
+
+func getAuth(c *gin.Context) {
+	err := api.Auth(c)
+	if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, "")
+	}
 }
 
 func getAuthzUrl(c *gin.Context) {

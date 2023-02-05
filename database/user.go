@@ -13,6 +13,14 @@ func SaveAccessToken(token *oauth2.Token, id string) error {
 	return nil
 }
 
+func UpdateAccessToken(token *oauth2.Token, id string) error{
+	_, err := db.Exec("UPDATE users set access_token = ?, updated_at=NOW() WHERE id = ?", token.AccessToken, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func GetUser(id string) (model.User, error) {
 	var user model.User
 
