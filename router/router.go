@@ -59,12 +59,12 @@ func Create() *gin.Engine {
 func getAuth(c *gin.Context) {
 	err := api.Auth(c)
 
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else if err == model.ErrFailedGetSession {
+	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")
+	} else if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
 	}
@@ -105,12 +105,12 @@ func callback(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else if err == model.ErrFailedGetSession {
+	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")
+	} else if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
@@ -132,12 +132,12 @@ func getTracks(c *gin.Context) {
 
 func deletePlaylists(c *gin.Context) {
 	err := api.DeletePlaylists(c)
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else if err == model.ErrFailedGetSession {
+	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")
+	} else if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
 	}
