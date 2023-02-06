@@ -1,9 +1,16 @@
 create table tracks(
     `uri` VARCHAR(255) primary key,
+    `artists_name` text,
     `duration_ms` int,
     `isrc` VARCHAR(255),
     `created_at` datetime,
     `updated_at` datetime
+);
+
+create table artists(
+    `user_id` VARCHAR(255),
+    `name` text,
+    FOREIGN KEY fk_user_id(user_id) REFERENCES users(id)
 );
 
 create table playlists(

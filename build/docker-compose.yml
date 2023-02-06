@@ -17,6 +17,7 @@ services:
     container_name: go_mysql
     volumes:
       - ./mysql:/var/lib/mysql
+      - ./charset.cnf:/etc/mysql/conf.d/charset.cnf
       - ./initdb.d:/docker-entrypoint-initdb.d
     ports:
       - 3306:3306
