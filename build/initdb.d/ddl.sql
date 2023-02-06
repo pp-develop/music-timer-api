@@ -10,7 +10,8 @@ create table tracks(
 create table artists(
     `user_id` VARCHAR(255),
     `name` text,
-    FOREIGN KEY fk_user_id(user_id) REFERENCES users(id)
+    FOREIGN KEY fk_user_id(user_id) REFERENCES users(id),
+    UNIQUE `user_id_name_index` (user_id, `name`(255))
 );
 
 create table playlists(
