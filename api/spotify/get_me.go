@@ -11,12 +11,7 @@ func GetMe(token *oauth2.Token) (*spotify.PrivateUser, error) {
 	var currentUser *spotify.PrivateUser
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
-		&oauth2.Token{
-			AccessToken:  token.AccessToken,
-			RefreshToken: token.RefreshToken,
-		},
-	))
+	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
 	client := spotify.New(httpClient)
 
 	currentUser, err := client.CurrentUser(ctx)
