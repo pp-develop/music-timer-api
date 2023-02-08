@@ -33,17 +33,17 @@ func main() {
 }
 
 func Invoke() error {
-	searchResult, err := spotify.SearchTracks()
+	items, err := spotify.SearchTracks()
 	if err != nil {
 		return err
 	}
 
-	err = SaveTracks(searchResult)
+	err = SaveTracks(items)
 	if err != nil {
 		return err
 	}
 
-	err = NextSearchTracks(searchResult)
+	err = NextSearchTracks(items)
 	if err != nil {
 		return err
 	}
@@ -63,11 +63,12 @@ func SaveTracks(tracks *spotifylibrary.SearchResult) error {
 	return nil
 }
 
-func NextSearchTracks(tracks *spotifylibrary.SearchResult) error {
-	searchSuccess := true
+func NextSearchTracks(items *spotifylibrary.SearchResult) error {
+	existNextUrl := true
+	count := 0
 
-	for searchSuccess {
-		items, err := spotify.NextSearchTracks(tracks)
+	for existNextUrl {
+		err := spotify.NextSearchTracks(items)
 		if err != nil {
 			return err
 		}
@@ -75,6 +76,14 @@ func NextSearchTracks(tracks *spotifylibrary.SearchResult) error {
 		err = SaveTracks(items)
 		if err != nil {
 			return err
+		}
+		// 1000件trackを取得したら、items.Tracks.Nextが空になる想定だが、
+		//　items.Tracks.Nextが空にならないので暫定対応
+		if(count == 1){
+			existNextUrl = false
+		}
+		if(items.Tracks.Offset == 950){
+			count++
 		}
 	}
 

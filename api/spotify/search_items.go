@@ -31,7 +31,7 @@ func SearchTracks() (*spotify.SearchResult, error) {
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
-	options := []spotify.RequestOption{spotify.Market("JP")}
+	options := []spotify.RequestOption{spotify.Market("JP"),spotify.Limit(50)}
 	results, err := client.Search(ctx, getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
@@ -60,10 +60,10 @@ func getRandomQuery() string {
 	return random_query
 }
 
-func NextSearchTracks(items *spotify.SearchResult) (*spotify.SearchResult, error) {
+func NextSearchTracks(items *spotify.SearchResult) error {
 	err := godotenv.Load()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ctx := context.Background()
@@ -74,15 +74,15 @@ func NextSearchTracks(items *spotify.SearchResult) (*spotify.SearchResult, error
 	}
 	token, err := config.Token(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
 	err = client.NextTrackResults(ctx, items)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return items, nil
+	return nil
 }
