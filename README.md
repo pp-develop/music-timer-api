@@ -2,7 +2,7 @@
 [ English | [日本語]() ]
 
 ## Overview
-WEB API for [Specify](https://github.com/pp-develop/make-playlist-by-specify-time)  
+WEB API for [Specify](https://github.com/pp-develop/make-playlist-by-specify-time).  
 create spotify playlist by specifying time  
 
 ## Setup
