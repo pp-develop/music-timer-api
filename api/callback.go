@@ -24,8 +24,13 @@ func Callback(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-
 	err = database.SaveAccessToken(token, user.ID)
+	if err != nil {
+		return err
+	}
+
+	// userのお気に入りのtrackを取得
+	err = SaveUserFavoriteArtists(token, user.ID)
 	if err != nil {
 		return err
 	}

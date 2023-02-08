@@ -19,7 +19,7 @@ func Authz(c *gin.Context) (string, error) {
 
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI")),
-		spotifyauth.WithScopes(spotifyauth.ScopePlaylistModifyPublic, spotifyauth.ScopePlaylistModifyPrivate),
+		spotifyauth.WithScopes(spotifyauth.ScopePlaylistModifyPublic, spotifyauth.ScopePlaylistModifyPrivate, spotifyauth.ScopeUserLibraryRead),
 		spotifyauth.WithClientID(os.Getenv("SPOTIFY_ID")),
 		spotifyauth.WithClientSecret(os.Getenv("SPOTIFY_SECRET")),
 	)
