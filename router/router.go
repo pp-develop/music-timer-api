@@ -52,6 +52,7 @@ func Create() *gin.Engine {
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
 	router.POST("/playlist", createPlaylist)
+	router.POST("/playlist", createPlaylistWithFavoriteArtists)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
 }
@@ -105,6 +106,19 @@ func callback(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
+	if err == model.ErrFailedGetSession {
+		log.Println(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
+	} else if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, playlistId)
+	}
+}
+
+func createPlaylistWithFavoriteArtists(c *gin.Context) {
+	playlistId, err := api.CreatePlaylistWithFavoriteArtistsBySpecifyTime(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")

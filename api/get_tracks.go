@@ -33,11 +33,10 @@ func getTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []mo
 	diff_ms = specify_ms - sum_ms
 
 	// 誤差が15秒以内は許容
-	// allowance_ms := 0
-	// if diff_ms == allowance_ms {
-	// 	return true, tracks
-	// }
-	// println(diff_ms)
+	allowance_ms := 15000
+	if diff_ms == allowance_ms {
+		return true, tracks
+	}
 
 	// 差分を埋めるtrackを取得
 	var isGetTrack bool
