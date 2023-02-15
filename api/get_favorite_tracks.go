@@ -47,7 +47,6 @@ func getFavoriteTracksBySpecifyTime(allTracks []model.Track, specify_ms int, use
 		artistName += "artists_name like " + "'%" + v.Name + "%' OR "
 	}
 	artistName = artistName[0 : len(artistName)-3]
-	log.Println(artistName)
 
 	favoriteTracks, err := database.GetFavoriteAllTracks(artistName)
 	if err != nil {
