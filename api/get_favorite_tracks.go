@@ -3,22 +3,23 @@ package api
 import (
 	"errors"
 	"log"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 func GetFavoriteTracks(specify_ms int, userId string) ([]model.Track, error) {
+	// todo:refactor 戻り値
 	var tracks []model.Track
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
 		successGetTracks := false
 		for !successGetTracks {
-			allTracks, _ := database.GetAllTracks()
-			successGetTracks, tracks = getFavoriteTracksBySpecifyTime(allTracks, specify_ms, userId)
+			allTracks, _ := getAllTracksByFavoriteArtists(userId)
+			successGetTracks, tracks = getFavoriteTracksBySpecifyTime(allTracks, specify_ms)
 		}
 		c1 <- tracks
 	}()
@@ -31,18 +32,17 @@ func GetFavoriteTracks(specify_ms int, userId string) ([]model.Track, error) {
 	}
 }
 
-func getFavoriteTracksBySpecifyTime(allTracks []model.Track, specify_ms int, userId string) (bool, []model.Track) {
+func getAllTracksByFavoriteArtists(userId string) ([]model.Track, error) {
 	var tracks []model.Track
-	var sum_ms int
 
-	favoriteArtists, err:= database.GetFavoriteAllArtists(userId)
+	favoriteArtists, err := database.GetFavoriteAllArtists(userId)
 	if err != nil {
 		log.Println(err)
-		return false, tracks
+		return tracks, err
 	}
 
 	var artistName string
-	for _ ,v := range favoriteArtists {
+	for _, v := range favoriteArtists {
 		v.Name = strings.Replace(v.Name, "'", "", -1)
 		artistName += "artists_name like " + "'%" + v.Name + "%' OR "
 	}
@@ -51,11 +51,17 @@ func getFavoriteTracksBySpecifyTime(allTracks []model.Track, specify_ms int, use
 	favoriteTracks, err := database.GetFavoriteAllTracks(artistName)
 	if err != nil {
 		log.Println(err)
-		return false, tracks
+		return tracks, err
 	}
+	return favoriteTracks, nil
+}
+
+func getFavoriteTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []model.Track) {
+	var tracks []model.Track
+	var sum_ms int
 
 	// tracksの合計分数が指定された分数を超過したらループを停止
-	for _, v := range favoriteTracks {
+	for _, v := range allTracks {
 		tracks = append(tracks, v)
 		sum_ms += v.DurationMs
 		if sum_ms > specify_ms {
