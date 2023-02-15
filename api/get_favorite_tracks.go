@@ -48,7 +48,7 @@ func getAllTracksByFavoriteArtists(userId string) ([]model.Track, error) {
 	}
 	artistName = artistName[0 : len(artistName)-3]
 
-	favoriteTracks, err := database.GetFavoriteAllTracks(artistName)
+	favoriteTracks, err := database.GetAllTracksByArtistsName(artistName)
 	if err != nil {
 		log.Println(err)
 		return tracks, err
