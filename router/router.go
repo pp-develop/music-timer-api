@@ -52,7 +52,7 @@ func Create() *gin.Engine {
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
 	router.POST("/playlist", createPlaylist)
-	router.POST("/playlist", createPlaylistWithFavoriteArtists)
+	router.POST("/playlist-with-favorite-artists", createPlaylistWithFavoriteArtists)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
 }
@@ -62,7 +62,7 @@ func getAuth(c *gin.Context) {
 
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -92,7 +92,7 @@ func callback(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Redirect(http.StatusInternalServerError, os.Getenv("APP_URL"))
 	}
 
 	err = api.Callback(c)
@@ -108,7 +108,7 @@ func createPlaylist(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -121,7 +121,7 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistWithFavoriteArtistsBySpecifyTime(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -148,8 +148,9 @@ func deletePlaylists(c *gin.Context) {
 	err := api.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
+		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
 		log.Println(err)
