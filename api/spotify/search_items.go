@@ -2,13 +2,13 @@ package spotify
 
 import (
 	"context"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"math/rand"
 	"os"
 	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify/v2"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2/clientcredentials"
 )
 
@@ -31,7 +31,7 @@ func SearchTracks() (*spotify.SearchResult, error) {
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
-	options := []spotify.RequestOption{spotify.Market("JP"),spotify.Limit(50)}
+	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
 	results, err := client.Search(ctx, getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
