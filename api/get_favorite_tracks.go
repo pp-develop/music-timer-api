@@ -10,7 +10,6 @@ import (
 )
 
 func GetFavoriteTracks(specify_ms int, userId string) ([]model.Track, error) {
-	// todo:refactor 戻り値
 	var tracks []model.Track
 
 	c1 := make(chan []model.Track, 1)

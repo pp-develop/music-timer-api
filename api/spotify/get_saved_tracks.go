@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetUserSavesTrakcs(token *oauth2.Token) (*spotify.SavedTrackPage, error) {
+func GetSavedTracks(token *oauth2.Token) (*spotify.SavedTrackPage, error) {
 	var tracks *spotify.SavedTrackPage
 
 	ctx := context.Background()
@@ -22,7 +22,7 @@ func GetUserSavesTrakcs(token *oauth2.Token) (*spotify.SavedTrackPage, error) {
 	return tracks, nil
 }
 
-func GetNextUserSavesTrakcs(token *oauth2.Token, track *spotify.SavedTrackPage) error {
+func GetNextSavedTrakcs(token *oauth2.Token, track *spotify.SavedTrackPage) error {
 
 	ctx := context.Background()
 	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))

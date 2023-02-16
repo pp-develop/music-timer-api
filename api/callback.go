@@ -30,7 +30,7 @@ func Callback(c *gin.Context) error {
 	}
 
 	// userのお気に入りのtrackを取得
-	err = SaveUserFavoriteArtists(token, user.ID)
+	err = SaveFavoriteArtists(token, user.ID)
 	if err != nil {
 		return err
 	}
