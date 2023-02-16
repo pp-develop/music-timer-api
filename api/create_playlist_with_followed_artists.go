@@ -8,7 +8,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func CreatePlaylistWithFavoriteArtistsBySpecifyTime(c *gin.Context) (string, error) {
+func CreatePlaylistWithFollowedArtists(c *gin.Context) (string, error) {
 	var json RequestJson
 	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
@@ -25,8 +25,8 @@ func CreatePlaylistWithFavoriteArtistsBySpecifyTime(c *gin.Context) (string, err
 	}
 	userId := v.(string)
 
-	// DBからトラックリストを取得
-	tracks, err := GetFavoriteTracks(specifyMsec, userId)
+	// DBからトラックを取得
+	tracks, err := GetFollowedArtistsTracksBySpecifyTime(specifyMsec, userId)
 	if err != nil {
 		return "", err
 	}

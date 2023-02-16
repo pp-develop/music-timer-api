@@ -41,7 +41,7 @@ func GetAllTracks() ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetAllTracksByArtistsName(artistsName string) ([]model.Track, error) {
+func GetTracksByArtistsName(artistsName string) ([]model.Track, error) {
 	var tracks []model.Track
 	rows, err := db.Query("SELECT uri, duration_ms FROM tracks WHERE isrc LIKE 'JP%' AND " + artistsName + "ORDER BY rand()")
 	if err != nil {

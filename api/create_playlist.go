@@ -12,7 +12,7 @@ type RequestJson struct {
 	Minute int `json:"minute"`
 }
 
-func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
+func CreatePlaylist(c *gin.Context) (string, error) {
 	var json RequestJson
 	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
@@ -21,8 +21,8 @@ func CreatePlaylistBySpecifyTime(c *gin.Context) (string, error) {
 	oneminuteToMsec := 60000
 	specify_ms := json.Minute * oneminuteToMsec
 
-	// DBからトラックリストを取得
-	tracks, err := GetTracks(specify_ms)
+	// DBからトラックを取得
+	tracks, err := GetTracksBySpecifyTime(specify_ms)
 	if err != nil {
 		return "", err
 	}

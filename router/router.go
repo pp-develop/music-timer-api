@@ -105,7 +105,7 @@ func callback(c *gin.Context) {
 }
 
 func createPlaylist(c *gin.Context) {
-	playlistId, err := api.CreatePlaylistBySpecifyTime(c)
+	playlistId, err := api.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
@@ -121,7 +121,7 @@ func createPlaylist(c *gin.Context) {
 }
 
 func createPlaylistWithFavoriteArtists(c *gin.Context) {
-	playlistId, err := api.CreatePlaylistWithFavoriteArtistsBySpecifyTime(c)
+	playlistId, err := api.CreatePlaylistWithFollowedArtists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
@@ -141,7 +141,7 @@ func getTracks(c *gin.Context) {
 	oneminuteToMsec := 60000
 
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	tracks, err := api.GetTracks(minute * oneminuteToMsec)
+	tracks, err := api.GetTracksBySpecifyTime(minute * oneminuteToMsec)
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")

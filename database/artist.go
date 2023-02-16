@@ -12,7 +12,7 @@ func SaveArtists(artistName string, userId string) error {
 	return nil
 }
 
-func GetFavoriteAllArtists(userId string) ([]model.Artists, error) {
+func GetFollowedArtists(userId string) ([]model.Artists, error) {
 	var artists []model.Artists
 	rows, err := db.Query("SELECT name FROM artists WHERE user_id = ?", userId)
 	if err != nil {

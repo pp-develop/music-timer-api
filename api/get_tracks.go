@@ -7,7 +7,28 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func getTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []model.Track) {
+func GetTracksBySpecifyTime(specify_ms int) ([]model.Track, error) {
+	var tracks []model.Track
+
+	c1 := make(chan []model.Track, 1)
+	go func() {
+		success := false
+		for !success {
+			tracks, _ = database.GetAllTracks()
+			success, tracks = MakeTracksBySpecifyTime(tracks, specify_ms)
+		}
+		c1 <- tracks
+	}()
+
+	select {
+	case <-c1:
+		return tracks, nil
+	case <-time.After(30 * time.Second):
+		return nil, model.ErrTimeoutCreatePlaylist
+	}
+}
+
+func MakeTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []model.Track) {
 	var tracks []model.Track
 	var sum_ms int
 
@@ -47,23 +68,3 @@ func getTracksBySpecifyTime(allTracks []model.Track, specify_ms int) (bool, []mo
 	return isGetTrack, tracks
 }
 
-func GetTracks(specify_ms int) ([]model.Track, error) {
-	var tracks []model.Track
-
-	c1 := make(chan []model.Track, 1)
-	go func() {
-		successGetTracks := false
-		for !successGetTracks {
-			allTracks, _ := database.GetAllTracks()
-			successGetTracks, tracks = getTracksBySpecifyTime(allTracks, specify_ms)
-		}
-		c1 <- tracks
-	}()
-
-	select {
-	case <-c1:
-		return tracks, nil
-	case <-time.After(30 * time.Second):
-		return tracks, model.ErrTimeoutCreatePlaylist
-	}
-}
