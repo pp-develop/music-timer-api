@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"log"
 	"strings"
 	"time"
@@ -27,7 +26,7 @@ func GetFavoriteTracks(specify_ms int, userId string) ([]model.Track, error) {
 	case <-c1:
 		return tracks, nil
 	case <-time.After(30 * time.Second):
-		return tracks, errors.New("get tracks: time out")
+		return tracks, model.ErrTimeoutCreatePlaylist
 	}
 }
 

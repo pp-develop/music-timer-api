@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
@@ -65,6 +64,6 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 	case <-c1:
 		return tracks, nil
 	case <-time.After(30 * time.Second):
-		return tracks, errors.New("get tracks: time out")
+		return tracks, model.ErrTimeoutCreatePlaylist
 	}
 }

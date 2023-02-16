@@ -109,6 +109,9 @@ func createPlaylist(c *gin.Context) {
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+	} else if err == model.ErrTimeoutCreatePlaylist {
+		log.Println(err)
+		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -122,6 +125,9 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+	} else if err == model.ErrTimeoutCreatePlaylist {
+		log.Println(err)
+		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
