@@ -7,18 +7,18 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func SaveFavoriteArtists(token *oauth2.Token, userId string) error {
+func GetSavedTracksArtists(token *oauth2.Token, userId string) error {
 
 	tracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.DeleteUserFavoriteArtists(userId)
+	err = database.DeleteArtists(userId)
 	if err != nil {
 		return err
 	}
-	err = SaveFavoriteArtist(tracks.Tracks, userId)
+	err = SaveArtist(tracks.Tracks, userId)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func NextPage(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string
 			return err
 		}
 
-		err = SaveFavoriteArtist(tracks.Tracks, userId)
+		err = SaveArtist(tracks.Tracks, userId)
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,7 @@ func NextPage(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string
 	return nil
 }
 
-func SaveFavoriteArtist(track []spotify.SavedTrack, userId string) error {
+func SaveArtist(track []spotify.SavedTrack, userId string) error {
 	var artistName []string
 	for _, v := range track {
 		for _, a := range v.Artists {
@@ -61,7 +61,7 @@ func SaveFavoriteArtist(track []spotify.SavedTrack, userId string) error {
 	}
 
 	for _, v := range artistName {
-		err := database.SaveFavoriteArtists(v, userId)
+		err := database.SaveArtists(v, userId)
 		if err != nil {
 			return err
 		}

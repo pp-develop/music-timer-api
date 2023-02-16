@@ -4,7 +4,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func SaveFavoriteArtists(artistName string, userId string) error {
+func SaveArtists(artistName string, userId string) error {
 	_, err := db.Exec("INSERT IGNORE INTO artists (user_id, name) VALUES (?, ?)", userId, artistName)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func GetFavoriteAllArtists(userId string) ([]model.Artists, error) {
 	return artists, nil
 }
 
-func DeleteUserFavoriteArtists(userId string) error {
+func DeleteArtists(userId string) error {
 	_, err := db.Exec("DELETE FROM artists WHERE user_id=?", userId)
 	if err != nil {
 		return err

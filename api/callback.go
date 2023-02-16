@@ -29,8 +29,8 @@ func Callback(c *gin.Context) error {
 		return err
 	}
 
-	// userのお気に入りのtrackを取得
-	err = SaveFavoriteArtists(token, user.ID)
+	// フォローしてるartistsを保存
+	err = GetFollowedArtists(token, user.ID)
 	if err != nil {
 		return err
 	}
