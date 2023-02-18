@@ -1,10 +1,9 @@
 package api
 
 import (
-	"fmt"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"os"
 
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -36,6 +35,5 @@ func Authz(c *gin.Context) (string, error) {
 	session.Set("state", state.String())
 	session.Save()
 
-	fmt.Println(url)
 	return url, nil
 }
