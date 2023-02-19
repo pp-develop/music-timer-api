@@ -53,6 +53,7 @@ func Create() *gin.Engine {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
+		Domain: os.Getenv("DOMAIN"),
 	})
 	router.Use(sessions.Sessions("mysession", store))
 
