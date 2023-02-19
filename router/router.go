@@ -49,6 +49,11 @@ func Create() *gin.Engine {
 	}))
 
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
+	store.Options(sessions.Options{
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 	router.Use(sessions.Sessions("mysession", store))
 
 	router.GET("/auth", getAuth)
