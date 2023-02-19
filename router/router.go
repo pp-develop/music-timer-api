@@ -73,7 +73,7 @@ func getAuth(c *gin.Context) {
 
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -103,13 +103,13 @@ func callback(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
-		c.Redirect(http.StatusInternalServerError, "/")
+		c.Redirect(http.StatusSeeOther, "/")
 	}
 
 	err = api.Callback(c)
 	if err != nil {
 		log.Println(err)
-		c.Redirect(http.StatusInternalServerError, os.Getenv("AUTHZ_ERROR_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
 	} else {
 		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
 	}
@@ -119,7 +119,7 @@ func createPlaylist(c *gin.Context) {
 	playlistId, err := api.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
@@ -135,7 +135,7 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistWithFollowedArtists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
@@ -175,7 +175,7 @@ func deletePlaylists(c *gin.Context) {
 	err := api.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
