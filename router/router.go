@@ -68,7 +68,7 @@ func getAuth(c *gin.Context) {
 
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -114,7 +114,7 @@ func createPlaylist(c *gin.Context) {
 	playlistId, err := api.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
@@ -130,7 +130,7 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 	playlistId, err := api.CreatePlaylistWithFollowedArtists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
@@ -170,7 +170,7 @@ func deletePlaylists(c *gin.Context) {
 	err := api.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
-		c.Redirect(http.StatusUnauthorized, os.Getenv("APP_URL"))
+		c.Redirect(http.StatusUnauthorized, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
 		log.Println(err)
 		c.IndentedJSON(http.StatusNotFound, "")
