@@ -38,7 +38,8 @@ func Callback(c *gin.Context) error {
 	// sessionにuseridを格納
 	session := sessions.Default(c)
 	session.Set("userId", user.ID)
-	session.Save()
+	err = session.Save()
+	log.Println(err)
 
 	return nil
 }
