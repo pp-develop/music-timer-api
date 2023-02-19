@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetSavedTracksArtists(token *oauth2.Token, userId string) error {
+func SaveArtistsOfFavoriteTracks(token *oauth2.Token, userId string) error {
 
 	tracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {

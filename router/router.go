@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"time"
 
@@ -143,7 +142,7 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 }
 
 func saveTracks(c *gin.Context) {
-	_, err := exec.Command("save_track").Output()
+	err := api.SearchTracks()
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")

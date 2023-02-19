@@ -30,7 +30,7 @@ func Callback(c *gin.Context) error {
 	}
 
 	// フォローしてるartistsを保存
-	err = GetFollowedArtists(token, user.ID)
+	err = SaveFollowedArtists(token, user.ID)
 	if err != nil {
 		return err
 	}

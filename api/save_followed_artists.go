@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetFollowedArtists(token *oauth2.Token, userId string) error {
+func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 
 	artists, err := spotifyApi.GetFollowedArtists(token)
 	if err != nil {
