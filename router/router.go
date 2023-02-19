@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -43,7 +44,7 @@ func Create() *gin.Engine {
 		MaxAge:           24 * time.Hour,
 	}))
 
-	store := cookie.NewStore([]byte("secret")) // TODO envを参照する
+	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	router.Use(sessions.Sessions("mysession", store))
 
 	router.GET("/auth", getAuth)
@@ -51,6 +52,7 @@ func Create() *gin.Engine {
 	router.DELETE("/session", deleteSession)
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
+	router.POST("/tracks", saveTracks)
 	router.POST("/playlist", createPlaylist)
 	router.POST("/playlist-with-favorite-artists", createPlaylistWithFavoriteArtists)
 	router.DELETE("/playlist", deletePlaylists)
@@ -133,6 +135,16 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
+	}
+}
+
+func saveTracks(c *gin.Context) {
+	_, err := exec.Command("save_track").Output()
+	if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusOK, "")
 	}
 }
 
