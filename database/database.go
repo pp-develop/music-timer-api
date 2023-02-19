@@ -24,8 +24,9 @@ func MysqlConect() *sql.DB {
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	database_name := os.Getenv("DB_NAME")
+	tls := os.Getenv("DB_TLS")
 
-	dbconf := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database_name + "?charset=utf8mb4"
+	dbconf := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database_name + "?charset=utf8mb4&tls=" + tls
 	db, err := sql.Open("mysql", dbconf)
 	if err != nil {
 		log.Fatal(err)
