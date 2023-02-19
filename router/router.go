@@ -44,6 +44,10 @@ func Create() *gin.Engine {
 		MaxAge:           24 * time.Hour,
 	}))
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalln("Error loading .env file")
+	}
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	router.Use(sessions.Sessions("mysession", store))
 
@@ -94,7 +98,7 @@ func callback(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
-		c.Redirect(http.StatusInternalServerError, os.Getenv("APP_URL"))
+		c.Redirect(http.StatusInternalServerError, "/")
 	}
 
 	err = api.Callback(c)
