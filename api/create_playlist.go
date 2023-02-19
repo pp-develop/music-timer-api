@@ -56,10 +56,10 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	oembed, err := spotify.GetOembed(string(playlist.ID))
-	if err != nil {
-		return "", err
-	}
+	// oembed, err := spotify.GetOembed(string(playlist.ID))
+	// if err != nil {
+	// 	return "", err
+	// }
 	
-	return oembed.Html, nil
+	return string(playlist.ID), nil
 }

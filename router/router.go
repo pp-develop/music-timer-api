@@ -117,7 +117,7 @@ func callback(c *gin.Context) {
 }
 
 func createPlaylist(c *gin.Context) {
-	oembed, err := api.CreatePlaylist(c)
+	playlistId, err := api.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
@@ -128,7 +128,7 @@ func createPlaylist(c *gin.Context) {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
-		c.IndentedJSON(http.StatusCreated, oembed)
+		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 }
 
