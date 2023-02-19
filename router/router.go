@@ -17,12 +17,15 @@ import (
 )
 
 func Create() *gin.Engine {
-	router := gin.Default()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalln("Error loading .env file")
+	}
 
+	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		// TODO envを参照
 		AllowOrigins: []string{
-			"http://localhost:19006",
+			os.Getenv("APP_URL"),
 		},
 		AllowMethods: []string{
 			"POST",
@@ -43,10 +46,6 @@ func Create() *gin.Engine {
 		MaxAge:           24 * time.Hour,
 	}))
 
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalln("Error loading .env file")
-	}
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	router.Use(sessions.Sessions("mysession", store))
 
