@@ -25,7 +25,8 @@ func Create() *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			os.Getenv("APP_URL"),
+			os.Getenv("BASE_URL"),
+			os.Getenv("API_URL"),
 		},
 		AllowMethods: []string{
 			"POST",
