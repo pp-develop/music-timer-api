@@ -40,26 +40,6 @@ func SearchTracks() (*spotify.SearchResult, error) {
 	return results, nil
 }
 
-func getRandomQuery() string {
-	rand.Seed(time.Now().UnixNano())
-
-	str := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	num := "01"
-
-	// Getting random character
-	shuffled_str := str[rand.Intn(len(str))]
-	shuffled_num := num[rand.Intn(len(num))]
-
-	random_query := ""
-	switch string(shuffled_num) {
-	case "0":
-		random_query = string(shuffled_str) + "%"
-	case "1":
-		random_query = "%" + string(shuffled_str) + "%"
-	}
-	return random_query
-}
-
 func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
@@ -113,4 +93,53 @@ func NextSearchTracks(items *spotify.SearchResult) error {
 	}
 
 	return nil
+}
+
+var (
+	japaneseChars = []rune("あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん")
+	chars         = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+)
+
+// n文字のランダムな日本語の文字列を生成する
+func randomJapaneseString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = japaneseChars[rand.Intn(len(japaneseChars))]
+	}
+	return string(b)
+}
+
+// n文字のランダムな文字列を生成する
+func randomString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
+}
+
+// 1か2の数字をランダムに作成する関数
+func randomOneOrTwo() int {
+	return rand.Intn(2) + 1
+}
+
+func getRandomQuery() string {
+	rand.Seed(time.Now().UnixNano())
+
+	// Getting random character
+	num := "0123"
+	shuffled_num := num[rand.Intn(len(num))]
+
+	random_query := ""
+	switch string(shuffled_num) {
+	case "0":
+		random_query = randomString(randomOneOrTwo()) + "%"
+	case "1":
+		random_query = "%" + randomString(randomOneOrTwo()) + "%"
+	case "2":
+		random_query = randomJapaneseString(randomOneOrTwo()) + "%"
+	case "3":
+		random_query = "%" + randomJapaneseString(randomOneOrTwo()) + "%"
+	}
+	return random_query
 }
