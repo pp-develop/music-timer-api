@@ -1,20 +1,28 @@
 package auth
 
 import (
-	"log"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
 )
 
 func SpotifyCallback(c *gin.Context) error {
 	code := c.Query("code")
-	state := c.Query("state")
-	// TODO stateの検証
-	log.Println(state)
+	qState := c.Query("state")
+
+	session := sessions.Default(c)
+	v := session.Get("state")
+	if v == nil {
+		return model.ErrFailedGetSession
+	}
+	state := v.(string)
+
+	if state != qState {
+		return model.ErrInvalidState
+	}
 
 	token, err := spotify.GetApiTokenForAuthzCode(code)
 	if err != nil {
@@ -41,7 +49,7 @@ func SpotifyCallback(c *gin.Context) error {
 	// }
 
 	// sessionにuseridを格納
-	session := sessions.Default(c)
+	session = sessions.Default(c)
 	session.Set("userId", user.ID)
 	session.Save()
 
