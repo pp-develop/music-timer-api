@@ -1,4 +1,4 @@
-package api
+package playlist
 
 import (
 	"github.com/gin-contrib/sessions"

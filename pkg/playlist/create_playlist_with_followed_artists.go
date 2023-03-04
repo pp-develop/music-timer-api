@@ -1,8 +1,9 @@
-package api
+package playlist
 
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -26,7 +27,7 @@ func CreatePlaylistWithFollowedArtists(c *gin.Context) (string, error) {
 	userId := v.(string)
 
 	// DBからトラックを取得
-	tracks, err := GetFollowedArtistsTracksBySpecifyTime(specifyMsec, userId)
+	tracks, err := track.GetFollowedArtistsTracks(specifyMsec, userId)
 	if err != nil {
 		return "", err
 	}

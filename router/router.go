@@ -12,7 +12,9 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
@@ -53,7 +55,7 @@ func Create() *gin.Engine {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
-		Domain: os.Getenv("DOMAIN"),
+		Domain:   os.Getenv("DOMAIN"),
 	})
 	router.Use(sessions.Sessions("mysession", store))
 
@@ -70,7 +72,7 @@ func Create() *gin.Engine {
 }
 
 func getAuth(c *gin.Context) {
-	err := api.Auth(c)
+	err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
@@ -84,7 +86,7 @@ func getAuth(c *gin.Context) {
 }
 
 func getAuthzUrl(c *gin.Context) {
-	url, err := api.Authz(c)
+	url, err := auth.SpotifyAuthz(c)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, "")
@@ -107,7 +109,7 @@ func callback(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/")
 	}
 
-	err = api.Callback(c)
+	err = auth.SpotifyCallback(c)
 	if err != nil {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
@@ -117,7 +119,7 @@ func callback(c *gin.Context) {
 }
 
 func createPlaylist(c *gin.Context) {
-	playlistId, err := api.CreatePlaylist(c)
+	playlistId, err := playlist.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
@@ -133,7 +135,7 @@ func createPlaylist(c *gin.Context) {
 }
 
 func createPlaylistWithFavoriteArtists(c *gin.Context) {
-	playlistId, err := api.CreatePlaylistWithFollowedArtists(c)
+	playlistId, err := playlist.CreatePlaylistWithFollowedArtists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
@@ -149,7 +151,7 @@ func createPlaylistWithFavoriteArtists(c *gin.Context) {
 }
 
 func saveTracks(c *gin.Context) {
-	err := api.SearchTracks()
+	err := track.SearchTracks()
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -163,7 +165,7 @@ func getTracks(c *gin.Context) {
 	oneminuteToMsec := 60000
 
 	minute, _ := strconv.Atoi(c.Query("minute"))
-	tracks, err := api.GetTracksBySpecifyTime(minute * oneminuteToMsec)
+	tracks, err := track.GetTracks(minute * oneminuteToMsec)
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
@@ -173,7 +175,7 @@ func getTracks(c *gin.Context) {
 }
 
 func deletePlaylists(c *gin.Context) {
-	err := api.DeletePlaylists(c)
+	err := playlist.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))

@@ -43,7 +43,13 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/api => ./api
+replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist => ./pkg/artist
+
+replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth => ./pkg/auth
+
+replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist => ./pkg/playlist
+
+replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track => ./pkg/track
 
 replace github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify => ./api/spotify
 

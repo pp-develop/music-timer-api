@@ -1,15 +1,16 @@
-package api
+package auth
 
 import (
 	"log"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
 
-func Callback(c *gin.Context) error {
+func SpotifyCallback(c *gin.Context) error {
 	code := c.Query("code")
 	state := c.Query("state")
 	// TODO stateの検証
@@ -29,16 +30,20 @@ func Callback(c *gin.Context) error {
 		return err
 	}
 
-	// フォローしてるartistsを保存
-	err = SaveFollowedArtists(token, user.ID)
+	// フォローしてるアーティストを保存
+	err = artist.SaveFollowedArtists(token, user.ID)
 	if err != nil {
 		return err
 	}
+	// err = SaveArtistsOfFavoriteTracks(token, user.ID)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// sessionにuseridを格納
 	session := sessions.Default(c)
 	session.Set("userId", user.ID)
 	session.Save()
-	
+
 	return nil
 }
