@@ -1,8 +1,9 @@
-package api
+package playlist
 
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -22,7 +23,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	specify_ms := json.Minute * oneminuteToMsec
 
 	// DBからトラックを取得
-	tracks, err := GetTracksBySpecifyTime(specify_ms)
+	tracks, err := track.GetTracks(specify_ms)
 	if err != nil {
 		return "", err
 	}

@@ -1,4 +1,4 @@
-package api
+package track
 
 import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"

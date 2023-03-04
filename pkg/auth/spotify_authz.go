@@ -1,4 +1,4 @@
-package api
+package auth
 
 import (
 	"os"
@@ -10,7 +10,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func Authz(c *gin.Context) (string, error) {
+func SpotifyAuthz(c *gin.Context) (string, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return "", err

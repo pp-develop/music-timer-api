@@ -1,4 +1,4 @@
-package api
+package track
 
 import (
 	"log"
@@ -9,15 +9,15 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func GetFollowedArtistsTracksBySpecifyTime(specify_ms int, userId string) ([]model.Track, error) {
+func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
 		success := false
 		for !success {
-			tracks, _ = GetFollowedArtistsTracks(userId)
-			success, tracks = MakeTracksBySpecifyTime(tracks, specify_ms)
+			tracks, _ = GetFollowedArtistsAllTracks(userId)
+			success, tracks = MakeTracks(tracks, specify_ms)
 		}
 		c1 <- tracks
 	}()
@@ -30,7 +30,7 @@ func GetFollowedArtistsTracksBySpecifyTime(specify_ms int, userId string) ([]mod
 	}
 }
 
-func GetFollowedArtistsTracks(userId string) ([]model.Track, error) {
+func GetFollowedArtistsAllTracks(userId string) ([]model.Track, error) {
 	var tracks []model.Track
 
 	followedArtists, err := database.GetFollowedArtists(userId)
@@ -46,10 +46,10 @@ func GetFollowedArtistsTracks(userId string) ([]model.Track, error) {
 	}
 	artistName = artistName[0 : len(artistName)-3]
 
-	favoriteTracks, err := database.GetTracksByArtistsName(artistName)
+	tracks, err = database.GetTracksByArtistsName(artistName)
 	if err != nil {
 		log.Println(err)
 		return tracks, err
 	}
-	return favoriteTracks, nil
+	return tracks, nil
 }
