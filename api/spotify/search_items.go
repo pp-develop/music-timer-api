@@ -60,6 +60,34 @@ func getRandomQuery() string {
 	return random_query
 }
 
+func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+	config := &clientcredentials.Config{
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		TokenURL:     spotifyauth.TokenURL,
+	}
+	token, err := config.Token(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	httpClient := spotifyauth.New().Client(ctx, token)
+	client := spotify.New(httpClient)
+	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
+	results, err := client.Search(ctx, artistName, spotify.SearchTypeTrack, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
 func NextSearchTracks(items *spotify.SearchResult) error {
 	err := godotenv.Load()
 	if err != nil {
