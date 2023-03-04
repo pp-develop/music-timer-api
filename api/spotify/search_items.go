@@ -43,7 +43,7 @@ func SearchTracks() (*spotify.SearchResult, error) {
 func getRandomQuery() string {
 	rand.Seed(time.Now().UnixNano())
 
-	str := "abcdefghijklmnopqrstuvwxyz"
+	str := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	num := "01"
 
 	// Getting random character

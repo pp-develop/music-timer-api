@@ -53,10 +53,10 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 		}
 		// 1000件trackを取得したら、items.Tracks.Nextが空になる想定だが、
 		//　items.Tracks.Nextが空にならないので暫定対応
-		if(count == 1){
+		if count == 1 {
 			existNextUrl = false
 		}
-		if(items.Tracks.Offset == 950){
+		if items.Tracks.Offset == 950 {
 			count++
 		}
 	}
@@ -65,10 +65,7 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 }
 
 func ValidateTrack(track *spotifylibrary.FullTrack) bool {
-	if IsIsrcJp(track.ExternalIDs["isrc"]) && ValidateTime(track.Duration) {
-		return true
-	}
-	return false
+	return IsIsrcJp(track.ExternalIDs["isrc"])
 }
 
 func ValidateTime(msec int) bool {
