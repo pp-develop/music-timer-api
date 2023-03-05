@@ -12,10 +12,10 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
 func Create() *gin.Engine {
@@ -55,7 +55,6 @@ func Create() *gin.Engine {
 		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
-		Domain:   os.Getenv("DOMAIN"),
 	})
 	router.Use(sessions.Sessions("mysession", store))
 
