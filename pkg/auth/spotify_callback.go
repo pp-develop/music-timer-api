@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"log"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
@@ -12,6 +14,7 @@ import (
 func SpotifyCallback(c *gin.Context) error {
 	code := c.Query("code")
 	qState := c.Query("state")
+	log.Println(qState)
 
 	session := sessions.Default(c)
 	v := session.Get("state")
@@ -19,6 +22,7 @@ func SpotifyCallback(c *gin.Context) error {
 		return model.ErrFailedGetSession
 	}
 	state := v.(string)
+	log.Println(state)
 
 	if state != qState {
 		return model.ErrInvalidState
