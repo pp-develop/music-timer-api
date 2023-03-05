@@ -51,6 +51,8 @@ func Create() *gin.Engine {
 	}))
 
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
+	log.Println("cookie")
+	log.Println(store)
 	store.Options(sessions.Options{
 		Secure:   true,
 		HttpOnly: true,
