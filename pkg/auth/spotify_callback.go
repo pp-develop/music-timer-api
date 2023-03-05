@@ -52,7 +52,7 @@ func SpotifyCallback(c *gin.Context) error {
 	// }
 
 	// sessionにuseridを格納
-	session = sessions.Default(c)
+	session := sessions.Default(c)
 	session.Set("userId", user.ID)
 	session.Save()
 
