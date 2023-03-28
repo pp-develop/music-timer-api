@@ -163,7 +163,7 @@ func saveTracks(c *gin.Context) {
 
 func test(c *gin.Context) {
 	json.Write()
-	str, err := json.Read("foo")
+	str, err := json.Read("baz")
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
