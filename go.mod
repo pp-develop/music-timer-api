@@ -49,6 +49,8 @@ replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth => ./pk
 
 replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist => ./pkg/playlist
 
+replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json => ./pkg/json
+
 replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track => ./pkg/track
 
 replace github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify => ./api/spotify
