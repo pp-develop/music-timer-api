@@ -78,6 +78,7 @@ func Write() {
 	}
 
 	configManager.mutex.Lock()
+	configManager.config.Foo = "new_foo"
 	configManager.config.Baz = append(configManager.config.Baz, "new_baz")
 	configManager.mutex.Unlock()
 
