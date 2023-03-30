@@ -3,7 +3,6 @@ package track
 import (
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 )
@@ -73,7 +72,7 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 
 	// 差分を埋めるためのトラックを取得します。
 	var isTrackFound bool
-	getTrack := database.GetTrackByMsec(remainingTime)
+	getTrack, _ := json.GetTrackByMsec(remainingTime)
 	if len(getTrack) > 0 {
 		isTrackFound = true
 		tracks = append(tracks, getTrack...)

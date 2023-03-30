@@ -78,6 +78,22 @@ func ShuffleTracks(tracks []model.Track) []model.Track {
 	return tracks
 }
 
+func GetTrackByMsec(msec int) ([]model.Track, error) {
+	allTracks, err := GetAllTracks()
+	if err != nil {
+		return nil, err
+	}
+
+	tracks := []model.Track{}
+	for _, track := range allTracks {
+		if track.DurationMs == msec {
+			tracks = append(tracks, track)
+			break
+		}
+	}
+	return tracks, nil
+}
+
 func filterTracksByArtist(tracks []model.Track, artists []model.Artists) []model.Track {
 	filteredTracks := []model.Track{}
 	for _, track := range tracks {
