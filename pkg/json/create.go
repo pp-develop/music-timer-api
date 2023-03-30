@@ -20,7 +20,7 @@ type ConfigManager struct {
 	mutex          sync.Mutex
 }
 
-var filePath = "config.json"
+var filePath = "tracks.json"
 
 func NewConfigManager(configFilePath string) (*ConfigManager, error) {
 	cm := &ConfigManager{configFilePath: configFilePath}
@@ -58,6 +58,36 @@ func (cm *ConfigManager) load() error {
 	return nil
 }
 
+func (cm *ConfigManager) exist() (bool, error) {
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
+
+	file, err := os.Open(cm.configFilePath)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		return false, err
+	}
+
+	var config struct {
+		Tracks []struct{} `json:"tracks"`
+	}
+
+	if err := json.Unmarshal(bytes, &config); err != nil {
+		return false, err
+	}
+
+	if len(config.Tracks) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (cm *ConfigManager) save() error {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
@@ -73,23 +103,41 @@ func (cm *ConfigManager) save() error {
 	return nil
 }
 
+func (cm *ConfigManager) createJson() error {
+	allTracks, err := database.GetAllTracks()
+	if err != nil {
+		return err
+	}
+
+	cm.mutex.Lock()
+	cm.config.Tracks = append(cm.config.Tracks, allTracks...)
+	cm.mutex.Unlock()
+
+	if err := cm.save(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func Create() error {
 	configManager, err := NewConfigManager(filePath)
 	if err != nil {
 		return err
 	}
 
-	allTracks, err := database.GetAllTracks()
+	// jsonがあれば何もしない
+	exists, err := configManager.exist()
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+
+	err = configManager.createJson()
 	if err != nil {
 		return err
 	}
 
-	configManager.mutex.Lock()
-	configManager.config.Tracks = append(configManager.config.Tracks, allTracks...)
-	configManager.mutex.Unlock()
-
-	if err := configManager.save(); err != nil {
-		return err
-	}
 	return nil
 }

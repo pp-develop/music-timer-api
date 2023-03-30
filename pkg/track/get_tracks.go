@@ -5,23 +5,34 @@ import (
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 )
 
 func GetTracks(specify_ms int) ([]model.Track, error) {
 	var tracks []model.Track
+	var err error
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
+		allTracks, err := json.GetAllTracks()
+		if err != nil {
+			c1 <- nil
+			return
+		}
+
 		success := false
 		for !success {
-			tracks, _ = database.GetAllTracks()
-			success, tracks = MakeTracks(tracks, specify_ms)
+			shuffleTracks := json.ShuffleTracks(allTracks)
+			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
 		c1 <- tracks
 	}()
 
 	select {
-	case <-c1:
+	case tracks := <-c1:
+		if tracks == nil {
+			return nil, err
+		}
 		return tracks, nil
 	case <-time.After(30 * time.Second):
 		return nil, model.ErrTimeoutCreatePlaylist

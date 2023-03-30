@@ -16,7 +16,6 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 )
 
 func Create() *gin.Engine {
@@ -64,7 +63,6 @@ func Create() *gin.Engine {
 	router.DELETE("/session", deleteSession)
 	router.GET("/callback", callback)
 	router.GET("/tracks", getTracks)
-	router.GET("/test", test)
 	router.POST("/tracks", saveTracks)
 	router.POST("/playlist", createPlaylist)
 	router.POST("/playlist-with-favorite-artists", createPlaylistWithFavoriteArtists)
@@ -158,17 +156,6 @@ func saveTracks(c *gin.Context) {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
-	}
-}
-
-func test(c *gin.Context) {
-	json.Write()
-	str, err := json.Read("baz")
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-	c.IndentedJSON(http.StatusOK, str)
 	}
 }
 

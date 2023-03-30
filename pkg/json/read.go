@@ -5,11 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"strings"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func Read(key string) ([]model.Track, error) {
+func GetAllTracks() ([]model.Track, error) {
+	// ファイルの作成
+	err := Create()
+	if err != nil {
+		return nil, err
+	}
+
 	// ファイルの読み込み
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -24,6 +31,7 @@ func Read(key string) ([]model.Track, error) {
 	}
 
 	// 配列型のキーを取得
+	key := "tracks"
 	value, ok := data[key]
 	if !ok {
 		return nil, fmt.Errorf("Key %s not found", key)
@@ -50,6 +58,16 @@ func Read(key string) ([]model.Track, error) {
 	return tracks, nil
 }
 
+func GetFollowedArtistsAllTracks(artists []model.Artists) ([]model.Track, error) {
+	allTrack, err := GetAllTracks()
+	if err != nil {
+		return nil, err
+	}
+
+	tracks := filterTracksByArtist(allTrack, artists)
+	return tracks, nil
+}
+
 func ShuffleTracks(tracks []model.Track) []model.Track {
 	// Fisher-Yates アルゴリズムを使って、スライスの要素をランダムに並び替える
 	n := len(tracks)
@@ -58,4 +76,17 @@ func ShuffleTracks(tracks []model.Track) []model.Track {
 		tracks[i], tracks[j] = tracks[j], tracks[i]
 	}
 	return tracks
+}
+
+func filterTracksByArtist(tracks []model.Track, artists []model.Artists) []model.Track {
+	filteredTracks := []model.Track{}
+	for _, track := range tracks {
+		for _, artist := range artists {
+			if strings.Contains(track.ArtistsName, artist.Name) {
+				filteredTracks = append(filteredTracks, track)
+				break
+			}
+		}
+	}
+	return filteredTracks
 }

@@ -2,28 +2,38 @@ package track
 
 import (
 	"log"
-	"strings"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 )
 
 func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, error) {
 	var tracks []model.Track
+	var err error
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
+		allTracks, err := GetFollowedArtistsAllTracks(userId)
+		if err != nil {
+			c1 <- nil
+			return
+		}
+
 		success := false
 		for !success {
-			tracks, _ = GetFollowedArtistsAllTracks(userId)
-			success, tracks = MakeTracks(tracks, specify_ms)
+			shuffleTracks := json.ShuffleTracks(allTracks)
+			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
 		c1 <- tracks
 	}()
 
 	select {
-	case <-c1:
+	case tracks := <-c1:
+		if tracks == nil {
+			return nil, err
+		}
 		return tracks, nil
 	case <-time.After(30 * time.Second):
 		return nil, model.ErrTimeoutCreatePlaylist
@@ -39,14 +49,7 @@ func GetFollowedArtistsAllTracks(userId string) ([]model.Track, error) {
 		return tracks, err
 	}
 
-	var artistName string
-	for _, v := range followedArtists {
-		v.Name = strings.Replace(v.Name, "'", "", -1)
-		artistName += "artists_name like " + "'%" + v.Name + "%' OR "
-	}
-	artistName = artistName[0 : len(artistName)-3]
-
-	tracks, err = database.GetTracksByArtistsName(artistName)
+	tracks, err = json.GetFollowedArtistsAllTracks(followedArtists)
 	if err != nil {
 		log.Println(err)
 		return tracks, err
