@@ -22,7 +22,7 @@ func SaveTrack(track *spotify.FullTrack) error {
 
 func GetAllTracks() ([]model.Track, error) {
 	var tracks []model.Track
-	rows, err := db.Query("SELECT uri, duration_ms FROM tracks WHERE isrc like 'JP%' ORDER BY rand()")
+	rows, err := db.Query("SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like 'JP%' ORDER BY rand()")
 	if err != nil {
 		return tracks, err
 	}
@@ -30,7 +30,7 @@ func GetAllTracks() ([]model.Track, error) {
 
 	for rows.Next() {
 		var track model.Track
-		if err := rows.Scan(&track.Uri, &track.DurationMs); err != nil {
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &track.ArtistsName); err != nil {
 			return tracks, err
 		}
 		tracks = append(tracks, track)

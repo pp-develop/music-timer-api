@@ -5,17 +5,18 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-type Config struct {
-	Foo string   `json:"foo"`
-	Bar int      `json:"bar"`
-	Baz []string `json:"baz"`
+type Json struct {
+	Tracks []model.Track `json:"tracks"`
 }
 
 type ConfigManager struct {
 	configFilePath string
-	config         Config
+	config         Json
 	mutex          sync.Mutex
 }
 
@@ -48,10 +49,11 @@ func (cm *ConfigManager) load() error {
 		return err
 	}
 
-	// Bazがなければ初期化する
-	if cm.config.Baz == nil {
-		cm.config.Baz = []string{}
-	}
+	// if cm.config.Tracks == nil {
+	// 	cm.config.Tracks = []model.Track{}
+	// }
+	// Tracksを初期化する
+	cm.config.Tracks = []model.Track{}
 
 	return nil
 }
@@ -71,18 +73,23 @@ func (cm *ConfigManager) save() error {
 	return nil
 }
 
-func Write() {
+func Create() error {
 	configManager, err := NewConfigManager(filePath)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	allTracks, err := database.GetAllTracks()
+	if err != nil {
+		return err
 	}
 
 	configManager.mutex.Lock()
-	configManager.config.Foo = "new_foo"
-	configManager.config.Baz = append(configManager.config.Baz, "new_baz")
+	configManager.config.Tracks = append(configManager.config.Tracks, allTracks...)
 	configManager.mutex.Unlock()
 
 	if err := configManager.save(); err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }

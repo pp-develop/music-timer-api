@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-type Track struct {
-	Id          string `json:"id"`
-	Description int    `json:"description"`
-}
-
-func Read(key string) ([]Track, error) {
+func Read(key string) ([]model.Track, error) {
 	// ファイルの読み込み
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -39,12 +36,13 @@ func Read(key string) ([]Track, error) {
 	}
 
 	// []interface{}型の配列を[]Track型に変換
-	tracks := make([]Track, 0, len(array))
+	tracks := make([]model.Track, 0, len(array))
 	for _, v := range array {
 		item := v.(map[string]interface{})
-		track := Track{
-			Id:          item["id"].(string),
-			Description: int(item["description"].(float64)), // float64型をint型に変換
+		track := model.Track{
+			Uri:         item["uri"].(string),
+			DurationMs:  int(item["duration_ms"].(float64)), // float64型をint型に変換
+			ArtistsName: item["artists_name"].(string),
 		}
 		tracks = append(tracks, track)
 	}
@@ -52,7 +50,7 @@ func Read(key string) ([]Track, error) {
 	return tracks, nil
 }
 
-func ShuffleTracks(tracks []Track) []Track {
+func ShuffleTracks(tracks []model.Track) []model.Track {
 	// Fisher-Yates アルゴリズムを使って、スライスの要素をランダムに並び替える
 	n := len(tracks)
 	for i := n - 1; i > 0; i-- {
