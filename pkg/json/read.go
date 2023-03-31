@@ -58,13 +58,8 @@ func GetAllTracks() ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetFollowedArtistsAllTracks(artists []model.Artists) ([]model.Track, error) {
-	allTrack, err := GetAllTracks()
-	if err != nil {
-		return nil, err
-	}
-
-	tracks := filterTracksByArtist(allTrack, artists)
+func GetFollowedArtistsAllTracks(allTracks []model.Track, artists []model.Artists) ([]model.Track, error) {
+	tracks := filterTracksByArtist(allTracks, artists)
 	return tracks, nil
 }
 
@@ -78,12 +73,7 @@ func ShuffleTracks(tracks []model.Track) []model.Track {
 	return tracks
 }
 
-func GetTrackByMsec(msec int) ([]model.Track, error) {
-	allTracks, err := GetAllTracks()
-	if err != nil {
-		return nil, err
-	}
-
+func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 	tracks := []model.Track{}
 	for _, track := range allTracks {
 		if track.DurationMs == msec {

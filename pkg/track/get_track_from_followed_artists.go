@@ -15,7 +15,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
-		allTracks, err := GetFollowedArtistsAllTracks(userId)
+		followedArtistsTracks, err := GetFollowedArtistsAllTracks(userId)
 		if err != nil {
 			c1 <- nil
 			return
@@ -23,7 +23,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 
 		success := false
 		for !success {
-			shuffleTracks := json.ShuffleTracks(allTracks)
+			shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
 			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
 		c1 <- tracks
@@ -49,7 +49,12 @@ func GetFollowedArtistsAllTracks(userId string) ([]model.Track, error) {
 		return tracks, err
 	}
 
-	tracks, err = json.GetFollowedArtistsAllTracks(followedArtists)
+	allTracks, err = json.GetAllTracks()
+	if err != nil {
+		return nil, err
+	}
+
+	tracks, err = json.GetFollowedArtistsAllTracks(allTracks, followedArtists)
 	if err != nil {
 		log.Println(err)
 		return tracks, err

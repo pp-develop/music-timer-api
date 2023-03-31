@@ -7,13 +7,15 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 )
 
+var allTracks []model.Track
+
 func GetTracks(specify_ms int) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
 	c1 := make(chan []model.Track, 1)
 	go func() {
-		allTracks, err := json.GetAllTracks()
+		allTracks, err = json.GetAllTracks()
 		if err != nil {
 			c1 <- nil
 			return
@@ -72,7 +74,7 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 
 	// 差分を埋めるためのトラックを取得します。
 	var isTrackFound bool
-	getTrack, _ := json.GetTrackByMsec(remainingTime)
+	getTrack, _ := json.GetTrackByMsec(allTracks, remainingTime)
 	if len(getTrack) > 0 {
 		isTrackFound = true
 		tracks = append(tracks, getTrack...)
