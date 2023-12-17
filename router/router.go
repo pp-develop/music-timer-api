@@ -180,7 +180,7 @@ func deletePlaylists(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
 		log.Println(err)
-		c.IndentedJSON(http.StatusNotFound, "")
+		c.IndentedJSON(http.StatusNoContent, "")
 	} else if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
