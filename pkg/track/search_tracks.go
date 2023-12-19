@@ -1,6 +1,7 @@
 package track
 
 import (
+	"strings"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	spotifylibrary "github.com/zmb3/spotify/v2"
@@ -88,5 +89,5 @@ func ValidateTime(msec int) bool {
 }
 
 func IsIsrcJp(isrc string) bool {
-	return isrc[0:2] == "JP"
+	return strings.Contains(isrc, "JP")
 }
