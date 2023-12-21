@@ -28,7 +28,7 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like 'JP%' LIMIT " + strconv.Itoa(offset) + "," + strconv.Itoa(limit)
+	query := "SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like '%JP%' LIMIT " + strconv.Itoa(offset) + "," + strconv.Itoa(limit)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
