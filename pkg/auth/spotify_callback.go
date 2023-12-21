@@ -27,7 +27,7 @@ func SpotifyCallback(c *gin.Context) error {
 	// 	return model.ErrInvalidState
 	// }
 
-	token, err := spotify.GetApiTokenForAuthzCode(code)
+	token, err := spotify.ExchangeSpotifyCode(code)
 	if err != nil {
 		return err
 	}

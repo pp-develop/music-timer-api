@@ -60,7 +60,7 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := client.Search(ctx, artistName, spotify.SearchTypeTrack, options...)
+	results, err := client.Search(ctx, "artist:" + artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}

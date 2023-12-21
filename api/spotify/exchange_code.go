@@ -10,7 +10,7 @@ import (
 )
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
-func GetApiTokenForAuthzCode(code string) (*oauth2.Token, error) {
+func ExchangeSpotifyCode(code string) (*oauth2.Token, error) {
 	var token *oauth2.Token
 
 	err := godotenv.Load()

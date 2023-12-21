@@ -1,7 +1,9 @@
 package track
 
 import (
+	"net/url"
 	"strings"
+
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	spotifylibrary "github.com/zmb3/spotify/v2"
@@ -39,10 +41,9 @@ func SaveTracks(tracks *spotifylibrary.SearchResult) error {
 }
 
 func NextSearchTracks(items *spotifylibrary.SearchResult) error {
-	existNextUrl := true
-	count := 0
+	var prevOffset string
 
-	for existNextUrl {
+	for {
 		err := spotify.NextSearchTracks(items)
 		if err != nil {
 			return err
@@ -52,14 +53,24 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 		if err != nil {
 			return err
 		}
-		// 1000件trackを取得したら、items.Tracks.Nextが空になる想定だが、
-		//　items.Tracks.Nextが空にならないので暫定対応
-		if count == 1 {
-			existNextUrl = false
+
+		if items.Tracks.Next == "" {
+			break
 		}
-		if items.Tracks.Offset == 950 {
-			count++
+
+		parsedURL, err := url.Parse(items.Tracks.Next)
+		if err != nil {
+			return err
 		}
+		queryParams := parsedURL.Query()
+		currentOffset := queryParams.Get("offset")
+
+		// 同じoffsetが2回続いたらループを終了
+		if currentOffset == prevOffset {
+			break
+		}
+
+		prevOffset = currentOffset // 現在のoffsetを保存
 	}
 
 	return nil

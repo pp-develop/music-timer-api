@@ -7,7 +7,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func SaveArtistsOfFavoriteTracks(token *oauth2.Token, userId string) error {
+// SaveFavoriteArtists は、ユーザーの「お気に入りトラック」に含まれるアーティストをデータベースに保存します。
+func SaveFavoriteArtists(token *oauth2.Token, userId string) error {
 
 	tracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {
@@ -18,12 +19,12 @@ func SaveArtistsOfFavoriteTracks(token *oauth2.Token, userId string) error {
 	if err != nil {
 		return err
 	}
-	err = SaveArtist(tracks.Tracks, userId)
+	err = SaveArtists(tracks.Tracks, userId)
 	if err != nil {
 		return err
 	}
 
-	err = NextPage(token, tracks, userId)
+	err = ProcessNextTracks(token, tracks, userId)
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,7 @@ func SaveArtistsOfFavoriteTracks(token *oauth2.Token, userId string) error {
 	return nil
 }
 
-func NextPage(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string) error {
+func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string) error {
 	existNextUrl := true
 
 	for existNextUrl {
@@ -40,7 +41,7 @@ func NextPage(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string
 			return err
 		}
 
-		err = SaveArtist(tracks.Tracks, userId)
+		err = SaveArtists(tracks.Tracks, userId)
 		if err != nil {
 			return err
 		}
@@ -52,7 +53,7 @@ func NextPage(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string
 	return nil
 }
 
-func SaveArtist(track []spotify.SavedTrack, userId string) error {
+func SaveArtists(track []spotify.SavedTrack, userId string) error {
 	var artistName []string
 	for _, v := range track {
 		for _, a := range v.Artists {
