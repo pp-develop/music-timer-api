@@ -28,7 +28,7 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like '%JP%' LIMIT " + strconv.Itoa(offset) + "," + strconv.Itoa(limit)
+	query := "SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like '%JP%' LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -66,11 +66,12 @@ func GetAllTracks() ([]model.Track, error) {
 		AllTracks = append(AllTracks, tracks...)
 
 		// ページネーション処理のために、ページ番号をインクリメントして次のページのトラックデータを取得
-		pageNumber++
-		if len(tracks) < pageSize {
-			// ページネーション処理が終了した場合はループを終える
+		if len(tracks) == 0 {
 			break
 		}
+
+		// ページ番号をインクリメント
+		pageNumber++
 	}
 	return AllTracks, nil
 }
