@@ -36,7 +36,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 			return nil, err
 		}
 		return tracks, nil
-	case <-time.After(30 * time.Second):
+	case <-time.After(60 * time.Second):
 		logger.LogError(err)
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
