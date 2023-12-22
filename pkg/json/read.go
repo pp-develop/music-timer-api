@@ -3,8 +3,8 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
+	"os"
 	"strings"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -17,15 +17,19 @@ func GetAllTracks() ([]model.Track, error) {
 		return nil, err
 	}
 
-	// ファイルの読み込み
-	bytes, err := ioutil.ReadFile(filePath)
+	// ファイルをオープン
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
+
+	// JSONデコーダの作成
+	decoder := json.NewDecoder(file)
 
 	// JSONのパース
 	var data map[string]interface{}
-	err = json.Unmarshal(bytes, &data)
+	err = decoder.Decode(&data)
 	if err != nil {
 		return nil, err
 	}
@@ -34,13 +38,13 @@ func GetAllTracks() ([]model.Track, error) {
 	key := "tracks"
 	value, ok := data[key]
 	if !ok {
-		return nil, fmt.Errorf("Key %s not found", key)
+		return nil, fmt.Errorf("key %s not found", key)
 	}
 
 	// 配列にキャスト
 	array, ok := value.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("Key %s is not an array", key)
+		return nil, fmt.Errorf("key %s is not an array", key)
 	}
 
 	// []interface{}型の配列を[]Track型に変換
