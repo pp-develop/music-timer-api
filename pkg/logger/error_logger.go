@@ -1,10 +1,10 @@
 package logger
 
 import (
-    "log"
-    "runtime/debug"
+	"log"
+	"runtime/debug"
 )
 
 func LogError(err error) {
-    log.Printf("ERROR: %v\nStack Trace:\n%s", err, debug.Stack())
+	log.Printf("Error: %v, Type: %T, Stacktrace: %s", err, err, debug.Stack())
 }

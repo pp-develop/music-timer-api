@@ -15,10 +15,12 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 	var err error
 
 	c1 := make(chan []model.Track, 1)
+	errChan := make(chan error, 1)
+
 	go func() {
 		followedArtistsTracks, err := GetFollowedArtistsAllTracks(userId)
 		if err != nil {
-			c1 <- nil
+			errChan <- err
 			return
 		}
 
@@ -33,11 +35,15 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 	select {
 	case tracks := <-c1:
 		if tracks == nil {
-			return nil, err
+			return nil, <-errChan
 		}
 		return tracks, nil
+	case err := <-errChan:
+		return nil, err
 	case <-time.After(60 * time.Second):
-		logger.LogError(err)
+		if err != nil {
+			logger.LogError(err)
+		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }
