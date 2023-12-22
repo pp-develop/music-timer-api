@@ -5,6 +5,7 @@ import (
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 )
 
 var allTracks []model.Track
@@ -36,6 +37,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 		}
 		return tracks, nil
 	case <-time.After(30 * time.Second):
+		logger.LogError(err)
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }
