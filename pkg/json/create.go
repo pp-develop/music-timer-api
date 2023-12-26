@@ -1,8 +1,9 @@
 package json
 
 import (
+	"bufio"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"os"
 	"sync"
 
@@ -40,12 +41,8 @@ func (cm *ConfigManager) load() error {
 	}
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(bytes, &cm.config); err != nil {
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&cm.config); err != nil {
 		return err
 	}
 
@@ -58,75 +55,103 @@ func (cm *ConfigManager) load() error {
 	return nil
 }
 
-func (cm *ConfigManager) exist() (bool, error) {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
+func exist() (bool, error) {
+	for i := 1; i <= 10; i++ {
+		filePath := fmt.Sprintf("tracks_part_%d.json", i)
+		file, err := os.Open(filePath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// ファイルが存在しない場合
+				return false, nil
+			}
+			// その他のエラー
+			return false, err
+		}
 
-	file, err := os.Open(cm.configFilePath)
-	if err != nil {
-		return false, err
+		var config struct {
+			Tracks []struct{} `json:"tracks"`
+		}
+
+		decoder := json.NewDecoder(file)
+		if err := decoder.Decode(&config); err != nil {
+			file.Close() // デコードエラーが発生した場合、ファイルを閉じます
+			return false, err
+		}
+		file.Close() // デコードが完了したらファイルを閉じます
+
+		if len(config.Tracks) == 0 {
+			// トラックが空の場合
+			return false, nil
+		}
 	}
-	defer file.Close()
-
-	bytes, err := ioutil.ReadAll(file)
-	if err != nil {
-		return false, err
-	}
-
-	var config struct {
-		Tracks []struct{} `json:"tracks"`
-	}
-
-	if err := json.Unmarshal(bytes, &config); err != nil {
-		return false, err
-	}
-
-	if len(config.Tracks) == 0 {
-		return false, nil
-	}
-
+	// すべてのファイルが存在し、空でない
 	return true, nil
 }
 
-func (cm *ConfigManager) save() error {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
-
-	bytes, err := json.MarshalIndent(cm.config, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(cm.configFilePath, bytes, 0644); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (cm *ConfigManager) createJson() error {
+func createJson() error {
 	allTracks, err := database.GetAllTracks()
 	if err != nil {
 		return err
 	}
 
-	cm.mutex.Lock()
-	cm.config.Tracks = append(cm.config.Tracks, allTracks...)
-	cm.mutex.Unlock()
+	// トラックを10個の部分に分割
+	numFiles := 10
+	numTracksPerFile := (len(allTracks) + numFiles - 1) / numFiles // 均等に分割できない場合は切り上げ
 
-	if err := cm.save(); err != nil {
+	for i := 0; i < numFiles; i++ {
+		start := i * numTracksPerFile
+		end := start + numTracksPerFile
+		if end > len(allTracks) {
+			end = len(allTracks)
+		}
+
+		filePath := fmt.Sprintf("tracks_part_%d.json", i+1)
+		configManager, err := NewConfigManager(filePath)
+		if err != nil {
+			return err
+		}
+
+		err = configManager.saveToFile(filePath, allTracks[start:end])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error {
+	cm.mutex.Lock()
+	defer cm.mutex.Unlock()
+
+	config := Json{Tracks: tracks}
+	bytes, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	_, err = writer.Write(bytes)
+	if err != nil {
+		return err
+	}
+
+	err = writer.Flush()
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
 func Create() error {
-	configManager, err := NewConfigManager(filePath)
-	if err != nil {
-		return err
-	}
-
 	// jsonがあれば何もしない
-	exists, err := configManager.exist()
+	exists, err := exist()
 	if err != nil {
 		return err
 	}
@@ -134,7 +159,7 @@ func Create() error {
 		return nil
 	}
 
-	err = configManager.createJson()
+	err = createJson()
 	if err != nil {
 		return err
 	}

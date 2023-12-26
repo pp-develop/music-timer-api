@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
@@ -17,8 +18,15 @@ func GetAllTracks() ([]model.Track, error) {
 		return nil, err
 	}
 
+	// ランダムにファイルを選択するための設定
+	src := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(src)
+	// ランダムな数（1から10）を生成
+	partNumber := r.Intn(10) + 1
+	randomFilePath := fmt.Sprintf("tracks_part_%d.json", partNumber)
+
 	// ファイルをオープン
-	file, err := os.Open(filePath)
+	file, err := os.Open(randomFilePath)
 	if err != nil {
 		return nil, err
 	}
