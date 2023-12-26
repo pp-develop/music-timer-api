@@ -16,6 +16,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
+	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
 		followedArtistsTracks, err := GetFollowedArtistsAllTracks(userId)
@@ -26,6 +27,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 
 		success := false
 		for !success {
+			tryCount++ // 試行回数をインクリメント
 			shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
 			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
