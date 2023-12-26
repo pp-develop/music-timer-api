@@ -37,6 +37,7 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 		if tracks == nil {
 			return nil, <-errChan
 		}
+		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err

@@ -1,6 +1,7 @@
 package track
 
 import (
+	"log"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -16,6 +17,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
+	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
 		allTracks, err = json.GetAllTracks()
@@ -26,6 +28,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 
 		success := false
 		for !success {
+			tryCount++ // 試行回数をインクリメント
 			shuffleTracks := json.ShuffleTracks(allTracks)
 			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
@@ -37,6 +40,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 		if tracks == nil {
 			return nil, <-errChan
 		}
+		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
