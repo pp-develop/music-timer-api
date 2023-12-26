@@ -65,7 +65,6 @@ func Create() *gin.Engine {
 	router.GET("/tracks", getTracks)
 	router.POST("/tracks", saveTracks)
 	router.POST("/playlist", createPlaylist)
-	router.POST("/playlist-with-favorite-artists", createPlaylistWithFavoriteArtists)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
 }
@@ -119,22 +118,6 @@ func callback(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
-	if err == model.ErrFailedGetSession {
-		log.Println(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
-	} else if err == model.ErrTimeoutCreatePlaylist {
-		log.Println(err)
-		c.IndentedJSON(http.StatusNotFound, "")
-	} else if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-		c.IndentedJSON(http.StatusCreated, playlistId)
-	}
-}
-
-func createPlaylistWithFavoriteArtists(c *gin.Context) {
-	playlistId, err := playlist.CreatePlaylistWithFollowedArtists(c)
 	if err == model.ErrFailedGetSession {
 		log.Println(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
