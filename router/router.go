@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
@@ -25,6 +27,7 @@ func Create() *gin.Engine {
 	}
 
 	router := gin.Default()
+	pprof.Register(router)
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			os.Getenv("BASE_URL"),
@@ -58,15 +61,32 @@ func Create() *gin.Engine {
 	})
 	router.Use(sessions.Sessions("mysession", store))
 
+	router.GET("/callback", callback)
 	router.GET("/auth", getAuth)
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
-	router.GET("/callback", callback)
-	router.GET("/tracks", getTracks)
 	router.POST("/tracks", saveTracks)
+	router.GET("/tracks", getTracks)
+	router.GET("/tracks", deleteTracks)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
+}
+
+func callback(c *gin.Context) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+		c.Redirect(http.StatusSeeOther, "/")
+	}
+
+	err = auth.SpotifyCallback(c)
+	if err != nil {
+		log.Println(err)
+		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
+	} else {
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
+	}
 }
 
 func getAuth(c *gin.Context) {
@@ -100,39 +120,6 @@ func deleteSession(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }
 
-func callback(c *gin.Context) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("Error loading .env file")
-		c.Redirect(http.StatusSeeOther, "/")
-	}
-
-	err = auth.SpotifyCallback(c)
-	if err != nil {
-		log.Println(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
-	} else {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
-	}
-}
-
-func createPlaylist(c *gin.Context) {
-	playlistId, err := playlist.CreatePlaylist(c)
-	if err == model.ErrFailedGetSession {
-		log.Println(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
-	} else if err == model.ErrTimeoutCreatePlaylist {
-		log.Println(err)
-		c.IndentedJSON(http.StatusNotFound, "")
-	} else if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-		log.Println("complete")
-		c.IndentedJSON(http.StatusCreated, playlistId)
-	}
-}
-
 func saveTracks(c *gin.Context) {
 	err := track.SearchTracks()
 	if err != nil {
@@ -154,6 +141,33 @@ func getTracks(c *gin.Context) {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, tracks)
+	}
+}
+
+func deleteTracks(c *gin.Context) {
+	err := database.DeleteTracks()
+	if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusOK, "")
+	}
+}
+
+func createPlaylist(c *gin.Context) {
+	playlistId, err := playlist.CreatePlaylist(c)
+	if err == model.ErrFailedGetSession {
+		log.Println(err)
+		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
+	} else if err == model.ErrTimeoutCreatePlaylist {
+		log.Println(err)
+		c.IndentedJSON(http.StatusNotFound, "")
+	} else if err != nil {
+		log.Println(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		log.Println("complete")
+		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 }
 

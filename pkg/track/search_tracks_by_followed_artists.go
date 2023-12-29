@@ -1,7 +1,6 @@
 package track
 
 import (
-	"log"
 	"sync"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
@@ -56,13 +55,11 @@ func SearchTracksByFollowedArtists(userId string) error {
 		go func(item model.Artists) {
 			defer wg.Done()
 
-			log.Println(item.Name)
 			items, err := spotify.SearchTracksByArtists(item.Name)
 			if err != nil {
 				errChan <- err
 				return
 			}
-			log.Printf("%+v\n", items.Tracks)
 
 			if err := SaveTracks(items); err != nil {
 				errChan <- err

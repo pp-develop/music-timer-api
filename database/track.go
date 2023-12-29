@@ -1,8 +1,10 @@
 package database
 
 import (
+	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/zmb3/spotify/v2"
@@ -76,35 +78,22 @@ func GetAllTracks() ([]model.Track, error) {
 	return AllTracks, nil
 }
 
-func GetTracksByArtistsName(artistsName string) ([]model.Track, error) {
-	var tracks []model.Track
-	rows, err := db.Query("SELECT uri, duration_ms FROM tracks WHERE isrc LIKE 'JP%' AND " + artistsName + "ORDER BY rand()")
+func DeleteTracks() error {
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30).Format("2000-01-01 00:00:00")
+
+	// 30日以上更新されていないレコードを削除するSQLクエリの実行
+	query := `DELETE FROM tracks WHERE updated_at < ?`
+	result, err := db.Exec(query, thirtyDaysAgo)
 	if err != nil {
-		return tracks, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var track model.Track
-		if err := rows.Scan(&track.Uri, &track.DurationMs); err != nil {
-			return tracks, err
-		}
-		tracks = append(tracks, track)
-	}
-	if err = rows.Err(); err != nil {
-		return tracks, err
-	}
-	return tracks, nil
-}
-
-func GetTrackByMsec(ms int) []model.Track {
-	var tracks []model.Track
-	var track model.Track
-
-	if err := db.QueryRow("SELECT uri, duration_ms FROM tracks WHERE duration_ms = ? AND isrc LIKE 'JP%' ORDER BY rand()", ms).Scan(&track.Uri, &track.DurationMs); err != nil {
-		return tracks
+		return err
 	}
 
-	tracks = append(tracks, track)
-	return tracks
+	// 削除されたレコードの数を取得
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("%d rows deleted\n", rowsAffected)
+	return nil
 }
