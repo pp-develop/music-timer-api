@@ -57,18 +57,19 @@ func GetFollowedArtistsAllTracks(userId string) ([]model.Track, error) {
 	followedArtists, err := database.GetFollowedArtists(userId)
 	if err != nil {
 		log.Println(err)
-		return tracks, err
+		return nil, err
 	}
 
 	allTracks, err = json.GetAllTracks()
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
 	tracks, err = json.GetFollowedArtistsAllTracks(allTracks, followedArtists)
 	if err != nil {
 		log.Println(err)
-		return tracks, err
+		return nil, err
 	}
 	return tracks, nil
 }

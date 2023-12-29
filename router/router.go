@@ -128,6 +128,7 @@ func createPlaylist(c *gin.Context) {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
+		log.Println("complete")
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 }

@@ -11,7 +11,7 @@ import (
 
 type RequestJson struct {
 	Minute                  int  `json:"minute"`
-	IDncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
+	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
 }
 
 func CreatePlaylist(c *gin.Context) (string, error) {
@@ -34,7 +34,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	// DBからトラックを取得
 	var tracks []model.Track
-	if json.IDncludeFavoriteArtists {
+	if json.IncludeFavoriteArtists {
 		tracks, err = track.GetFollowedArtistsTracks(specify_ms, userId)
 		if err != nil {
 			return "", err
