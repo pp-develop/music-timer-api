@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -27,7 +26,6 @@ func Create() *gin.Engine {
 	}
 
 	router := gin.Default()
-	pprof.Register(router)
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			os.Getenv("BASE_URL"),
