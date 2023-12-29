@@ -79,15 +79,14 @@ func GetAllTracks() ([]model.Track, error) {
 }
 
 func DeleteTracks() error {
-	const chunkSize = 1000
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -60).Format("2006-01-02 15:04:05")
-	offset := 0
+	const chunkSize = 100000
+	// 180日更新されてないデータを削除
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -180).Format("2006-01-02 15:04:05")
 	totalDeleted := 0
 
 	for {
-		// 一定範囲のデータに対して削除クエリを実行
-		query := `DELETE FROM tracks WHERE updated_at < ? LIMIT ? OFFSET ?`
-		result, err := db.Exec(query, thirtyDaysAgo, chunkSize, offset)
+		query := `DELETE FROM tracks WHERE updated_at < ? LIMIT ?`
+		result, err := db.Exec(query, thirtyDaysAgo, chunkSize)
 		if err != nil {
 			return err
 		}
@@ -97,14 +96,12 @@ func DeleteTracks() error {
 		if err != nil {
 			return err
 		}
+		totalDeleted += int(rowsAffected)
 
 		// もう削除すべき行がない場合、ループを抜ける
-		if rowsAffected < chunkSize {
+		if rowsAffected == 0 {
 			break
 		}
-
-		// 次のバッチのためにオフセットを更新
-		offset += chunkSize
 	}
 
 	log.Printf("Total %d rows deleted\n", totalDeleted)
