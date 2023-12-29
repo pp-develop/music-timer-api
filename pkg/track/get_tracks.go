@@ -2,6 +2,7 @@ package track
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -9,9 +10,17 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 )
 
-var allTracks []model.Track
+var (
+	allTracks      []model.Track
+	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
+)
 
+// GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
 func GetTracks(specify_ms int) ([]model.Track, error) {
+	allTracksMutex.Lock()
+	localTracks := allTracks // ローカルコピーを作成
+	allTracksMutex.Unlock()
+
 	var tracks []model.Track
 	var err error
 
@@ -20,7 +29,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
-		allTracks, err = json.GetAllTracks()
+		localTracks, err = json.GetAllTracks()
 		if err != nil {
 			errChan <- err
 			return
@@ -29,7 +38,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 		success := false
 		for !success {
 			tryCount++ // 試行回数をインクリメント
-			shuffleTracks := json.ShuffleTracks(allTracks)
+			shuffleTracks := json.ShuffleTracks(localTracks)
 			success, tracks = MakeTracks(shuffleTracks, specify_ms)
 		}
 		c1 <- tracks
