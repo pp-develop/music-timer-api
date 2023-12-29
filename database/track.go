@@ -79,7 +79,7 @@ func GetAllTracks() ([]model.Track, error) {
 }
 
 func DeleteTracks() error {
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -30).Format("2000-01-01 00:00:00")
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30).Format("2006-01-02 15:04:05")
 
 	// 30日以上更新されていないレコードを削除するSQLクエリの実行
 	query := `DELETE FROM tracks WHERE updated_at < ?`
