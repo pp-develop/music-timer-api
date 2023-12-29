@@ -65,7 +65,7 @@ func Create() *gin.Engine {
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
 	router.GET("/tracks", getTracks)
-	router.GET("/tracks", deleteTracks)
+	router.DELETE("/tracks", deleteTracks)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
