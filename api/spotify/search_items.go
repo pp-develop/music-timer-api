@@ -60,7 +60,7 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient)
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := client.Search(ctx, "artist:" + artistName, spotify.SearchTypeTrack, options...)
+	results, err := client.Search(ctx, "artist:"+artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,13 +133,13 @@ func getRandomQuery() string {
 	random_query := ""
 	switch string(shuffled_num) {
 	case "0":
-		random_query = randomString(randomOneOrTwo()) + "%"
+		random_query = randomString(randomOneOrTwo()) + "*"
 	case "1":
-		random_query = "%" + randomString(randomOneOrTwo()) + "%"
+		random_query = "*" + randomString(randomOneOrTwo()) + "*"
 	case "2":
-		random_query = randomJapaneseString(randomOneOrTwo()) + "%"
+		random_query = randomJapaneseString(randomOneOrTwo()) + "*"
 	case "3":
-		random_query = "%" + randomJapaneseString(randomOneOrTwo()) + "%"
+		random_query = "*" + randomJapaneseString(randomOneOrTwo()) + "*"
 	}
 	return random_query
 }
