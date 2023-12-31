@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
 )
 
@@ -15,17 +16,16 @@ func SpotifyCallback(c *gin.Context) error {
 	qState := c.Query("state")
 	log.Println(qState)
 
-	// session := sessions.Default(c)
-	// v := session.Get("state")
-	// if v == nil {
-	// 	return model.ErrFailedGetSession
-	// }
-	// state := v.(string)
-	// log.Println(state)
-
-	// if state != qState {
-	// 	return model.ErrInvalidState
-	// }
+	session := sessions.Default(c)
+	v := session.Get("state")
+	if v == nil {
+		return model.ErrFailedGetSession
+	}
+	state := v.(string)
+	log.Println(state)
+	if state != qState {
+		return model.ErrInvalidState
+	}
 
 	token, err := spotify.ExchangeSpotifyCode(code)
 	if err != nil {
@@ -52,7 +52,7 @@ func SpotifyCallback(c *gin.Context) error {
 	// }
 
 	// sessionにuseridを格納
-	session := sessions.Default(c)
+	session = sessions.Default(c)
 	session.Set("userId", user.ID)
 	session.Save()
 

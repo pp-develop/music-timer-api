@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -59,14 +58,19 @@ func GetAllTracks() ([]model.Track, error) {
 	tracks := make([]model.Track, 0, len(array))
 	for _, v := range array {
 		item := v.(map[string]interface{})
+
+		var artistsNames []string
+		for _, name := range item["artists_name"].([]interface{}) {
+			artistsNames = append(artistsNames, name.(string))
+		}
+
 		track := model.Track{
 			Uri:         item["uri"].(string),
 			DurationMs:  int(item["duration_ms"].(float64)), // float64型をint型に変換
-			ArtistsName: item["artists_name"].(string),
+			ArtistsName: artistsNames,
 		}
 		tracks = append(tracks, track)
 	}
-
 	return tracks, nil
 }
 
@@ -100,9 +104,11 @@ func filterTracksByArtist(tracks []model.Track, artists []model.Artists) []model
 	filteredTracks := []model.Track{}
 	for _, track := range tracks {
 		for _, artist := range artists {
-			if strings.Contains(track.ArtistsName, artist.Name) {
-				filteredTracks = append(filteredTracks, track)
-				break
+			for _, artistName := range track.ArtistsName {
+				if artistName == artist.Name {
+					filteredTracks = append(filteredTracks, track)
+					break
+				}
 			}
 		}
 	}

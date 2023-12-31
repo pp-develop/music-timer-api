@@ -3,6 +3,8 @@ package track
 import (
 	"sync"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -41,7 +43,15 @@ import (
 // 	return nil
 // }
 
-func SearchTracksByFollowedArtists(userId string) error {
+func SearchTracksByFollowedArtists(c *gin.Context) error {
+	// sessionからuserIdを取得
+	session := sessions.Default(c)
+	v := session.Get("userId")
+	if v == nil {
+		return model.ErrFailedGetSession
+	}
+	userId := v.(string)
+
 	artist, err := database.GetFollowedArtists(userId)
 	if err != nil {
 		return err

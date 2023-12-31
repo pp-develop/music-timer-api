@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -64,7 +63,6 @@ func Create() *gin.Engine {
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
-	router.GET("/tracks", getTracks)
 	router.DELETE("/tracks", deleteTracks)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
@@ -119,26 +117,20 @@ func deleteSession(c *gin.Context) {
 }
 
 func saveTracks(c *gin.Context) {
-	err := track.SearchTracks()
+	var json track.RequestJson
+	var err error
+	c.ShouldBindJSON(&json)
+	if json.IncludeFavoriteArtists {
+		err = track.SearchTracksByFollowedArtists(c)
+	} else {
+		err = track.SearchAndSaveTracks()
+	}
+
 	if err != nil {
 		log.Println(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
-	}
-}
-
-func getTracks(c *gin.Context) {
-	// 1minute = 60000ms
-	oneminuteToMsec := 60000
-
-	minute, _ := strconv.Atoi(c.Query("minute"))
-	tracks, err := track.GetTracks(minute * oneminuteToMsec)
-	if err != nil {
-		log.Println(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-		c.IndentedJSON(http.StatusOK, tracks)
 	}
 }
 

@@ -1,9 +1,9 @@
 package database
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -15,8 +15,9 @@ func SaveTrack(track *spotify.FullTrack) error {
 	for _, v := range track.Album.Artists {
 		artistName = append(artistName, v.Name)
 	}
+	artistNameJson, _ := json.Marshal(artistName)
 
-	_, err := db.Exec("INSERT INTO tracks (uri, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, strings.Join(artistName, " "), track.Duration, track.ExternalIDs["isrc"])
+	_, err := db.Exec("INSERT INTO tracks (uri, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistNameJson, track.Duration, track.ExternalIDs["isrc"])
 	if err != nil {
 		return err
 	}
@@ -30,7 +31,7 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name FROM tracks WHERE isrc like '%JP%' LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
+	query := "SELECT uri, duration_ms, artists_name FROM tracks LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -40,7 +41,12 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	tracks := make([]model.Track, 0)
 	for rows.Next() {
 		var track model.Track
-		if err := rows.Scan(&track.Uri, &track.DurationMs, &track.ArtistsName); err != nil {
+		var artistsJSON string // JSON 文字列を格納するための一時変数
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsJSON); err != nil {
+			return nil, err
+		}
+		// JSON 文字列を構造体に変換
+		if err := json.Unmarshal([]byte(artistsJSON), &track.ArtistsName); err != nil {
 			return nil, err
 		}
 		tracks = append(tracks, track)

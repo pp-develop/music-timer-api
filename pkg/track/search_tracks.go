@@ -9,7 +9,11 @@ import (
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 
-func SearchTracks() error {
+type RequestJson struct {
+	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
+}
+
+func SearchAndSaveTracks() error {
 	items, err := spotify.SearchTracks()
 	if err != nil {
 		return err
@@ -78,25 +82,6 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 
 func ValidateTrack(track *spotifylibrary.FullTrack) bool {
 	return IsIsrcJp(track.ExternalIDs["isrc"])
-}
-
-func ValidateTime(msec int) bool {
-	// 1minute = 60000ms
-	oneminuteToMsec := 60000
-
-	// 任意の分数 +- ALLOWANCE_MSEC を許容する
-	// 下記の値だと+-5秒を許容するため、n分55秒~n分05秒の曲を許容する
-	allowanceMsec := 5000
-
-	for minute := 1; minute <= 8; minute++ {
-		allowanceMsecMin := minute*oneminuteToMsec - allowanceMsec
-		allowanceMsecMax := minute*oneminuteToMsec + allowanceMsec
-		if msec >= allowanceMsecMin &&
-			msec <= allowanceMsecMax {
-			return true
-		}
-	}
-	return false
 }
 
 func IsIsrcJp(isrc string) bool {
