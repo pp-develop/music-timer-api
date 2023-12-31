@@ -14,6 +14,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
 )
@@ -78,7 +79,7 @@ func callback(c *gin.Context) {
 
 	err = auth.SpotifyCallback(c)
 	if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
 	} else {
 		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
@@ -89,10 +90,10 @@ func getAuth(c *gin.Context) {
 	err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
-		log.Println(err)
+		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
@@ -102,7 +103,7 @@ func getAuth(c *gin.Context) {
 func getAuthzUrl(c *gin.Context) {
 	url, err := auth.SpotifyAuthz(c)
 	if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.JSON(http.StatusInternalServerError, "")
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
@@ -127,7 +128,7 @@ func saveTracks(c *gin.Context) {
 	}
 
 	if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
@@ -137,7 +138,7 @@ func saveTracks(c *gin.Context) {
 func deleteTracks(c *gin.Context) {
 	err := database.DeleteTracks()
 	if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
@@ -147,16 +148,15 @@ func deleteTracks(c *gin.Context) {
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
-		log.Println(err)
+		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
-		log.Println("complete")
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 }
@@ -164,13 +164,13 @@ func createPlaylist(c *gin.Context) {
 func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
-		log.Println(err)
+		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusNoContent, "")
 	} else if err != nil {
-		log.Println(err)
+		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	} else {
 		c.IndentedJSON(http.StatusOK, "")
