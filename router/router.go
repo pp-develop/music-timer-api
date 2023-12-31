@@ -46,8 +46,6 @@ func Create() *gin.Engine {
 			"Content-Length",
 			"Accept-Encoding",
 			"Authorization",
-			"X-Requested-With",
-			"Accept",
 		},
 		AllowCredentials: true,
 		MaxAge:           24 * time.Hour,
