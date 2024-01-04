@@ -1,6 +1,6 @@
 create table tracks(
     `uri` VARCHAR(255) primary key,
-    `artists_name` text,
+    `artists_name` json,
     `duration_ms` int,
     `isrc` VARCHAR(255),
     `created_at` datetime,
