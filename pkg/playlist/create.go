@@ -1,6 +1,8 @@
 package playlist
 
 import (
+	"strings"
+
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
@@ -10,7 +12,7 @@ import (
 )
 
 type RequestJson struct {
-	Minute                  int  `json:"minute"`
+	Minute                 int  `json:"minute"`
 	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
 }
 
@@ -53,12 +55,22 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	playlist, err := spotify.CreatePlaylist(user, specify_ms)
 	if err != nil {
+		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
+		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
+		if strings.Contains(err.Error(), "token expired") {
+			return "", model.ErrAccessTokenExpired
+		}
 		return "", err
 	}
 
 	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
 	if err != nil {
 		database.DeletePlaylists(string(playlist.ID), user.Id)
+		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
+		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
+		if strings.Contains(err.Error(), "token expired") {
+			return "", model.ErrAccessTokenExpired
+		}
 		return "", err
 	}
 

@@ -71,7 +71,7 @@ func SearchTracksByFollowedArtists(c *gin.Context) error {
 				return
 			}
 
-			if err := SaveTracks(items); err != nil {
+			if err := SaveTracks(items, false); err != nil {
 				errChan <- err
 				return
 			}

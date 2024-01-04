@@ -147,7 +147,7 @@ func deleteTracks(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
-	if err == model.ErrFailedGetSession {
+	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
@@ -163,7 +163,7 @@ func createPlaylist(c *gin.Context) {
 
 func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
-	if err == model.ErrFailedGetSession {
+	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {

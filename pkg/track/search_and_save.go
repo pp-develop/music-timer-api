@@ -19,7 +19,7 @@ func SearchAndSaveTracks() error {
 		return err
 	}
 
-	err = SaveTracks(items)
+	err = SaveTracks(items, true)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func SearchAndSaveTracks() error {
 	return nil
 }
 
-func SaveTracks(tracks *spotifylibrary.SearchResult) error {
+func SaveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	for _, item := range tracks.Tracks.Tracks {
 		if !ValidateTrack(&item) {
 			continue
@@ -53,7 +53,7 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 			return err
 		}
 
-		err = SaveTracks(items)
+		err = SaveTracks(items, true)
 		if err != nil {
 			return err
 		}
