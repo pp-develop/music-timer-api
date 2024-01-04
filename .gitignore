@@ -1,2 +1,3 @@
 /build/mysql
 .env
+tracks_part*
