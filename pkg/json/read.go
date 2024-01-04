@@ -22,7 +22,7 @@ func GetAllTracks() ([]model.Track, error) {
 	r := rand.New(src)
 	// ランダムな数（1から10）を生成
 	partNumber := r.Intn(10) + 1
-	randomFilePath := fmt.Sprintf("tracks_part_%d.json", partNumber)
+	randomFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, partNumber))
 
 	// ファイルをオープン
 	file, err := os.Open(randomFilePath)

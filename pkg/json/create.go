@@ -21,7 +21,8 @@ type ConfigManager struct {
 	mutex          sync.Mutex
 }
 
-var filePath = "tracks.json"
+const baseDirectory = "./pkg/json"
+const fileNamePattern = "tracks_part_%d.json"
 
 func NewConfigManager(configFilePath string) (*ConfigManager, error) {
 	cm := &ConfigManager{configFilePath: configFilePath}
@@ -57,7 +58,7 @@ func (cm *ConfigManager) load() error {
 
 func exist() (bool, error) {
 	for i := 1; i <= 10; i++ {
-		filePath := fmt.Sprintf("tracks_part_%d.json", i)
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
 		file, err := os.Open(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
@@ -105,7 +106,7 @@ func createJson() error {
 			end = len(allTracks)
 		}
 
-		filePath := fmt.Sprintf("tracks_part_%d.json", i+1)
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
 		configManager, err := NewConfigManager(filePath)
 		if err != nil {
 			return err
