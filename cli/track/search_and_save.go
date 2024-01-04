@@ -10,17 +10,17 @@ import (
 
 func main() {
 	app := &cli.App{
-		Name:  "save_track",
+		Name:  "search and save track",
 		Usage: "search spotify tracks to DB save",
 		Action: func(*cli.Context) error {
-			log.Println("start save track")
+			log.Println("start search and save track")
 
-			err := track.SearchTracks()
+			err := track.SearchAndSaveTracks()
 			if err != nil {
 				log.Println(err)
 			}
 
-			log.Println("end save track")
+			log.Println("end search and save track")
 			return nil
 		},
 	}
