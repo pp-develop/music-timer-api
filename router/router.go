@@ -59,6 +59,7 @@ func Create() *gin.Engine {
 	})
 	router.Use(sessions.Sessions("mysession", store))
 
+	router.GET("/health", healthCheck)
 	router.GET("/callback", callback)
 	router.GET("/auth", getAuth)
 	router.GET("/authz-url", getAuthzUrl)
@@ -68,6 +69,10 @@ func Create() *gin.Engine {
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
+}
+
+func healthCheck(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"status": "UP"})
 }
 
 func callback(c *gin.Context) {
