@@ -78,7 +78,7 @@ func healthCheck(c *gin.Context) {
 func callback(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
+		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, "/")
 	}
 
