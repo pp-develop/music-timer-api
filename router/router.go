@@ -66,6 +66,7 @@ func Create() *gin.Engine {
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
 	router.DELETE("/tracks", deleteTracks)
+	router.POST("/gest-playlist", gestCreatePlaylist)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
@@ -156,6 +157,20 @@ func createPlaylist(c *gin.Context) {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrTimeoutCreatePlaylist {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusNotFound, "")
+	} else if err != nil {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusCreated, playlistId)
+	}
+}
+
+
+func gestCreatePlaylist(c *gin.Context) {
+	playlistId, err := playlist.GestCreatePlaylist(c)
+	if err == model.ErrTimeoutCreatePlaylist {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {
