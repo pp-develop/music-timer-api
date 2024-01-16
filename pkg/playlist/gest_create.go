@@ -45,5 +45,11 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
+	// TODO:: delete
+	err = database.SavePlaylist(playlist, user.Id)
+	if err != nil {
+		return "", err
+	}
+
 	return string(playlist.ID), nil
 }
