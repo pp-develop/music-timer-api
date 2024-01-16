@@ -8,6 +8,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
 )
 
@@ -71,6 +72,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		if strings.Contains(err.Error(), "token expired") {
 			return "", model.ErrAccessTokenExpired
 		}
+		logger.LogError(spotify.UnfollowPlaylist(playlist.ID, user))
 		return "", err
 	}
 

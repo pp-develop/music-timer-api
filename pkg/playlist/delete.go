@@ -8,6 +8,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	sotifySdk "github.com/zmb3/spotify/v2"
 )
 
 func DeletePlaylists(c *gin.Context) error {
@@ -30,7 +31,12 @@ func DeletePlaylists(c *gin.Context) error {
 		return err
 	}
 
-	err = spotify.UnfollowPlaylist(playlists, user)
+	for _, item := range playlists {
+		err := spotify.UnfollowPlaylist(sotifySdk.ID(item.ID), user)
+		if err != nil {
+			return err
+		}
+	}
 	if err != nil {
 		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
 		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。

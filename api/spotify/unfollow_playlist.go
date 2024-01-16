@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func UnfollowPlaylist(playlist []model.Playlist, user model.User) error {
+func UnfollowPlaylist(playlistID spotify.ID, user model.User) error {
 	ctx := context.Background()
 	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
 		&oauth2.Token{
@@ -18,11 +18,9 @@ func UnfollowPlaylist(playlist []model.Playlist, user model.User) error {
 	))
 	client := spotify.New(httpClient)
 
-	for _, item := range playlist {
-		err := client.UnfollowPlaylist(ctx, spotify.ID(item.ID))
-		if err != nil {
-			return err
-		}
+	err := client.UnfollowPlaylist(ctx, playlistID)
+	if err != nil {
+		return err
 	}
 
 	return nil
