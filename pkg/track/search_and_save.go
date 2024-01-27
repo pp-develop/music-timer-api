@@ -33,7 +33,7 @@ func SearchAndSaveTracks() error {
 
 func SaveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	for _, item := range tracks.Tracks.Tracks {
-		if !validateTrack(&item) {
+		if validate && !validateTrack(&item) {
 			continue
 		}
 		err := database.SaveTrack(&item)
