@@ -167,7 +167,7 @@ func createPlaylist(c *gin.Context) {
 	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
-	} else if err == model.ErrTimeoutCreatePlaylist {
+	} else if err == model.ErrTimeoutCreatePlaylist || err == model.ErrNotFoundTracks {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusNotFound, "")
 	} else if err != nil {

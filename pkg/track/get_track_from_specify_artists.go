@@ -4,13 +4,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 )
 
-func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, error) {
+func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
@@ -19,7 +18,11 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
-		followedArtistsTracks, err := getFollowedArtistsAllTracks(userId)
+		var artists []model.Artists
+		for _, id := range artistIds {
+			artists = append(artists, model.Artists{Id: id})
+		}
+		followedArtistsTracks, err := getSpecifyArtistsAllTracks(artists)
 		if err != nil {
 			errChan <- err
 			return
@@ -51,25 +54,15 @@ func GetFollowedArtistsTracks(specify_ms int, userId string) ([]model.Track, err
 	}
 }
 
-func getFollowedArtistsAllTracks(userId string) ([]model.Track, error) {
+func getSpecifyArtistsAllTracks(artists []model.Artists) ([]model.Track, error) {
 	var tracks []model.Track
 
-	followedArtists, err := database.GetFollowedArtists(userId)
+	tracks, err := json.GetTracksByArtistsFromAllFiles(artists)
 	if err != nil {
-		log.Println(err)
 		return nil, err
 	}
-
-	allTracks, err = json.GetAllTracks()
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	tracks, err = json.GetFollowedArtistsAllTracks(allTracks, followedArtists)
-	if err != nil {
-		log.Println(err)
-		return nil, err
+	if len(tracks) == 0 {
+		return nil, model.ErrNotFoundTracks
 	}
 	return tracks, nil
 }
