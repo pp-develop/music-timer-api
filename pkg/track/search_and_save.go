@@ -33,7 +33,7 @@ func SearchAndSaveTracks() error {
 
 func SaveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	for _, item := range tracks.Tracks.Tracks {
-		if !ValidateTrack(&item) {
+		if !validateTrack(&item) {
 			continue
 		}
 		err := database.SaveTrack(&item)
@@ -80,10 +80,10 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 	return nil
 }
 
-func ValidateTrack(track *spotifylibrary.FullTrack) bool {
-	return IsIsrcJp(track.ExternalIDs["isrc"])
+func validateTrack(track *spotifylibrary.FullTrack) bool {
+	return isIsrcJp(track.ExternalIDs["isrc"])
 }
 
-func IsIsrcJp(isrc string) bool {
+func isIsrcJp(isrc string) bool {
 	return strings.Contains(isrc, "JP")
 }

@@ -46,10 +46,6 @@ func SpotifyCallback(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	// err = SaveArtistsOfFavoriteTracks(token, user.ID)
-	// if err != nil {
-	// 	return err
-	// }
 
 	// sessionにuseridを格納
 	session = sessions.Default(c)

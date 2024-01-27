@@ -43,11 +43,6 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		if err != nil {
 			return "", err
 		}
-	} else if json.IncludeFavoriteArtists {
-		tracks, err = track.GetFollowedArtistsTracks(specify_ms, userId)
-		if err != nil {
-			return "", err
-		}
 	} else {
 		tracks, err = track.GetTracks(specify_ms)
 		if err != nil {

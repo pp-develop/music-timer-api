@@ -74,11 +74,6 @@ func GetAllTracks() ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetFollowedArtistsAllTracks(allTracks []model.Track, artists []model.Artists) ([]model.Track, error) {
-	tracks := filterTracksByArtist(allTracks, artists)
-	return tracks, nil
-}
-
 func ShuffleTracks(tracks []model.Track) []model.Track {
 	// Fisher-Yates アルゴリズムを使って、スライスの要素をランダムに並び替える
 	n := len(tracks)
@@ -100,26 +95,11 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func filterTracksByArtist(tracks []model.Track, artists []model.Artists) []model.Track {
-	filteredTracks := []model.Track{}
-	for _, track := range tracks {
-		for _, artist := range artists {
-			for _, artistName := range track.ArtistsName {
-				if artistName == artist.Name {
-					filteredTracks = append(filteredTracks, track)
-					break
-				}
-			}
-		}
-	}
-	return filteredTracks
-}
-
 func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, error) {
 	var allTracks []model.Track
 	for i := 1; i <= 10; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
-		tracks, err := GetTracksByArtistsFromFile(filePath, artists)
+		tracks, err := getTracksByArtistsFromFile(filePath, artists)
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +108,7 @@ func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, err
 	return allTracks, nil
 }
 
-func GetTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]model.Track, error) {
+func getTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]model.Track, error) {
 	// ファイルをオープン
 	file, err := os.Open(filePath)
 	if err != nil {
