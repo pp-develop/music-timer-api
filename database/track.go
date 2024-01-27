@@ -11,13 +11,16 @@ import (
 )
 
 func SaveTrack(track *spotify.FullTrack) error {
+	var artistId []string
 	var artistName []string
 	for _, v := range track.Album.Artists {
+		artistId = append(artistId, string(v.ID))
 		artistName = append(artistName, v.Name)
 	}
+	artistIdJson, _ := json.Marshal(artistId)
 	artistNameJson, _ := json.Marshal(artistName)
 
-	_, err := db.Exec("INSERT INTO tracks (uri, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistNameJson, track.Duration, track.ExternalIDs["isrc"])
+	_, err := db.Exec("INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistIdJson, artistNameJson, track.Duration, track.ExternalIDs["isrc"])
 	if err != nil {
 		return err
 	}
@@ -31,7 +34,7 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name FROM tracks LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
+	query := "SELECT uri, duration_ms, artists_name, artists_id FROM tracks LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
 	rows, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -41,12 +44,17 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	tracks := make([]model.Track, 0)
 	for rows.Next() {
 		var track model.Track
-		var artistsJSON string // JSON 文字列を格納するための一時変数
-		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsJSON); err != nil {
+		var artistsNameJSON string // JSON 文字列を格納するための一時変数
+		var artistsIdJSON string   // JSON 文字列を格納するための一時変数
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsNameJSON, &artistsIdJSON); err != nil {
 			return nil, err
 		}
 		// JSON 文字列を構造体に変換
-		if err := json.Unmarshal([]byte(artistsJSON), &track.ArtistsName); err != nil {
+		if err := json.Unmarshal([]byte(artistsNameJSON), &track.ArtistsName); err != nil {
+			return nil, err
+		}
+		// artistsIdJSONのデシリアライズを追加
+		if err := json.Unmarshal([]byte(artistsIdJSON), &track.ArtistsId); err != nil {
 			return nil, err
 		}
 		tracks = append(tracks, track)

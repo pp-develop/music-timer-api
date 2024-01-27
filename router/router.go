@@ -66,6 +66,7 @@ func Create() *gin.Engine {
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
 	router.DELETE("/tracks", deleteTracks)
+	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
@@ -151,6 +152,16 @@ func deleteTracks(c *gin.Context) {
 	}
 }
 
+func getArtists(c *gin.Context) {
+	artists, err := artist.GetFollowedArtists(c)
+	if err != nil {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	} else {
+		c.IndentedJSON(http.StatusOK, artists)
+	}
+}
+
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
@@ -166,7 +177,6 @@ func createPlaylist(c *gin.Context) {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
 }
-
 
 func gestCreatePlaylist(c *gin.Context) {
 	playlistId, err := playlist.GestCreatePlaylist(c)

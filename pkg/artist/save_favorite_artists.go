@@ -19,7 +19,7 @@ func SaveFavoriteArtists(token *oauth2.Token, userId string) error {
 	if err != nil {
 		return err
 	}
-	err = SaveArtists(tracks.Tracks, userId)
+	err = saveArtists(tracks.Tracks, userId)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, user
 			return err
 		}
 
-		err = SaveArtists(tracks.Tracks, userId)
+		err = saveArtists(tracks.Tracks, userId)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, user
 	return nil
 }
 
-func SaveArtists(track []spotify.SavedTrack, userId string) error {
+func saveArtists(track []spotify.SavedTrack, userId string) error {
 	var artistName []string
 	for _, v := range track {
 		for _, a := range v.Artists {
@@ -61,11 +61,11 @@ func SaveArtists(track []spotify.SavedTrack, userId string) error {
 		}
 	}
 
-	for _, v := range artistName {
-		err := database.SaveArtists(v, userId)
-		if err != nil {
-			return err
-		}
-	}
+	// for _, v := range artistName {
+	// 	err := database.SaveArtists(v, userId)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
+
 // SaveFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得し、データベースに保存します。
 func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 
@@ -18,12 +19,12 @@ func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 	if err != nil {
 		return err
 	}
-	err = SaveArtistNames(artists.Artists, userId)
+	err = saveArtistNames(artists.Artists, userId)
 	if err != nil {
 		return err
 	}
 
-	err = ProcessNextArtists(token, artists, userId)
+	err = processNextArtists(token, artists, userId)
 	if err != nil {
 		return err
 	}
@@ -31,7 +32,7 @@ func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 	return nil
 }
 
-func ProcessNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPage, userId string) error {
+func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPage, userId string) error {
 	existAfter := artists.Cursor.After != ""
 
 	for existAfter {
@@ -40,7 +41,7 @@ func ProcessNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 			return err
 		}
 
-		err = SaveArtistNames(artists.Artists, userId)
+		err = saveArtistNames(artists.Artists, userId)
 		if err != nil {
 			return err
 		}
@@ -52,17 +53,11 @@ func ProcessNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 	return nil
 }
 
-func SaveArtistNames(artists []spotify.FullArtist, userId string) error {
-	var artistName []string
-	for _, v := range artists {
-		artistName = append(artistName, v.Name)
+func saveArtistNames(artists []spotify.FullArtist, userId string) error {
+	err := database.SaveArtists(artists, userId)
+	if err != nil {
+		return err
 	}
 
-	for _, v := range artistName {
-		err := database.SaveArtists(v, userId)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }

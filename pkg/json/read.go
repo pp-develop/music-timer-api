@@ -114,3 +114,83 @@ func filterTracksByArtist(tracks []model.Track, artists []model.Artists) []model
 	}
 	return filteredTracks
 }
+
+func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, error) {
+	var allTracks []model.Track
+	for i := 1; i <= 10; i++ {
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
+		tracks, err := GetTracksByArtistsFromFile(filePath, artists)
+		if err != nil {
+			return nil, err
+		}
+		allTracks = append(allTracks, tracks...)
+	}
+	return allTracks, nil
+}
+
+func GetTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]model.Track, error) {
+	// ファイルをオープン
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	// JSONデコーダの作成
+	decoder := json.NewDecoder(file)
+
+	// JSONのパース
+	var data map[string]interface{}
+	err = decoder.Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	// 配列型のキーを取得
+	key := "tracks"
+	value, ok := data[key]
+	if !ok {
+		return nil, fmt.Errorf("key %s not found", key)
+	}
+
+	// 配列にキャスト
+	array, ok := value.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("key %s is not an array", key)
+	}
+
+	// []interface{}型の配列を[]Track型に変換
+	var tracks []model.Track
+	for _, v := range array {
+		item := v.(map[string]interface{})
+
+		var artistIds []string
+		for _, id := range item["artists_id"].([]interface{}) {
+			artistIds = append(artistIds, id.(string))
+		}
+
+		track := model.Track{
+			Uri:        item["uri"].(string),
+			DurationMs: int(item["duration_ms"].(float64)), // float64型をint型に変換
+			ArtistsId:  artistIds,
+		}
+
+		// アーティスト名によるフィルタリング
+		for _, artist := range artists {
+			if contains(artistIds, artist.Id) {
+				tracks = append(tracks, track)
+				break
+			}
+		}
+	}
+	return tracks, nil
+}
+
+func contains(slice []string, val string) bool {
+	for _, item := range slice {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
