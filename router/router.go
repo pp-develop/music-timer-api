@@ -13,6 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
