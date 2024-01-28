@@ -158,9 +158,8 @@ func getArtists(c *gin.Context) {
 	if err != nil {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
-	} else {
-		c.IndentedJSON(http.StatusOK, artists)
 	}
+	c.IndentedJSON(http.StatusOK, artists)
 }
 
 func createPlaylist(c *gin.Context) {
