@@ -96,6 +96,12 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 }
 
 func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, error) {
+	// ファイルの作成
+	err := Create()
+	if err != nil {
+		return nil, err
+	}
+
 	var allTracks []model.Track
 	for i := 1; i <= 10; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
