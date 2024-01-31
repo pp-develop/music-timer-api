@@ -46,7 +46,7 @@ func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) 
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(60 * time.Second):
+	case <-time.After(time.Duration(timeout) * time.Second):
 		if err != nil {
 			logger.LogError(err)
 		}

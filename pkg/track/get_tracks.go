@@ -13,6 +13,7 @@ import (
 var (
 	allTracks      []model.Track
 	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
+	timeout = 35
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
@@ -53,7 +54,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(60 * time.Second):
+	case <-time.After(time.Duration(timeout) * time.Second):
 		if err != nil {
 			logger.LogError(err)
 		}
