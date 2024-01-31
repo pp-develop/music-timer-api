@@ -11,8 +11,8 @@ func GetSavedTracks(token *oauth2.Token) (*spotify.SavedTrackPage, error) {
 	var tracks *spotify.SavedTrackPage
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	tracks, err := client.CurrentUsersTracks(ctx)
 	if err != nil {
@@ -25,8 +25,8 @@ func GetSavedTracks(token *oauth2.Token) (*spotify.SavedTrackPage, error) {
 func GetNextSavedTrakcs(token *oauth2.Token, track *spotify.SavedTrackPage) error {
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	err := client.NextPage(ctx, track)
 	if err != nil {

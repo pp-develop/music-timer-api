@@ -30,7 +30,7 @@ func SearchTracks() (*spotify.SearchResult, error) {
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
 	results, err := client.Search(ctx, getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
@@ -58,7 +58,7 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
 	results, err := client.Search(ctx, "artist:"+artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
@@ -86,7 +86,7 @@ func NextSearchTracks(items *spotify.SearchResult) error {
 	}
 
 	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 	err = client.NextTrackResults(ctx, items)
 	if err != nil {
 		return err

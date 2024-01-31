@@ -10,13 +10,13 @@ import (
 
 func UnfollowPlaylist(playlistID spotify.ID, user model.User) error {
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 		},
 	))
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	err := client.UnfollowPlaylist(ctx, playlistID)
 	if err != nil {

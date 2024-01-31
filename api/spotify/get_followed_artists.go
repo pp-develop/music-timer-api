@@ -11,8 +11,8 @@ func GetFollowedArtists(token *oauth2.Token) (*spotify.FullArtistCursorPage, err
 	var artists *spotify.FullArtistCursorPage
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	artists, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50))
 	if err != nil {
@@ -26,8 +26,8 @@ func GetAfterFollowedArtists(token *oauth2.Token, after string) (*spotify.FullAr
 	var artists *spotify.FullArtistCursorPage
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	artists, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50), spotify.After(after))
 	if err != nil {

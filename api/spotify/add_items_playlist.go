@@ -11,13 +11,13 @@ import (
 
 func AddItemsPlaylist(playlistId string, tracks []model.Track, user model.User) error {
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 		},
 	))
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	var ids []spotify.ID
 	for _, item := range tracks {

@@ -16,13 +16,13 @@ func CreatePlaylist(user model.User, ms int) (*spotify.FullPlaylist, error) {
 	var playlist *spotify.FullPlaylist
 
 	ctx := context.Background()
-	httpClient := oauth2.NewClient(context.Background(), oauth2.StaticTokenSource(
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 		},
 	))
-	client := spotify.New(httpClient)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	playlist, err := client.CreatePlaylistForUser(ctx, user.Id, strconv.Itoa(ms/ONEMINUTE_TO_MSEC)+"min", "", true, false)
 	if err != nil {
