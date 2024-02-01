@@ -27,6 +27,23 @@ func SaveTrack(track *spotify.FullTrack) error {
 	return nil
 }
 
+func SaveSimpleTrack(track *spotify.SimpleTrack) error {
+	var artistId []string
+	var artistName []string
+	for _, v := range track.Artists {
+		artistId = append(artistId, string(v.ID))
+		artistName = append(artistName, v.Name)
+	}
+	artistIdJson, _ := json.Marshal(artistId)
+	artistNameJson, _ := json.Marshal(artistName)
+
+	_, err := db.Exec("INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistIdJson, artistNameJson, track.Duration, "JP")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // ページ番号とページサイズに基づいてトラックを取得する関数
 func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	// OFFSETを計算してLIMIT句を生成

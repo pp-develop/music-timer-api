@@ -17,7 +17,7 @@ func SaveArtists(artists []spotify.FullArtist, userId string) error {
 
 func GetFollowedArtists(userId string) ([]model.Artists, error) {
 	var artists []model.Artists
-	rows, err := db.Query("SELECT name FROM artists WHERE user_id = ?", userId)
+	rows, err := db.Query("SELECT id, name FROM artists WHERE user_id = ?", userId)
 	if err != nil {
 		return artists, err
 	}
@@ -25,7 +25,7 @@ func GetFollowedArtists(userId string) ([]model.Artists, error) {
 
 	for rows.Next() {
 		var artist model.Artists
-		if err := rows.Scan(&artist.Name); err != nil {
+		if err := rows.Scan(&artist.Id, &artist.Name); err != nil {
 			return artists, err
 		}
 		artists = append(artists, artist)

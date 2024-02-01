@@ -12,27 +12,25 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
+var config = &clientcredentials.Config{
+	ClientID:     os.Getenv("SPOTIFY_ID"),
+	ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+	TokenURL:     spotifyauth.TokenURL,
+}
+var token, _ = config.Token(context.Background())
+
+var clientcredentialHttpClient = spotifyauth.New().Client(context.Background(), token)
+
+var clientcredentialClient = spotify.New(clientcredentialHttpClient, spotify.WithRetry(true))
+
 func SearchTracks() (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-		TokenURL:     spotifyauth.TokenURL,
-	}
-	token, err := config.Token(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient, spotify.WithRetry(true))
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := client.Search(ctx, getRandomQuery(), spotify.SearchTypeTrack, options...)
+	results, err := clientcredentialClient.Search(context.Background(), getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,21 +44,8 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-		TokenURL:     spotifyauth.TokenURL,
-	}
-	token, err := config.Token(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := spotifyauth.New().Client(ctx, token)
-	client := spotify.New(httpClient, spotify.WithRetry(true))
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := client.Search(ctx, "artist:"+artistName, spotify.SearchTypeTrack, options...)
+	results, err := clientcredentialClient.Search(context.Background(), "artist:"+artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}

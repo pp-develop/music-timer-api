@@ -1,6 +1,8 @@
 package track
 
 import (
+	"fmt"
+	"log"
 	"sync"
 
 	"github.com/gin-contrib/sessions"
@@ -9,39 +11,6 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
-
-// SearchTracksByFollowedArtists は、spotifyユーザーがフォローしたアーティストをデータベースから取得し、
-// それらのアーティスト名に基づいてSpotifyでトラックを検索します。
-// 検索された各アーティストについて、関連するトラックが見つかった場合、それらのトラックを保存します。
-// func SearchTracksByFollowedArtists(userId string) error {
-// 	artists, err := database.GetFollowedArtists(userId)
-// 	log.Printf("artists:")
-// 	log.Printf("%+v\n", artists)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	for _, item := range artists {
-// 		items, err := spotify.SearchTracksByArtists(item.Name)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		err = SaveTracks(items)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		if items.Tracks.Next == "" {
-// 			continue
-// 		}
-// 		err = NextSearchTracks(items)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 func SearchTracksByFollowedArtists(c *gin.Context) error {
 	// sessionからuserIdを取得
@@ -52,37 +21,48 @@ func SearchTracksByFollowedArtists(c *gin.Context) error {
 	}
 	userId := v.(string)
 
-	artist, err := database.GetFollowedArtists(userId)
+	artists, err := database.GetFollowedArtists(userId)
 	if err != nil {
 		return err
 	}
 
-	errChan := make(chan error, len(artist))
+	errChan := make(chan error, len(artists))
 	var wg sync.WaitGroup
 
-	for _, item := range artist {
+	for _, artist := range artists {
 		wg.Add(1)
-		go func(item model.Artists) {
+		go func(artist model.Artists) {
 			defer wg.Done()
 
-			items, err := spotify.SearchTracksByArtists(item.Name)
+			albums, err := spotify.GetArtistAlbums(artist.Id)
 			if err != nil {
+				// todo:: 再考慮
 				errChan <- err
 				return
 			}
 
-			if err := SaveTracks(items, false); err != nil {
-				errChan <- err
-				return
-			}
+			for _, album := range albums.Albums {
+				if album.ID.String() == "" {
+					// todo:: 再考慮
+					errChan <- fmt.Errorf("Album ID is empty")
+					continue
+				}
 
-			if items.Tracks.Next != "" {
-				if err := NextSearchTracks(items); err != nil {
-					errChan <- err
-					return
+				tracks, err := spotify.GetAlbumTracks(album.ID.String())
+				if err != nil {
+					// todo:: 再考慮
+					log.Printf("Error retrieving album tracks: %v", err)
+					continue
+				}
+
+				for _, track := range tracks.Tracks {
+					if err := database.SaveSimpleTrack(&track); err != nil {
+						// todo:: 再考慮
+						errChan <- err
+					}
 				}
 			}
-		}(item)
+		}(artist)
 	}
 
 	go func() {
