@@ -138,3 +138,52 @@ func DeleteTracks() error {
 	log.Printf("Total %d rows deleted\n", totalDeleted)
 	return nil
 }
+
+func GetTracksByArtists(artists []model.Artists) ([]model.Track, error) {
+	// Extract artist IDs from the artists slice
+	var artistIds []string
+	for _, artist := range artists {
+		artistIds = append(artistIds, artist.Id)
+	}
+
+	// Convert artistIds slice to a JSON string for the SQL query
+	artistIdsJson, err := json.Marshal(artistIds)
+	if err != nil {
+		return nil, err
+	}
+
+	// Query to select tracks where the artists_id JSON contains any of the provided artist IDs
+	query := `SELECT uri, duration_ms, artists_name, artists_id FROM tracks WHERE JSON_CONTAINS(artists_id, ?)`
+
+	// Executing the query
+	rows, err := db.Query(query, artistIdsJson)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tracks []model.Track
+	for rows.Next() {
+		var track model.Track
+		var artistsNameJSON, artistsIdJSON string
+
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsNameJSON, &artistsIdJSON); err != nil {
+			return nil, err
+		}
+
+		// Deserialize JSON fields into the respective struct fields
+		if err := json.Unmarshal([]byte(artistsNameJSON), &track.ArtistsName); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(artistsIdJSON), &track.ArtistsId); err != nil {
+			return nil, err
+		}
+
+		tracks = append(tracks, track)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return tracks, nil
+}
