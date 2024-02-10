@@ -31,6 +31,14 @@ func DeletePlaylists(c *gin.Context) error {
 		return err
 	}
 
+	token, err := spotify.RefreshToken(user)
+	if err != nil {
+		return err
+	}
+	user.AccessToken = token.AccessToken
+	user.RefreshToken = token.RefreshToken
+	user.TokenExpiration = token.Expiry.Second()
+
 	for _, item := range playlists {
 		err := spotify.UnfollowPlaylist(sotifySdk.ID(item.ID), user)
 		if err != nil {
