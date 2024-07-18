@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -20,7 +19,15 @@ func SaveTrack(track *spotify.FullTrack) error {
 	artistIdJson, _ := json.Marshal(artistId)
 	artistNameJson, _ := json.Marshal(artistName)
 
-	_, err := db.Exec("INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistIdJson, artistNameJson, track.Duration, track.ExternalIDs["isrc"])
+	_, err := db.Exec(`
+        INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        ON CONFLICT (uri) DO UPDATE SET 
+            artists_id = EXCLUDED.artists_id,
+            artists_name = EXCLUDED.artists_name,
+            duration_ms = EXCLUDED.duration_ms,
+            isrc = EXCLUDED.isrc,
+            updated_at = NOW()`, track.URI, artistIdJson, artistNameJson, track.Duration, track.ExternalIDs["isrc"])
 	if err != nil {
 		return err
 	}
@@ -37,7 +44,15 @@ func SaveSimpleTrack(track *spotify.SimpleTrack) error {
 	artistIdJson, _ := json.Marshal(artistId)
 	artistNameJson, _ := json.Marshal(artistName)
 
-	_, err := db.Exec("INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE updated_at = NOW()", track.URI, artistIdJson, artistNameJson, track.Duration, "JP")
+	_, err := db.Exec(`
+        INSERT INTO tracks (uri, artists_id, artists_name, duration_ms, isrc, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+        ON CONFLICT (uri) DO UPDATE SET 
+            artists_id = EXCLUDED.artists_id,
+            artists_name = EXCLUDED.artists_name,
+            duration_ms = EXCLUDED.duration_ms,
+            isrc = EXCLUDED.isrc,
+            updated_at = NOW()`, track.URI, artistIdJson, artistNameJson, track.Duration, "JP")
 	if err != nil {
 		return err
 	}
@@ -51,8 +66,8 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name, artists_id FROM tracks LIMIT " + strconv.Itoa(limit) + " OFFSET " + strconv.Itoa(offset)
-	rows, err := db.Query(query)
+	query := "SELECT uri, duration_ms, artists_name, artists_id FROM tracks LIMIT $1 OFFSET $2"
+	rows, err := db.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +131,7 @@ func DeleteTracks() error {
 	totalDeleted := 0
 
 	for {
-		query := `DELETE FROM tracks WHERE updated_at < ? LIMIT ?`
+		query := `DELETE FROM tracks WHERE updated_at < $1 LIMIT $2`
 		result, err := db.Exec(query, thirtyDaysAgo, chunkSize)
 		if err != nil {
 			return err
@@ -153,7 +168,7 @@ func GetTracksByArtists(artists []model.Artists) ([]model.Track, error) {
 	}
 
 	// Query to select tracks where the artists_id JSON contains any of the provided artist IDs
-	query := `SELECT uri, duration_ms, artists_name, artists_id FROM tracks WHERE JSON_CONTAINS(artists_id, ?)`
+	query := `SELECT uri, duration_ms, artists_name, artists_id FROM tracks WHERE artists_id @> $1`
 
 	// Executing the query
 	rows, err := db.Query(query, artistIdsJson)

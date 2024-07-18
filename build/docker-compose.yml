@@ -11,18 +11,25 @@ services:
       - ..:/go/src/
     working_dir: /go/src/
     tty: true
+    networks:
+      - music-timer-api-network
 
-  mysql:
-    image: mysql:8.0
-    container_name: go_mysql
-    volumes:
-      - ./mysql:/var/lib/mysql
-      - ./charset.cnf:/etc/mysql/conf.d/charset.cnf
-      - ./initdb.d:/docker-entrypoint-initdb.d
+  cockroachdb:
+    image: cockroachdb/cockroach:v21.2.10
+    container_name: cockroachdb
+    command: start-single-node --insecure
     ports:
-      - 3306:3306
-    environment:
-      MYSQL_DATABASE: develop_db
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: dev
-      MYSQL_PASSWORD: dev
+      - "26257:26257"
+      - "8081:8080"
+    volumes:
+      - music-timer-api-data:/cockroach/music-timer-api-data
+      - ./initdb.d/ddl.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - music-timer-api-network
+
+networks:
+  music-timer-api-network:
+    driver: bridge
+
+volumes:
+  music-timer-api-data:

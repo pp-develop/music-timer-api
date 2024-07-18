@@ -7,7 +7,11 @@ import (
 
 func SaveArtists(artists []spotify.FullArtist, userId string) error {
 	for _, v := range artists {
-		_, err := db.Exec("INSERT IGNORE INTO artists (user_id, name, id) VALUES (?, ?, ?)", userId, v.Name, string(v.ID))
+		_, err := db.Exec(`
+            INSERT INTO artists (user_id, name, id)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (id) DO NOTHING`,
+			userId, v.Name, string(v.ID))
 		if err != nil {
 			return err
 		}
@@ -17,7 +21,9 @@ func SaveArtists(artists []spotify.FullArtist, userId string) error {
 
 func GetFollowedArtists(userId string) ([]model.Artists, error) {
 	var artists []model.Artists
-	rows, err := db.Query("SELECT id, name FROM artists WHERE user_id = ?", userId)
+	rows, err := db.Query(`
+        SELECT id, name FROM artists
+        WHERE user_id = $1`, userId)
 	if err != nil {
 		return artists, err
 	}
@@ -37,7 +43,8 @@ func GetFollowedArtists(userId string) ([]model.Artists, error) {
 }
 
 func DeleteArtists(userId string) error {
-	_, err := db.Exec("DELETE FROM artists WHERE user_id=?", userId)
+	_, err := db.Exec(`
+        DELETE FROM artists WHERE user_id = $1`, userId)
 	if err != nil {
 		return err
 	}
