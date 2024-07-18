@@ -12,8 +12,8 @@ create table users(
 DROP TABLE IF EXISTS tracks CASCADE;
 create table tracks(
     "uri" VARCHAR(255) primary key,
-    "artists_id" json,
-    "artists_name" json,
+    "artists_id" jsonb,
+    "artists_name" jsonb,
     "duration_ms" int,
     "isrc" VARCHAR(255),
     "created_at" TIMESTAMP,
