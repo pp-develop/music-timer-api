@@ -4,16 +4,25 @@ import (
 	"database/sql"
 	"log"
 	"os"
+	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 var (
-	db = MysqlConect()
+	db *sql.DB
 )
 
-func MysqlConect() *sql.DB {
+func init() {
+	var err error
+	db, err = CockroachDBConnect()
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+}
+
+func CockroachDBConnect() (*sql.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -24,15 +33,20 @@ func MysqlConect() *sql.DB {
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
 	database_name := os.Getenv("DB_NAME")
-	tls := os.Getenv("DB_TLS")
+	sslmode := os.Getenv("DB_SSLMODE")
 
-	dbconf := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database_name + "?charset=utf8mb4&tls=" + tls
-	db, err := sql.Open("mysql", dbconf)
+	dbconf := "postgresql://" + user + ":" + password + "@" + host + ":" + port + "/" + database_name + "?sslmode=" + sslmode
+	db, err := sql.Open("postgres", dbconf)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+
+	db.SetConnMaxLifetime(time.Minute * 3)
+	db.SetMaxOpenConns(10)
+	db.SetMaxIdleConns(10)
+
 	if err := db.Ping(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return db
+	return db, nil
 }

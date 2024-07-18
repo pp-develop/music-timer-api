@@ -6,7 +6,10 @@ import (
 )
 
 func SavePlaylist(playlist *spotify.FullPlaylist, userId string) error {
-	_, err := db.Exec("INSERT INTO playlists (id, user_id) VALUES (?, ?)", string(playlist.ID), userId)
+	_, err := db.Exec(`
+        INSERT INTO playlists (id, user_id)
+        VALUES ($1, $2)
+        ON CONFLICT (id) DO NOTHING`, string(playlist.ID), userId)
 	if err != nil {
 		return err
 	}
@@ -15,7 +18,7 @@ func SavePlaylist(playlist *spotify.FullPlaylist, userId string) error {
 
 func GetAllPlaylists(userId string) ([]model.Playlist, error) {
 	var playlists []model.Playlist
-	rows, err := db.Query("SELECT id FROM playlists WHERE user_id = ?", userId)
+	rows, err := db.Query("SELECT id FROM playlists WHERE user_id = $1", userId)
 	if err != nil {
 		return playlists, err
 	}
@@ -35,7 +38,7 @@ func GetAllPlaylists(userId string) ([]model.Playlist, error) {
 }
 
 func DeletePlaylists(playlistId string, userId string) error {
-	_, err := db.Exec("DELETE FROM playlists WHERE id=? AND user_id=?", playlistId, userId)
+	_, err := db.Exec("DELETE FROM playlists WHERE id = $1 AND user_id = $2", playlistId, userId)
 	if err != nil {
 		return err
 	}

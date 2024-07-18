@@ -9,6 +9,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/uuid v1.5.0
 	github.com/joho/godotenv v1.5.1
+	github.com/lib/pq v1.10.3
 	github.com/urfave/cli/v2 v2.26.0
 	github.com/zmb3/spotify/v2 v2.4.0
 	golang.org/x/oauth2 v0.15.0
