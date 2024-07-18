@@ -1,21 +1,48 @@
 package database
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/zmb3/spotify/v2"
 )
 
 func SaveArtists(artists []spotify.FullArtist, userId string) error {
-	for _, v := range artists {
-		_, err := db.Exec(`
-            INSERT INTO artists (user_id, name, id)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (id) DO NOTHING`,
-			userId, v.Name, string(v.ID))
-		if err != nil {
-			return err
-		}
+	// トランザクションを開始
+	tx, err := db.Begin()
+	if err != nil {
+		return err
 	}
+
+	// バルクインサートのためのクエリを構築
+	queryPrefix := `
+        INSERT INTO artists (user_id, name, id)
+        VALUES `
+	querySuffix := `
+        ON CONFLICT (id) DO NOTHING`
+	valueStrings := make([]string, 0, len(artists))
+	valueArgs := make([]interface{}, 0, len(artists)*3)
+
+	for i, v := range artists {
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d)", i*3+1, i*3+2, i*3+3))
+		valueArgs = append(valueArgs, userId, v.Name, string(v.ID))
+	}
+
+	query := queryPrefix + strings.Join(valueStrings, ",") + querySuffix
+
+	_, err = tx.Exec(query, valueArgs...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// トランザクションをコミット
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
