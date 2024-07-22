@@ -3,6 +3,7 @@ package json
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -99,6 +100,7 @@ func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, err
 	// ファイルの作成
 	err := Create()
 	if err != nil {
+		log.Printf("Error creating file: %v", err)
 		return nil, err
 	}
 
@@ -107,6 +109,7 @@ func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, err
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
 		tracks, err := getTracksByArtistsFromFile(filePath, artists)
 		if err != nil {
+			log.Printf("Error processing file %s: %v", filePath, err)
 			return nil, err
 		}
 		allTracks = append(allTracks, tracks...)
