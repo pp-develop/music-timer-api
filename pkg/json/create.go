@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"sync"
 
@@ -154,6 +155,7 @@ func Create() error {
 	// jsonがあれば何もしない
 	exists, err := exist()
 	if err != nil {
+		log.Printf("Error checking existence: %v", err)
 		return err
 	}
 	if exists {
@@ -162,6 +164,7 @@ func Create() error {
 
 	err = createJson()
 	if err != nil {
+		log.Printf("Error creating JSON: %v", err)
 		return err
 	}
 
