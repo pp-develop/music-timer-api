@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
@@ -37,24 +38,33 @@ func (cm *ConfigManager) load() error {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 
-	file, err := os.Open(cm.configFilePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+	// リトライを追加
+	err := retry(3, 1*time.Second, func() error {
+		file, err := os.Open(cm.configFilePath)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
 
-	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&cm.config); err != nil {
-		return err
-	}
+		// ファイルサイズをチェックし、空でないことを確認
+		stat, err := file.Stat()
+		if err != nil {
+			return err
+		}
+		if stat.Size() == 0 {
+			return fmt.Errorf("file is empty: %s", cm.configFilePath)
+		}
 
-	// if cm.config.Tracks == nil {
-	// 	cm.config.Tracks = []model.Track{}
-	// }
-	// Tracksを初期化する
-	cm.config.Tracks = []model.Track{}
+		decoder := json.NewDecoder(file)
+		if err := decoder.Decode(&cm.config); err != nil {
+			return fmt.Errorf("error decoding JSON from file %s: %w", cm.configFilePath, err)
+		}
 
-	return nil
+		cm.config.Tracks = []model.Track{}
+		return nil
+	})
+
+	return err
 }
 
 func exist() (bool, error) {
@@ -108,18 +118,33 @@ func createJson() error {
 		}
 
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
-		configManager, err := NewConfigManager(filePath)
-		if err != nil {
-			return err
-		}
 
-		err = configManager.saveToFile(filePath, allTracks[start:end])
+		// リトライを追加
+		err := retry(3, 1*time.Second, func() error {
+			configManager, err := NewConfigManager(filePath)
+			if err != nil {
+				return err
+			}
+
+			return configManager.saveToFile(filePath, allTracks[start:end])
+		})
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func retry(attempts int, sleep time.Duration, fn func() error) error {
+	var err error
+	for i := 0; i < attempts; i++ {
+		if err = fn(); err == nil {
+			return nil
+		}
+		time.Sleep(sleep)
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
 func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error {
