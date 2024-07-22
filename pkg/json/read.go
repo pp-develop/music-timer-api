@@ -81,7 +81,6 @@ func readJSONFileWithRetry(filePath string, retries int) (map[string]interface{}
 		file.Close() // ファイルを閉じる
 		if err == nil {
 			// 成功した場合
-			log.Printf("File %s read successfully", filePath)
 			return data, nil
 		}
 
