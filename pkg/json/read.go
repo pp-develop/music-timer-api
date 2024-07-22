@@ -25,19 +25,8 @@ func GetAllTracks() ([]model.Track, error) {
 	partNumber := r.Intn(10) + 1
 	randomFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, partNumber))
 
-	// ファイルをオープン
-	file, err := os.Open(randomFilePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	// JSONデコーダの作成
-	decoder := json.NewDecoder(file)
-
-	// JSONのパース
-	var data map[string]interface{}
-	err = decoder.Decode(&data)
+	// ファイルの内容を確認して読み込み
+	data, err := readJSONFileWithRetry(randomFilePath, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +62,34 @@ func GetAllTracks() ([]model.Track, error) {
 		tracks = append(tracks, track)
 	}
 	return tracks, nil
+}
+
+func readJSONFileWithRetry(filePath string, retries int) (map[string]interface{}, error) {
+	var data map[string]interface{}
+	for i := 0; i < retries; i++ {
+		file, err := os.Open(filePath)
+		if err != nil {
+			log.Printf("Error opening file %s: %v", filePath, err)
+			return nil, err
+		}
+
+		// JSONデコーダの作成
+		decoder := json.NewDecoder(file)
+
+		// JSONのパース
+		err = decoder.Decode(&data)
+		file.Close() // ファイルを閉じる
+		if err == nil {
+			// 成功した場合
+			log.Printf("File %s read successfully", filePath)
+			return data, nil
+		}
+
+		// エラーが発生した場合、リトライの前にログを出力
+		log.Printf("Error decoding JSON from file %s (attempt %d/%d): %v", filePath, i+1, retries, err)
+		time.Sleep(1 * time.Second) // 少し待ってから再試行
+	}
+	return nil, fmt.Errorf("failed to read and decode JSON from file %s after %d attempts", filePath, retries)
 }
 
 func ShuffleTracks(tracks []model.Track) []model.Track {
@@ -118,19 +135,8 @@ func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, err
 }
 
 func getTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]model.Track, error) {
-	// ファイルをオープン
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	// JSONデコーダの作成
-	decoder := json.NewDecoder(file)
-
-	// JSONのパース
-	var data map[string]interface{}
-	err = decoder.Decode(&data)
+	// ファイルの内容を確認して読み込み
+	data, err := readJSONFileWithRetry(filePath, 3)
 	if err != nil {
 		return nil, err
 	}
