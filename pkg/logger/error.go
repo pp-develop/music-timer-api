@@ -2,9 +2,12 @@ package logger
 
 import (
 	"log"
-	"runtime/debug"
+
+	"github.com/pkg/errors"
 )
 
 func LogError(err error) {
-	log.Printf("Error: %v, Type: %T, Stacktrace: %s", err, err, debug.Stack())
+	wrappedErr := errors.WithStack(err)
+	log.Printf("Error: %v, Type: %T", err, err)
+	log.Printf("Detailed Error: %+v", wrappedErr)
 }
