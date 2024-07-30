@@ -13,7 +13,7 @@ import (
 var (
 	allTracks      []model.Track
 	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
-	timeout = 35
+	timeout = 15 // 15秒
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
