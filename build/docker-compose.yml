@@ -23,7 +23,7 @@ services:
       - "8081:8080"
     volumes:
       - music-timer-api-data:/cockroach/music-timer-api-data
-      - ./initdb.d/ddl.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./initdb.d/ddl.sql:/cockroach/init.sql
     networks:
       - music-timer-api-network
 
