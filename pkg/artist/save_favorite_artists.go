@@ -19,10 +19,10 @@ func SaveFavoriteArtists(token *oauth2.Token, userId string) error {
 	if err != nil {
 		return err
 	}
-	err = saveArtists(tracks.Tracks, userId)
-	if err != nil {
-		return err
-	}
+	// err = saveArtists(tracks.Tracks, userId)
+	// if err != nil {
+	// 	return err
+	// }
 
 	err = ProcessNextTracks(token, tracks, userId)
 	if err != nil {
@@ -41,10 +41,10 @@ func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, user
 			return err
 		}
 
-		err = saveArtists(tracks.Tracks, userId)
-		if err != nil {
-			return err
-		}
+		// err = saveArtists(tracks.Tracks, userId)
+		// if err != nil {
+		// 	return err
+		// }
 		if tracks.Next == "" {
 			existNextUrl = false
 		}
@@ -53,19 +53,19 @@ func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, user
 	return nil
 }
 
-func saveArtists(track []spotify.SavedTrack, userId string) error {
-	var artistName []string
-	for _, v := range track {
-		for _, a := range v.Artists {
-			artistName = append(artistName, a.Name)
-		}
-	}
+// func saveArtists(track []spotify.SavedTrack, userId string) error {
+// 	var artistName []string
+// 	for _, v := range track {
+// 		for _, a := range v.Artists {
+// 			artistName = append(artistName, a.Name)
+// 		}
+// 	}
 
-	// for _, v := range artistName {
-	// 	err := database.SaveArtists(v, userId)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	return nil
-}
+// 	for _, v := range artistName {
+// 		err := database.SaveArtists(v, userId)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+// 	return nil
+// }

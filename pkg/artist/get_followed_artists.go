@@ -11,8 +11,9 @@ import (
 )
 
 type ArtistInfo struct {
-	ID   string
-	Name string
+	ID       string
+	Name     string
+	ImageUrl string
 }
 
 // GetFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得します。
@@ -68,13 +69,20 @@ func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursor
 }
 
 // extractArtistInfo は、spotify.FullArtist のスライスから ArtistInfo のスライスを生成します。
-func extractArtistInfo(fullArtists []spotify.FullArtist) []ArtistInfo {
-	artistInfos := []ArtistInfo{}
-	for _, artist := range fullArtists {
-		artistInfos = append(artistInfos, ArtistInfo{
-			ID:   string(artist.ID),
-			Name: artist.Name,
-		})
+func extractArtistInfo(artists []spotify.FullArtist) []ArtistInfo {
+	var artistInfos []ArtistInfo
+	for _, artist := range artists {
+		if len(artist.Images) > 0 {
+			artistInfos = append(artistInfos, ArtistInfo{
+				ImageUrl: artist.Images[0].URL,
+				ID:       string(artist.ID),
+				Name:     artist.Name})
+		} else {
+			artistInfos = append(artistInfos, ArtistInfo{
+				ImageUrl: "", // 画像がない場合のデフォルト値
+				ID:       string(artist.ID),
+				Name:     artist.Name})
+		}
 	}
 	return artistInfos
 }
