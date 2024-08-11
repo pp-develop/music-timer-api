@@ -13,7 +13,7 @@ import (
 var (
 	allTracks      []model.Track
 	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
-	timeout = 15 // 15秒
+	timeout        = 15       // 15秒
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
@@ -88,9 +88,10 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 	}
 	remainingTime = totalPlayTimeMs - totalDuration
 
-	// 差分が15秒以内の場合、差分を埋めるためのトラックは必要ありません。
+	// 差分が15秒以内で、指定された再生時間が10分（600秒）以上の場合、
+	// 差分を埋めるためのトラックは必要ないと見なします。
 	allowance_ms := 15000
-	if remainingTime == allowance_ms {
+	if remainingTime == allowance_ms && totalPlayTimeMs >= 600000 {
 		return true, tracks
 	}
 
