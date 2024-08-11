@@ -36,8 +36,8 @@ func GetUser(id string) (model.User, error) {
 	var user model.User
 
 	err := db.QueryRow(`
-        SELECT id, access_token, refresh_token FROM users
-        WHERE id = $1`, id).Scan(&user.Id, &user.AccessToken, &user.RefreshToken)
+        SELECT id, access_token, refresh_token, token_expiration FROM users
+        WHERE id = $1`, id).Scan(&user.Id, &user.AccessToken, &user.RefreshToken, &user.TokenExpiration)
 	if err != nil {
 		return user, err
 	}
