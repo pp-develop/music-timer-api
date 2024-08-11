@@ -19,7 +19,7 @@ func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 	if err != nil {
 		return err
 	}
-	err = saveArtistNames(artists.Artists, userId)
+	err = saveArtists(artists.Artists, userId)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 			return err
 		}
 
-		err = saveArtistNames(artists.Artists, userId)
+		err = saveArtists(artists.Artists, userId)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 	return nil
 }
 
-func saveArtistNames(artists []spotify.FullArtist, userId string) error {
+func saveArtists(artists []spotify.FullArtist, userId string) error {
 	err := database.SaveArtists(artists, userId)
 	if err != nil {
 		return err

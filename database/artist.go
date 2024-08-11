@@ -17,16 +17,20 @@ func SaveArtists(artists []spotify.FullArtist, userId string) error {
 
 	// バルクインサートのためのクエリを構築
 	queryPrefix := `
-        INSERT INTO artists (user_id, name, id)
+        INSERT INTO artists (user_id, name, id, image_url)
         VALUES `
 	querySuffix := `
         ON CONFLICT (id) DO NOTHING`
 	valueStrings := make([]string, 0, len(artists))
-	valueArgs := make([]interface{}, 0, len(artists)*3)
+	valueArgs := make([]interface{}, 0, len(artists)*4)
 
 	for i, v := range artists {
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d)", i*3+1, i*3+2, i*3+3))
-		valueArgs = append(valueArgs, userId, v.Name, string(v.ID))
+		imageUrl := ""
+		if len(v.Images) > 0 {
+			imageUrl = v.Images[0].URL
+		}
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d)", i*4+1, i*4+2, i*4+3, i*4+4))
+		valueArgs = append(valueArgs, userId, v.Name, string(v.ID), imageUrl)
 	}
 
 	query := queryPrefix + strings.Join(valueStrings, ",") + querySuffix
@@ -49,7 +53,7 @@ func SaveArtists(artists []spotify.FullArtist, userId string) error {
 func GetFollowedArtists(userId string) ([]model.Artists, error) {
 	var artists []model.Artists
 	rows, err := db.Query(`
-        SELECT id, name FROM artists
+        SELECT id, name, image_url FROM artists
         WHERE user_id = $1`, userId)
 	if err != nil {
 		return artists, err
@@ -58,7 +62,7 @@ func GetFollowedArtists(userId string) ([]model.Artists, error) {
 
 	for rows.Next() {
 		var artist model.Artists
-		if err := rows.Scan(&artist.Id, &artist.Name); err != nil {
+		if err := rows.Scan(&artist.Id, &artist.Name, &artist.ImageUrl); err != nil {
 			return artists, err
 		}
 		artists = append(artists, artist)
