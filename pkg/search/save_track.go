@@ -1,4 +1,4 @@
-package track
+package search
 
 import (
 	"net/url"
@@ -13,25 +13,25 @@ type RequestJson struct {
 	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
 }
 
-func SearchAndSaveTracks() error {
+func SaveTracks() error {
 	items, err := spotify.SearchTracks()
 	if err != nil {
 		return err
 	}
 
-	err = SaveTracks(items, true)
+	err = saveTracks(items, true)
 	if err != nil {
 		return err
 	}
 
-	err = NextSearchTracks(items)
+	err = nextSearchTracks(items)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func SaveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
+func saveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	for _, item := range tracks.Tracks.Tracks {
 		if validate && !validateTrack(&item) {
 			continue
@@ -44,7 +44,7 @@ func SaveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	return nil
 }
 
-func NextSearchTracks(items *spotifylibrary.SearchResult) error {
+func nextSearchTracks(items *spotifylibrary.SearchResult) error {
 	var prevOffset string
 
 	for {
@@ -53,7 +53,7 @@ func NextSearchTracks(items *spotifylibrary.SearchResult) error {
 			return err
 		}
 
-		err = SaveTracks(items, true)
+		err = saveTracks(items, true)
 		if err != nil {
 			return err
 		}

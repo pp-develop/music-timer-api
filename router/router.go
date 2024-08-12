@@ -17,7 +17,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
 )
 
 func Create() *gin.Engine {
@@ -126,13 +126,13 @@ func deleteSession(c *gin.Context) {
 }
 
 func saveTracks(c *gin.Context) {
-	var json track.RequestJson
+	var json search.RequestJson
 	var err error
 	c.ShouldBindJSON(&json)
 	if json.IncludeFavoriteArtists {
-		err = track.SearchTracksByFollowedArtists(c)
+		err = search.SaveTracksByFollowedArtists(c)
 	} else {
-		err = track.SearchAndSaveTracks()
+		err = search.SaveTracks()
 	}
 
 	if err != nil {

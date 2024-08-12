@@ -1,4 +1,4 @@
-package track
+package search
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
-func SearchTracksByFollowedArtists(c *gin.Context) error {
+func SaveTracksByFollowedArtists(c *gin.Context) error {
 	// sessionからuserIdを取得
 	session := sessions.Default(c)
 	v := session.Get("userId")

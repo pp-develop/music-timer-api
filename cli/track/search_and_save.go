@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
 	"github.com/urfave/cli/v2"
 )
 
@@ -15,7 +15,7 @@ func main() {
 		Action: func(*cli.Context) error {
 			log.Println("start search and save track")
 
-			err := track.SearchAndSaveTracks()
+			err := search.SaveTracks()
 			if err != nil {
 				log.Println(err)
 			}
