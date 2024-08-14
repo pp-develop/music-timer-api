@@ -16,10 +16,10 @@ func SaveFavoriteTracks(token *oauth2.Token, userId string) error {
 		return err
 	}
 
-	// err = database.DeleteArtists(userId)
-	// if err != nil {
-	// 	return err
-	// }
+	err = database.ClearFavoriteTracks(userId)
+	if err != nil {
+		return err
+	}
 
 	// トラック情報を保存
 	for _, item := range tracks.Tracks {

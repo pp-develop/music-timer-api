@@ -138,3 +138,13 @@ func UpdateUserUpdateAt(userId string, updatedAt time.Time) error {
 	}
 	return nil
 }
+
+func ClearFavoriteTracks(userId string) error {
+	_, err := db.Exec(`
+        UPDATE users SET favorite_track = '[]', updated_at = NOW()
+        WHERE id = $1`, userId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
