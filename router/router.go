@@ -69,6 +69,7 @@ func Create() *gin.Engine {
 	router.DELETE("/tracks", deleteTracks)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
+	router.GET("/playlist", getPlaylist)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
 	return router
@@ -160,6 +161,15 @@ func getArtists(c *gin.Context) {
 		c.IndentedJSON(http.StatusInternalServerError, "")
 	}
 	c.IndentedJSON(http.StatusOK, artists)
+}
+
+func getPlaylist(c *gin.Context) {
+	playlist, err := playlist.GetPlaylists(c)
+	if err != nil {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusInternalServerError, "")
+	}
+	c.IndentedJSON(http.StatusOK, playlist)
 }
 
 func createPlaylist(c *gin.Context) {
