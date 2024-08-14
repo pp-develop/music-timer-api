@@ -15,6 +15,7 @@ import (
 type RequestJson struct {
 	Minute                 int      `json:"minute"`
 	IncludeFavoriteArtists bool     `json:"includeFavoriteArtists"`
+	IncludeFavoriteTracks bool     `json:"includeFavoriteTracks"`
 	ArtistIds              []string `json:"artistIds"`
 }
 
@@ -40,6 +41,11 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	var tracks []model.Track
 	if json.IncludeFavoriteArtists && len(json.ArtistIds) > 0 {
 		tracks, err = track.GetSpecifyArtistsTracks(specify_ms, json.ArtistIds, userId)
+		if err != nil {
+			return "", err
+		}
+	} else if json.IncludeFavoriteArtists {
+		tracks, err = track.GetSaveTracks(specify_ms, userId)
 		if err != nil {
 			return "", err
 		}

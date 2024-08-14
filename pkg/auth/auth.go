@@ -1,11 +1,14 @@
 package auth
 
 import (
+	"log"
 	"time"
 
 	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
+	"golang.org/x/oauth2"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -47,6 +50,30 @@ func Auth(c *gin.Context) error {
 
 		// アクセストークンの更新
 		err = database.UpdateAccessToken(token, user.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	// 更新日時のチェック
+	// TODO:: 別リクエストで行う
+	updateAt, err := time.Parse(time.RFC3339, user.UpdateAt)
+	if err != nil {
+		log.Printf("failed to parse UpdatedAt: %v", err)
+		return err
+	}
+
+	if time.Since(updateAt).Hours() > 24 {
+		err = search.SaveFavoriteTracks(&oauth2.Token{
+			AccessToken:  user.AccessToken,
+			RefreshToken: user.RefreshToken,
+		}, userId)
+		if err != nil {
+			return err
+		}
+
+		// 更新日時を現在の時間に更新
+		err = database.UpdateUserUpdateAt(userId, time.Now())
 		if err != nil {
 			return err
 		}
