@@ -1,4 +1,4 @@
-FROM golang:1.23
+FROM golang:1.23.0
 
 RUN go install github.com/go-delve/delve/cmd/dlv@latest \
     && go install github.com/air-verse/air@latest
