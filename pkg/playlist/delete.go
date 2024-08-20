@@ -31,27 +31,16 @@ func DeletePlaylists(c *gin.Context) error {
 		return err
 	}
 
-	token, err := spotify.RefreshToken(user)
-	if err != nil {
-		return err
-	}
-	user.AccessToken = token.AccessToken
-	user.RefreshToken = token.RefreshToken
-	user.TokenExpiration = token.Expiry.Second()
-
 	for _, item := range playlists {
 		err := spotify.UnfollowPlaylist(sotifySdk.ID(item.ID), user)
 		if err != nil {
+			// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
+			// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
+			if strings.Contains(err.Error(), "token expired") {
+				return model.ErrAccessTokenExpired
+			}
 			return err
 		}
-	}
-	if err != nil {
-		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
-		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
-		if strings.Contains(err.Error(), "token expired") {
-			return model.ErrAccessTokenExpired
-		}
-		return err
 	}
 
 	for _, item := range playlists {
