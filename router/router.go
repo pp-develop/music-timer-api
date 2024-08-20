@@ -176,9 +176,12 @@ func getPlaylist(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
-	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
+	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
+	} else if err == model.ErrAccessTokenExpired {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
 	} else if err == model.ErrTimeoutCreatePlaylist || err == model.ErrNotFoundTracks {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusNotFound, "")
@@ -205,12 +208,15 @@ func gestCreatePlaylist(c *gin.Context) {
 
 func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
-	if err == model.ErrFailedGetSession || err == model.ErrAccessTokenExpired {
+	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
 	} else if err == model.ErrNotFoundPlaylist {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusNoContent, "")
+	} else if err == model.ErrAccessTokenExpired {
+		logger.LogError(err)
+		c.IndentedJSON(http.StatusUnauthorized, "")
 	} else if err != nil {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
