@@ -100,7 +100,7 @@ func getAuth(c *gin.Context) {
 
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
+		c.IndentedJSON(http.StatusSeeOther, "")
 	} else if err != nil {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")
