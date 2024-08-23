@@ -178,7 +178,7 @@ func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
+		c.IndentedJSON(http.StatusSeeOther, "")
 	} else if err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusUnauthorized, "")
