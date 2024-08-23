@@ -210,7 +210,7 @@ func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("BASE_URL"))
+		c.IndentedJSON(http.StatusSeeOther, "")
 	} else if err == model.ErrNotFoundPlaylist {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusNoContent, "")
