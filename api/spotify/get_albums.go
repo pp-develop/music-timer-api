@@ -11,7 +11,12 @@ func GetArtistAlbums(artistID string) (*spotify.SimpleAlbumPage, error) {
 		spotify.Market("JP"),
 	}
 
-	albums, err := clientcredentialClient.GetArtistAlbums(context.Background(), spotify.ID(artistID), nil, opts...)
+	client, err := getClient()
+	if err != nil {
+		return nil, err
+	}
+
+	albums, err := client.GetArtistAlbums(context.Background(), spotify.ID(artistID), nil, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +24,12 @@ func GetArtistAlbums(artistID string) (*spotify.SimpleAlbumPage, error) {
 }
 
 func GetAlbumTracks(albumID string) (*spotify.SimpleTrackPage, error) {
-	tracks, err := clientcredentialClient.GetAlbumTracks(context.Background(), spotify.ID(albumID))
+	client, err := getClient()
+	if err != nil {
+		return nil, err
+	}
+
+	tracks, err := client.GetAlbumTracks(context.Background(), spotify.ID(albumID))
 	if err != nil {
 		return nil, err
 	}
