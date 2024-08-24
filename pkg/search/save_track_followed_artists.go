@@ -12,6 +12,10 @@ import (
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 )
 
+const maxConcurrency = 5
+
+var semaphore = make(chan struct{}, maxConcurrency)
+
 func SaveTracksByFollowedArtists(c *gin.Context) error {
 	// sessionからuserIdを取得
 	session := sessions.Default(c)
@@ -31,8 +35,12 @@ func SaveTracksByFollowedArtists(c *gin.Context) error {
 
 	for _, artist := range artists {
 		wg.Add(1)
+
 		go func(artist model.Artists) {
 			defer wg.Done()
+
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
 
 			albums, err := spotify.GetArtistAlbums(artist.Id)
 			if err != nil {
