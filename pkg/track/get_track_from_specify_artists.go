@@ -1,18 +1,22 @@
 package track
 
 import (
+	"context"
 	"log"
 	"time"
 
+	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
 	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
 )
 
 func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel() // タイムアウト後にキャンセル
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
@@ -31,23 +35,26 @@ func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) 
 
 		success := false
 		for !success {
-			tryCount++ // 試行回数をインクリメント
-			shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
-			success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			select {
+			case <-ctx.Done(): // タイムアウトまたはキャンセル時にループを終了
+				errChan <- ctx.Err()
+				return
+			default:
+				tryCount++
+				shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
+				success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			}
 		}
 		c1 <- tracks
 	}()
 
 	select {
 	case tracks := <-c1:
-		if tracks == nil {
-			return nil, <-errChan
-		}
-		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
+		log.Printf("試行回数: %d\n", tryCount)
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-ctx.Done(): // タイムアウト時
 		if err != nil {
 			logger.LogError(err)
 		}

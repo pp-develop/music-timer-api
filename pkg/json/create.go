@@ -79,6 +79,7 @@ func exist() (bool, error) {
 			// その他のエラー
 			return false, err
 		}
+		defer file.Close()
 
 		var config struct {
 			Tracks []struct{} `json:"tracks"`
@@ -86,10 +87,8 @@ func exist() (bool, error) {
 
 		decoder := json.NewDecoder(file)
 		if err := decoder.Decode(&config); err != nil {
-			file.Close() // デコードエラーが発生した場合、ファイルを閉じます
 			return false, err
 		}
-		file.Close() // デコードが完了したらファイルを閉じます
 
 		if len(config.Tracks) == 0 {
 			// トラックが空の場合
