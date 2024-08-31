@@ -1,8 +1,8 @@
-# 　make-playlist-by-specify-time-api
+# 　music-timer-api
 [ English | [日本語]() ]
 
 ## Overview
-WEB API for [music-timer](https://github.com/pp-develop/make-playlist-by-specify-time).  
+WEB API for [music-timer](https://github.com/pp-develop/music-timer).  
 create spotify playlist by specifying time  
 
 ## Setup

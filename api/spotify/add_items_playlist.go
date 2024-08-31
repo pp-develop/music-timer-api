@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )

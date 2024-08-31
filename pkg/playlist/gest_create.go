@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/pkg/track"
 )
 
 func GestCreatePlaylist(c *gin.Context) (string, error) {

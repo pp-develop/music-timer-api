@@ -1,4 +1,4 @@
-module github.com/pp-develop/make-playlist-by-specify-time-api
+module github.com/pp-develop/music-timer-api
 
 go 1.19
 
@@ -51,22 +51,22 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist => ./pkg/artist
+replace github.com/pp-develop/music-timer-api/pkg/artist => ./pkg/artist
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth => ./pkg/auth
+replace github.com/pp-develop/music-timer-api/pkg/auth => ./pkg/auth
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist => ./pkg/playlist
+replace github.com/pp-develop/music-timer-api/pkg/playlist => ./pkg/playlist
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger => ./pkg/logger
+replace github.com/pp-develop/music-timer-api/pkg/logger => ./pkg/logger
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json => ./pkg/json
+replace github.com/pp-develop/music-timer-api/pkg/json => ./pkg/json
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track => ./pkg/track
+replace github.com/pp-develop/music-timer-api/pkg/track => ./pkg/track
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify => ./api/spotify
+replace github.com/pp-develop/music-timer-api/api/spotify => ./api/spotify
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/router => ./router
+replace github.com/pp-develop/music-timer-api/router => ./router
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/model => ./model
+replace github.com/pp-develop/music-timer-api/model => ./model
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/database => ./database
+replace github.com/pp-develop/music-timer-api/database => ./database

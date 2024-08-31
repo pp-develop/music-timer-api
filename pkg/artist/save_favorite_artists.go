@@ -1,8 +1,8 @@
 package artist
 
 import (
-	spotifyApi "github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )

@@ -11,13 +11,13 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/artist"
+	"github.com/pp-develop/music-timer-api/pkg/auth"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/pkg/playlist"
+	"github.com/pp-develop/music-timer-api/pkg/search"
 )
 
 func Create() *gin.Engine {

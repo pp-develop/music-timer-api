@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/json"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) ([]model.Track, error) {

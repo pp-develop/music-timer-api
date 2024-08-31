@@ -3,8 +3,8 @@ package playlist
 import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
 func GetPlaylists(c *gin.Context) ([]model.Playlist, error) {

@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
 func GetAllTracks() ([]model.Track, error) {

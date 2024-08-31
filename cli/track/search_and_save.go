@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/pkg/search"
 	"github.com/urfave/cli/v2"
 )
 

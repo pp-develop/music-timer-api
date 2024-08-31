@@ -4,8 +4,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 

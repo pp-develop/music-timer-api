@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/pkg/track"
 )
 
 type RequestJson struct {
