@@ -6,6 +6,7 @@ import (
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/utils"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
@@ -24,7 +25,13 @@ func GetFollowedArtists(c *gin.Context) ([]ArtistInfo, error) {
 		return nil, model.ErrFailedGetSession
 	}
 	userId := v.(string)
-	user, err := database.GetUser(userId)
+
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return nil, model.ErrFailedGetDB
+	}
+
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return nil, err
 	}

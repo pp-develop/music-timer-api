@@ -8,6 +8,7 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/utils"
 	sotifySdk "github.com/zmb3/spotify/v2"
 )
 
@@ -19,14 +20,19 @@ func DeletePlaylists(c *gin.Context) error {
 	}
 	userId := v.(string)
 
-	playlists, err := database.GetAllPlaylists(userId)
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
+
+	playlists, err := database.GetAllPlaylists(dbInstance, userId)
 	if err != nil {
 		return err
 	} else if len(playlists) == 0 {
 		return model.ErrNotFoundPlaylist
 	}
 
-	user, err := database.GetUser(userId)
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return err
 	}
@@ -44,7 +50,7 @@ func DeletePlaylists(c *gin.Context) error {
 	}
 
 	for _, item := range playlists {
-		err = database.DeletePlaylists(item.ID, user.Id)
+		err = database.DeletePlaylists(dbInstance, item.ID, user.Id)
 		if err != nil {
 			return err
 		}

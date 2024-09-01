@@ -6,6 +6,7 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/utils"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,12 @@ func Auth(c *gin.Context) error {
 	}
 	userId := v.(string)
 
-	user, err := database.GetUser(userId)
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
+
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return err
 	}
@@ -46,7 +52,7 @@ func Auth(c *gin.Context) error {
 		}
 
 		// アクセストークンの更新
-		err = database.UpdateAccessToken(token, user.Id)
+		err = database.UpdateAccessToken(dbInstance, token, user.Id)
 		if err != nil {
 			return err
 		}

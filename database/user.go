@@ -1,11 +1,13 @@
 package database
 
 import (
+	"database/sql"
+
 	"github.com/pp-develop/music-timer-api/model"
 	"golang.org/x/oauth2"
 )
 
-func SaveAccessToken(token *oauth2.Token, id string) error {
+func SaveAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	_, err := db.Exec(`
         INSERT INTO users (id, access_token, refresh_token, token_expiration, created_at, updated_at)
         VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -21,7 +23,7 @@ func SaveAccessToken(token *oauth2.Token, id string) error {
 	return nil
 }
 
-func UpdateAccessToken(token *oauth2.Token, id string) error {
+func UpdateAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	_, err := db.Exec(`
         UPDATE users SET access_token = $1, updated_at = NOW()
         WHERE id = $2`,
@@ -32,7 +34,7 @@ func UpdateAccessToken(token *oauth2.Token, id string) error {
 	return nil
 }
 
-func GetUser(id string) (model.User, error) {
+func GetUser(db *sql.DB, id string) (model.User, error) {
 	var user model.User
 
 	err := db.QueryRow(`

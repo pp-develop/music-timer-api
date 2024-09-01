@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 )
 
-func SaveArtists(artists []spotify.FullArtist, userId string) error {
+func SaveArtists(db *sql.DB, artists []spotify.FullArtist, userId string) error {
 	// トランザクションを開始
 	tx, err := db.Begin()
 	if err != nil {
@@ -50,7 +51,7 @@ func SaveArtists(artists []spotify.FullArtist, userId string) error {
 	return nil
 }
 
-func GetFollowedArtists(userId string) ([]model.Artists, error) {
+func GetFollowedArtists(db *sql.DB, userId string) ([]model.Artists, error) {
 	var artists []model.Artists
 	rows, err := db.Query(`
         SELECT id, name, image_url FROM artists
@@ -73,7 +74,7 @@ func GetFollowedArtists(userId string) ([]model.Artists, error) {
 	return artists, nil
 }
 
-func DeleteArtists(userId string) error {
+func DeleteArtists(db *sql.DB, userId string) error {
 	_, err := db.Exec(`
         DELETE FROM artists WHERE user_id = $1`, userId)
 	if err != nil {

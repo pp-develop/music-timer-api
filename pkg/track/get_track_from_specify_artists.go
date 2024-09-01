@@ -2,6 +2,7 @@ package track
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
+func GetSpecifyArtistsTracks(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
@@ -27,7 +28,7 @@ func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) 
 		for _, id := range artistIds {
 			artists = append(artists, model.Artists{Id: id})
 		}
-		followedArtistsTracks, err := getSpecifyArtistsAllTracks(artists)
+		followedArtistsTracks, err := getSpecifyArtistsAllTracks(db, artists)
 		if err != nil {
 			errChan <- err
 			return
@@ -62,15 +63,15 @@ func GetSpecifyArtistsTracks(specify_ms int, artistIds []string, userId string) 
 	}
 }
 
-func getSpecifyArtistsAllTracks(artists []model.Artists) ([]model.Track, error) {
+func getSpecifyArtistsAllTracks(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
 	var tracks []model.Track
 
-	tracks, err := json.GetTracksByArtistsFromAllFiles(artists)
+	tracks, err := json.GetTracksByArtistsFromAllFiles(db, artists)
 	if err != nil {
 		return nil, err
 	}
 	if len(tracks) == 0 {
-		tracks, err = database.GetTracksByArtists(artists)
+		tracks, err = database.GetTracksByArtists(db, artists)
 		if err != nil {
 			return nil, err
 		}

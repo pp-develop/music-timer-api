@@ -1,11 +1,15 @@
 package search
 
 import (
+	"database/sql"
 	"net/url"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/utils"
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 
@@ -13,30 +17,35 @@ type RequestJson struct {
 	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
 }
 
-func SaveTracks() error {
+func SaveTracks(c *gin.Context) error {
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
+	
 	items, err := spotify.SearchTracks()
 	if err != nil {
 		return err
 	}
 
-	err = saveTracks(items, true)
+	err = saveTracks(dbInstance, items, true)
 	if err != nil {
 		return err
 	}
 
-	err = nextSearchTracks(items)
+	err = nextSearchTracks(dbInstance, items)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func saveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
+func saveTracks(db *sql.DB, tracks *spotifylibrary.SearchResult, validate bool) error {
 	for _, item := range tracks.Tracks.Tracks {
 		if validate && !validateTrack(&item) {
 			continue
 		}
-		err := database.SaveTrack(&item)
+		err := database.SaveTrack(db, &item)
 		if err != nil {
 			return err
 		}
@@ -44,7 +53,7 @@ func saveTracks(tracks *spotifylibrary.SearchResult, validate bool) error {
 	return nil
 }
 
-func nextSearchTracks(items *spotifylibrary.SearchResult) error {
+func nextSearchTracks(db *sql.DB, items *spotifylibrary.SearchResult) error {
 	var prevOffset string
 
 	for {
@@ -53,7 +62,7 @@ func nextSearchTracks(items *spotifylibrary.SearchResult) error {
 			return err
 		}
 
-		err = saveTracks(items, true)
+		err = saveTracks(db, items, true)
 		if err != nil {
 			return err
 		}

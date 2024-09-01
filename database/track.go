@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 )
 
-func SaveTrack(track *spotify.FullTrack) error {
+func SaveTrack(db *sql.DB, track *spotify.FullTrack) error {
 	var artistId []string
 	var artistName []string
 	for _, v := range track.Album.Artists {
@@ -34,7 +35,7 @@ func SaveTrack(track *spotify.FullTrack) error {
 	return nil
 }
 
-func SaveSimpleTrack(track *spotify.SimpleTrack) error {
+func SaveSimpleTrack(db *sql.DB, track *spotify.SimpleTrack) error {
 	var artistId []string
 	var artistName []string
 	for _, v := range track.Artists {
@@ -60,7 +61,7 @@ func SaveSimpleTrack(track *spotify.SimpleTrack) error {
 }
 
 // ページ番号とページサイズに基づいてトラックを取得する関数
-func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
+func GetTracks(db *sql.DB, pageNumber, pageSize int) ([]model.Track, error) {
 	// OFFSETを計算してLIMIT句を生成
 	offset := (pageNumber - 1) * pageSize
 	limit := pageSize
@@ -97,7 +98,7 @@ func GetTracks(pageNumber, pageSize int) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetAllTracks() ([]model.Track, error) {
+func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	var AllTracks []model.Track
 
 	// ページネーションでトラックデータを取得
@@ -105,7 +106,7 @@ func GetAllTracks() ([]model.Track, error) {
 	pageNumber := 1
 	for {
 		// ページ番号とページサイズに基づいてトラックを取得
-		tracks, err := GetTracks(pageNumber, pageSize)
+		tracks, err := GetTracks(db, pageNumber, pageSize)
 		if err != nil {
 			return nil, err
 		}
@@ -124,7 +125,7 @@ func GetAllTracks() ([]model.Track, error) {
 	return AllTracks, nil
 }
 
-func DeleteTracks() error {
+func DeleteTracks(db *sql.DB) error {
 	const chunkSize = 100000
 	// 180日更新されてないデータを削除
 	thirtyDaysAgo := time.Now().AddDate(0, 0, -180).Format("2006-01-02 15:04:05")
@@ -154,7 +155,7 @@ func DeleteTracks() error {
 	return nil
 }
 
-func GetTracksByArtists(artists []model.Artists) ([]model.Track, error) {
+func GetTracksByArtists(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
 	// Extract artist IDs from the artists slice
 	var artistIds []string
 	for _, artist := range artists {

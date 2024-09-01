@@ -1,6 +1,7 @@
 package json
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,9 +12,9 @@ import (
 	"github.com/pp-develop/music-timer-api/model"
 )
 
-func GetAllTracks() ([]model.Track, error) {
+func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	// ファイルの作成
-	err := Create()
+	err := Create(db)
 	if err != nil {
 		return nil, err
 	}
@@ -111,9 +112,9 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, error) {
+func GetTracksByArtistsFromAllFiles(db *sql.DB,artists []model.Artists) ([]model.Track, error) {
 	// ファイルの作成
-	err := Create()
+	err := Create(db)
 	if err != nil {
 		log.Printf("Error creating file: %v", err)
 		return nil, err

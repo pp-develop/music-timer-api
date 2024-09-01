@@ -2,6 +2,7 @@ package json
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -99,8 +100,8 @@ func exist() (bool, error) {
 	return true, nil
 }
 
-func createJson() error {
-	allTracks, err := database.GetAllTracks()
+func createJson(db *sql.DB) error {
+	allTracks, err := database.GetAllTracks(db)
 	if err != nil {
 		return err
 	}
@@ -175,7 +176,7 @@ func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error
 	return nil
 }
 
-func Create() error {
+func Create(db *sql.DB,) error {
 	// jsonがあれば何もしない
 	exists, err := exist()
 	if err != nil {
@@ -186,7 +187,7 @@ func Create() error {
 		return nil
 	}
 
-	err = createJson()
+	err = createJson(db)
 	if err != nil {
 		log.Printf("Error creating JSON: %v", err)
 		return err

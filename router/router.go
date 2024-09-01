@@ -12,12 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/pkg/auth"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/pkg/playlist"
 	"github.com/pp-develop/music-timer-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
 func Create() *gin.Engine {
@@ -59,6 +61,7 @@ func Create() *gin.Engine {
 		SameSite: http.SameSiteNoneMode,
 	})
 	router.Use(sessions.Sessions("mysession", store))
+	router.Use(middleware.DBMiddleware())
 
 	router.GET("/health", healthCheck)
 	router.GET("/callback", callback)
@@ -133,7 +136,7 @@ func saveTracks(c *gin.Context) {
 	if json.IncludeFavoriteArtists {
 		err = search.SaveTracksByFollowedArtists(c)
 	} else {
-		err = search.SaveTracks()
+		err = search.SaveTracks(c)
 	}
 
 	if err != nil {
@@ -145,7 +148,13 @@ func saveTracks(c *gin.Context) {
 }
 
 func deleteTracks(c *gin.Context) {
-	err := database.DeleteTracks()
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		c.IndentedJSON(http.StatusInternalServerError, "")
+		return
+	}
+
+	err := database.DeleteTracks(dbInstance)
 	if err != nil {
 		logger.LogError(err)
 		c.IndentedJSON(http.StatusInternalServerError, "")

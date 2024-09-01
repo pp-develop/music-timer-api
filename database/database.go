@@ -2,8 +2,10 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -11,18 +13,22 @@ import (
 )
 
 var (
-	db *sql.DB
+	dbInstance *sql.DB
+	once       sync.Once
+	initError  error
 )
 
-func init() {
-	var err error
-	db, err = CockroachDBConnect()
-	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
-	}
+// GetDatabaseInstance シングルトンパターンでデータベース接続を提供
+func GetDatabaseInstance(db Database) (*sql.DB, error) {
+	once.Do(func() {
+		dbInstance, initError = db.Connect()
+	})
+	return dbInstance, initError
 }
 
-func CockroachDBConnect() (*sql.DB, error) {
+type CockroachDB struct{}
+
+func (db CockroachDB) Connect() (*sql.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
@@ -32,21 +38,21 @@ func CockroachDBConnect() (*sql.DB, error) {
 	password := os.Getenv("DB_PASSWORD")
 	host := os.Getenv("DB_HOST")
 	port := os.Getenv("DB_PORT")
-	database_name := os.Getenv("DB_NAME")
+	databaseName := os.Getenv("DB_NAME")
 	sslmode := os.Getenv("DB_SSLMODE")
 
-	dbconf := "postgresql://" + user + ":" + password + "@" + host + ":" + port + "/" + database_name + "?sslmode=" + sslmode
-	db, err := sql.Open("postgres", dbconf)
+	dbconf := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s", user, password, host, port, databaseName, sslmode)
+	dbConn, err := sql.Open("postgres", dbconf)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetConnMaxLifetime(time.Minute * 3)
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
+	dbConn.SetConnMaxLifetime(time.Minute * 3)
+	dbConn.SetMaxOpenConns(10)
+	dbConn.SetMaxIdleConns(10)
 
-	if err := db.Ping(); err != nil {
+	if err := dbConn.Ping(); err != nil {
 		return nil, err
 	}
-	return db, nil
+	return dbConn, nil
 }

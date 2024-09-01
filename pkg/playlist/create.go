@@ -10,6 +10,7 @@ import (
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
 type RequestJson struct {
@@ -36,21 +37,26 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	}
 	userId := v.(string)
 
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return "", model.ErrFailedGetDB
+	}
+
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteArtists && len(json.ArtistIds) > 0 {
-		tracks, err = track.GetSpecifyArtistsTracks(specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetSpecifyArtistsTracks(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		tracks, err = track.GetTracks(specify_ms)
+		tracks, err = track.GetTracks(dbInstance, specify_ms)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	user, err := database.GetUser(userId)
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return "", err
 	}
@@ -67,7 +73,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
 	if err != nil {
-		database.DeletePlaylists(string(playlist.ID), user.Id)
+		database.DeletePlaylists(dbInstance, string(playlist.ID), user.Id)
 		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
 		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
 		if strings.Contains(err.Error(), "token expired") {
@@ -77,7 +83,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	err = database.SavePlaylist(playlist, userId)
+	err = database.SavePlaylist(dbInstance, playlist, userId)
 	if err != nil {
 		return "", err
 	}

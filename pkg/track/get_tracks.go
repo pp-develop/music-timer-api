@@ -2,6 +2,7 @@ package track
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ var (
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
-func GetTracks(specify_ms int) ([]model.Track, error) {
+func GetTracks(db *sql.DB, specify_ms int) ([]model.Track, error) {
 	allTracksMutex.Lock()
 	localTracks := allTracks // ローカルコピーを作成
 	allTracksMutex.Unlock()
@@ -34,7 +35,7 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
-		localTracks, err = json.GetAllTracks()
+		localTracks, err = json.GetAllTracks(db)
 		if err != nil {
 			errChan <- err
 			return

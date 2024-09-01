@@ -1,6 +1,8 @@
 package artist
 
 import (
+	"database/sql"
+
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/zmb3/spotify/v2"
@@ -8,14 +10,14 @@ import (
 )
 
 // SaveFavoriteArtists は、ユーザーの「お気に入りトラック」に含まれるアーティストをデータベースに保存します。
-func SaveFavoriteArtists(token *oauth2.Token, userId string) error {
+func SaveFavoriteArtists(db *sql.DB, token *oauth2.Token, userId string) error {
 
 	tracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.DeleteArtists(userId)
+	err = database.DeleteArtists(db, userId)
 	if err != nil {
 		return err
 	}
