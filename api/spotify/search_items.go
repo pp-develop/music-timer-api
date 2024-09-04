@@ -12,33 +12,25 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-var config = &clientcredentials.Config{
-	ClientID:     os.Getenv("SPOTIFY_ID"),
-	ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-	TokenURL:     spotifyauth.TokenURL,
-}
-
-func getClient() (*spotify.Client, error) {
-	token, err := config.Token(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	clientcredentialHttpClient := spotifyauth.New().Client(context.Background(), token)
-	client := spotify.New(clientcredentialHttpClient, spotify.WithRetry(true))
-	return client, nil
-}
-
 func SearchTracks() (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := getClient()
+	ctx := context.Background()
+	config := &clientcredentials.Config{
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		TokenURL:     spotifyauth.TokenURL,
+	}
+	token, err := config.Token(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	httpClient := spotifyauth.New().Client(ctx, token)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
 
@@ -56,10 +48,19 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 		return nil, err
 	}
 
-	client, err := getClient()
+	ctx := context.Background()
+	config := &clientcredentials.Config{
+		ClientID:     os.Getenv("SPOTIFY_ID"),
+		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
+		TokenURL:     spotifyauth.TokenURL,
+	}
+	token, err := config.Token(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	httpClient := spotifyauth.New().Client(ctx, token)
+	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
 	results, err := client.Search(context.Background(), "artist:"+artistName, spotify.SearchTypeTrack, options...)
