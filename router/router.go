@@ -103,12 +103,12 @@ func getAuth(c *gin.Context) {
 
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusSeeOther, "")
+		c.Status(http.StatusSeeOther)
 	} else if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
-		c.IndentedJSON(http.StatusOK, "")
+		c.Status(http.StatusOK)
 	}
 }
 
@@ -116,7 +116,7 @@ func getAuthzUrl(c *gin.Context) {
 	url, err := auth.SpotifyAuthz(c)
 	if err != nil {
 		logger.LogError(err)
-		c.JSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	}
@@ -126,7 +126,7 @@ func deleteSession(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Delete("userId")
 	session.Save()
-	c.JSON(http.StatusOK, "")
+	c.Status(http.StatusOK)
 }
 
 func saveTracks(c *gin.Context) {
@@ -141,25 +141,25 @@ func saveTracks(c *gin.Context) {
 
 	if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
-		c.IndentedJSON(http.StatusOK, "")
+		c.Status(http.StatusOK)
 	}
 }
 
 func deleteTracks(c *gin.Context) {
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
 	err := database.DeleteTracks(dbInstance)
 	if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
-		c.IndentedJSON(http.StatusOK, "")
+		c.Status(http.StatusOK)
 	}
 }
 
@@ -167,7 +167,7 @@ func getArtists(c *gin.Context) {
 	artists, err := artist.GetFollowedArtists(c)
 	if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, artists)
@@ -177,7 +177,7 @@ func getPlaylist(c *gin.Context) {
 	playlist, err := playlist.GetPlaylists(c)
 	if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, playlist)
@@ -187,16 +187,16 @@ func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusSeeOther, "")
+		c.Status(http.StatusSeeOther)
 	} else if err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Status(http.StatusUnauthorized)
 	} else if err == model.ErrTimeoutCreatePlaylist || err == model.ErrNotFoundTracks {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusNotFound, "")
+		c.Status(http.StatusNotFound)
 	} else if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
@@ -206,10 +206,10 @@ func gestCreatePlaylist(c *gin.Context) {
 	playlistId, err := playlist.GestCreatePlaylist(c)
 	if err == model.ErrTimeoutCreatePlaylist {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusNotFound, "")
+		c.Status(http.StatusNotFound)
 	} else if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
@@ -219,17 +219,17 @@ func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusSeeOther, "")
+		c.Status(http.StatusSeeOther)
 	} else if err == model.ErrNotFoundPlaylist {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusNoContent, "")
+		c.Status(http.StatusNoContent)
 	} else if err == model.ErrAccessTokenExpired {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusUnauthorized, "")
+		c.Status(http.StatusUnauthorized)
 	} else if err != nil {
 		logger.LogError(err)
-		c.IndentedJSON(http.StatusInternalServerError, "")
+		c.Status(http.StatusInternalServerError)
 	} else {
-		c.IndentedJSON(http.StatusOK, "")
+		c.Status(http.StatusOK)
 	}
 }
