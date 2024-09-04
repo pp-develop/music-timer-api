@@ -69,6 +69,7 @@ func Create() *gin.Engine {
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
+	router.POST("/tracks/followed-artists ", saveTracksFromFollowedArtists)
 	router.DELETE("/tracks", deleteTracks)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
@@ -130,15 +131,17 @@ func deleteSession(c *gin.Context) {
 }
 
 func saveTracks(c *gin.Context) {
-	var json search.RequestJson
-	var err error
-	c.ShouldBindJSON(&json)
-	if json.IncludeFavoriteArtists {
-		err = search.SaveTracksByFollowedArtists(c)
+	err := search.SaveTracks(c)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
 	} else {
-		err = search.SaveTracks(c)
+		c.Status(http.StatusOK)
 	}
+}
 
+func saveTracksFromFollowedArtists(c *gin.Context) {
+	err := search.SaveTracksFromFollowedArtists(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)

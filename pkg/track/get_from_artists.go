@@ -12,7 +12,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetSpecifyArtistsTracks(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
+func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 

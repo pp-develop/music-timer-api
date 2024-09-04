@@ -17,7 +17,7 @@ const maxConcurrency = 5
 
 var semaphore = make(chan struct{}, maxConcurrency)
 
-func SaveTracksByFollowedArtists(c *gin.Context) error {
+func SaveTracksFromFollowedArtists(c *gin.Context) error {
 	// sessionからuserIdを取得
 	session := sessions.Default(c)
 	v := session.Get("userId")

@@ -45,7 +45,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteArtists && len(json.ArtistIds) > 0 {
-		tracks, err = track.GetSpecifyArtistsTracks(dbInstance, specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			return "", err
 		}
