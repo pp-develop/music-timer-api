@@ -4,10 +4,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/utils"
 	"golang.org/x/oauth2"
 
 	"github.com/gin-contrib/sessions"
@@ -35,7 +36,12 @@ func Auth(c *gin.Context) error {
 	}
 	userId := v.(string)
 
-	user, err := database.GetUser(userId)
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
+
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return err
 	}
@@ -49,7 +55,7 @@ func Auth(c *gin.Context) error {
 		}
 
 		// アクセストークンの更新
-		err = database.UpdateAccessToken(token, user.Id)
+		err = database.UpdateAccessToken(dbInstance, token, user.Id)
 		if err != nil {
 			return err
 		}
@@ -64,7 +70,7 @@ func Auth(c *gin.Context) error {
 	}
 
 	if time.Since(updateAt).Hours() > 24 {
-		err = search.SaveFavoriteTracks(&oauth2.Token{
+		err = search.SaveFavoriteTracks(dbInstance, &oauth2.Token{
 			AccessToken:  user.AccessToken,
 			RefreshToken: user.RefreshToken,
 		}, userId)
@@ -73,7 +79,7 @@ func Auth(c *gin.Context) error {
 		}
 
 		// 更新日時を現在の時間に更新
-		err = database.UpdateUserUpdateAt(userId, time.Now())
+		err = database.UpdateUserUpdateAt(dbInstance, userId, time.Now())
 		if err != nil {
 			return err
 		}

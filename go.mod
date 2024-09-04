@@ -1,4 +1,4 @@
-module github.com/pp-develop/make-playlist-by-specify-time-api
+module github.com/pp-develop/music-timer-api
 
 go 1.19
 
@@ -10,6 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
+	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.4
 	github.com/zmb3/spotify/v2 v2.4.2
 	golang.org/x/oauth2 v0.22.0
@@ -21,6 +22,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.5 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -38,7 +40,10 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
@@ -51,22 +56,22 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist => ./pkg/artist
+replace github.com/pp-develop/music-timer-api/pkg/artist => ./pkg/artist
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/auth => ./pkg/auth
+replace github.com/pp-develop/music-timer-api/pkg/auth => ./pkg/auth
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/playlist => ./pkg/playlist
+replace github.com/pp-develop/music-timer-api/pkg/playlist => ./pkg/playlist
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger => ./pkg/logger
+replace github.com/pp-develop/music-timer-api/pkg/logger => ./pkg/logger
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json => ./pkg/json
+replace github.com/pp-develop/music-timer-api/pkg/json => ./pkg/json
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track => ./pkg/track
+replace github.com/pp-develop/music-timer-api/pkg/track => ./pkg/track
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify => ./api/spotify
+replace github.com/pp-develop/music-timer-api/api/spotify => ./api/spotify
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/router => ./router
+replace github.com/pp-develop/music-timer-api/router => ./router
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/model => ./model
+replace github.com/pp-develop/music-timer-api/model => ./model
 
-replace github.com/pp-develop/make-playlist-by-specify-time-api/database => ./database
+replace github.com/pp-develop/music-timer-api/database => ./database

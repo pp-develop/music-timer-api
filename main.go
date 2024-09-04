@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pp-develop/make-playlist-by-specify-time-api/router"
+	"github.com/pp-develop/music-timer-api/router"
 )
 
 func main() {

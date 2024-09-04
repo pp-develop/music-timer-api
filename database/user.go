@@ -1,14 +1,15 @@
 package database
 
 import (
+	"database/sql"
 	"encoding/json"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 	"golang.org/x/oauth2"
 )
 
-func SaveAccessToken(token *oauth2.Token, id string) error {
+func SaveAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	_, err := db.Exec(`
         INSERT INTO users (id, access_token, refresh_token, token_expiration, created_at, updated_at)
         VALUES ($1, $2, $3, $4, NOW(), NOW())
@@ -24,7 +25,7 @@ func SaveAccessToken(token *oauth2.Token, id string) error {
 	return nil
 }
 
-func UpdateAccessToken(token *oauth2.Token, id string) error {
+func UpdateAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	_, err := db.Exec(`
         UPDATE users SET access_token = $1, updated_at = NOW()
         WHERE id = $2`,
@@ -35,7 +36,7 @@ func UpdateAccessToken(token *oauth2.Token, id string) error {
 	return nil
 }
 
-func GetUser(id string) (model.User, error) {
+func GetUser(db *sql.DB, id string) (model.User, error) {
 	var user model.User
 
 	err := db.QueryRow(`
@@ -48,7 +49,7 @@ func GetUser(id string) (model.User, error) {
 	return user, nil
 }
 
-func SaveFavoriteTrack(id string, track model.Track) error {
+func SaveFavoriteTrack(db *sql.DB, id string, track model.Track) error {
 	// Track構造体をJSONにエンコード
 	favoriteTrackJSON, err := json.Marshal(track)
 	if err != nil {
@@ -68,7 +69,7 @@ func SaveFavoriteTrack(id string, track model.Track) error {
 	return nil
 }
 
-func GetFavoriteTracks(id string) ([]model.Track, error) {
+func GetFavoriteTracks(db *sql.DB, id string) ([]model.Track, error) {
 	var tracksJSON string
 	var tracks []model.Track
 
@@ -88,7 +89,7 @@ func GetFavoriteTracks(id string) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func AddFavoriteTrack(userId string, newTrack model.Track) error {
+func AddFavoriteTrack(db *sql.DB, userId string, newTrack model.Track) error {
 	var existingTracks []model.Track
 
 	// 既存のJSONデータを取得
@@ -128,7 +129,7 @@ func AddFavoriteTrack(userId string, newTrack model.Track) error {
 	return nil
 }
 
-func UpdateUserUpdateAt(userId string, updatedAt time.Time) error {
+func UpdateUserUpdateAt(db *sql.DB, userId string, updatedAt time.Time) error {
 	_, err := db.Exec(`
         UPDATE users SET updated_at = $1
         WHERE id = $2`,
@@ -139,7 +140,7 @@ func UpdateUserUpdateAt(userId string, updatedAt time.Time) error {
 	return nil
 }
 
-func ClearFavoriteTracks(userId string) error {
+func ClearFavoriteTracks(db *sql.DB, userId string) error {
 	_, err := db.Exec(`
         UPDATE users SET favorite_track = '[]', updated_at = NOW()
         WHERE id = $1`, userId)

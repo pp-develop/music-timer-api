@@ -5,9 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
 func GestCreatePlaylist(c *gin.Context) (string, error) {
@@ -24,13 +26,18 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	oneminuteToMsec := 60000
 	specify_ms := json.Minute * oneminuteToMsec
 
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return "", model.ErrFailedGetDB
+	}
+
 	// DBからトラックを取得
-	tracks, err := track.GetTracks(specify_ms)
+	tracks, err := track.GetTracks(dbInstance, specify_ms)
 	if err != nil {
 		return "", err
 	}
 
-	user, err := database.GetUser(os.Getenv("SPOTIFY_GEST_ACCOUNT"))
+	user, err := database.GetUser(dbInstance, os.Getenv("SPOTIFY_GEST_ACCOUNT"))
 	if err != nil {
 		return "", err
 	}
@@ -53,7 +60,7 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	}
 
 	// TODO:: delete
-	err = database.SavePlaylist(playlist, user.Id)
+	err = database.SavePlaylist(dbInstance, playlist, user.Id)
 	if err != nil {
 		return "", err
 	}

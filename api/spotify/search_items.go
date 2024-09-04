@@ -17,11 +17,17 @@ var config = &clientcredentials.Config{
 	ClientSecret: os.Getenv("SPOTIFY_SECRET"),
 	TokenURL:     spotifyauth.TokenURL,
 }
-var token, _ = config.Token(context.Background())
 
-var clientcredentialHttpClient = spotifyauth.New().Client(context.Background(), token)
+func getClient() (*spotify.Client, error) {
+	token, err := config.Token(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
-var clientcredentialClient = spotify.New(clientcredentialHttpClient, spotify.WithRetry(true))
+	clientcredentialHttpClient := spotifyauth.New().Client(context.Background(), token)
+	client := spotify.New(clientcredentialHttpClient, spotify.WithRetry(true))
+	return client, nil
+}
 
 func SearchTracks() (*spotify.SearchResult, error) {
 	err := godotenv.Load()
@@ -29,8 +35,14 @@ func SearchTracks() (*spotify.SearchResult, error) {
 		return nil, err
 	}
 
+	client, err := getClient()
+	if err != nil {
+		return nil, err
+	}
+
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := clientcredentialClient.Search(context.Background(), getRandomQuery(), spotify.SearchTypeTrack, options...)
+
+	results, err := client.Search(context.Background(), getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +56,13 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 		return nil, err
 	}
 
+	client, err := getClient()
+	if err != nil {
+		return nil, err
+	}
+
 	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
-	results, err := clientcredentialClient.Search(context.Background(), "artist:"+artistName, spotify.SearchTypeTrack, options...)
+	results, err := client.Search(context.Background(), "artist:"+artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err
 	}

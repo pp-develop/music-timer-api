@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
 func GetOembed(playlistId string) (model.Oembed, error) {
@@ -38,6 +38,6 @@ func GetOembed(playlistId string) (model.Oembed, error) {
 		log.Println(body)
 		return response, err
 	}
-	
+
 	return response, nil
 }

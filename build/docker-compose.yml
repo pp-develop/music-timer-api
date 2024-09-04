@@ -2,9 +2,10 @@ version: "3.9"
 
 services:
   app:
-    image: golang:1.21.4
-    build: .
-    container_name: go
+    build:
+      context: ./dockerfile/golang
+      dockerfile: Dockerfile
+    container_name: golang
     ports:
       - "8080:8080"
     volumes:
@@ -15,7 +16,9 @@ services:
       - music-timer-api-network
 
   cockroachdb:
-    image: cockroachdb/cockroach:v21.2.10
+    build:
+      context: ./dockerfile/cockroachdb
+      dockerfile: Dockerfile
     container_name: cockroachdb
     command: start-single-node --insecure
     ports:

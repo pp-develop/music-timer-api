@@ -9,3 +9,13 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
+      
+  - package-ecosystem: "docker"
+    directory: "/build/dockerfile/golang"
+    schedule:
+      interval: "daily"
+      
+  - package-ecosystem: "docker"
+    directory: "/build/dockerfile/cockroachdb"
+    schedule:
+      interval: "daily"

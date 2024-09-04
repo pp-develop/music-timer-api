@@ -1,22 +1,24 @@
 package search
 
 import (
-	spotifyApi "github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"database/sql"
+
+	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
 
 // SaveFavoriteTracks は、ユーザーの「お気に入りトラック」をデータベースに保存します。
-func SaveFavoriteTracks(token *oauth2.Token, userId string) error {
+func SaveFavoriteTracks(db *sql.DB, token *oauth2.Token, userId string) error {
 
 	tracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.ClearFavoriteTracks(userId)
+	err = database.ClearFavoriteTracks(db, userId)
 	if err != nil {
 		return err
 	}
@@ -24,14 +26,14 @@ func SaveFavoriteTracks(token *oauth2.Token, userId string) error {
 	// トラック情報を保存
 	for _, item := range tracks.Tracks {
 		track := convertToTrackModel(&item)
-		err := database.AddFavoriteTrack(userId, track)
+		err := database.AddFavoriteTrack(db, userId, track)
 		if err != nil {
 			return err
 		}
 	}
 
 	// 次のトラックが存在する場合の処理
-	err = ProcessNextTracks(token, tracks, userId)
+	err = ProcessNextTracks(db, token, tracks, userId)
 	if err != nil {
 		return err
 	}
@@ -39,7 +41,7 @@ func SaveFavoriteTracks(token *oauth2.Token, userId string) error {
 	return nil
 }
 
-func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string) error {
+func ProcessNextTracks(db *sql.DB, token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string) error {
 	existNextUrl := true
 
 	for existNextUrl {
@@ -50,7 +52,7 @@ func ProcessNextTracks(token *oauth2.Token, tracks *spotify.SavedTrackPage, user
 
 		for _, item := range tracks.Tracks {
 			track := convertToTrackModel(&item)
-			err := database.AddFavoriteTrack(userId, track)
+			err := database.AddFavoriteTrack(db, userId, track)
 			if err != nil {
 				return err
 			}

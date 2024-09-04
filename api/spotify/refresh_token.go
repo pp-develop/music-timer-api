@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 	"golang.org/x/oauth2"
 )
 

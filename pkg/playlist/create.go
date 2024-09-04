@@ -5,17 +5,18 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
 type RequestJson struct {
 	Minute                 int      `json:"minute"`
 	IncludeFavoriteArtists bool     `json:"includeFavoriteArtists"`
-	IncludeFavoriteTracks bool     `json:"includeFavoriteTracks"`
+	IncludeFavoriteTracks  bool     `json:"includeFavoriteTracks"`
 	ArtistIds              []string `json:"artistIds"`
 }
 
@@ -37,37 +38,34 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	}
 	userId := v.(string)
 
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return "", model.ErrFailedGetDB
+	}
+
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteArtists && len(json.ArtistIds) > 0 {
-		tracks, err = track.GetSpecifyArtistsTracks(specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			return "", err
 		}
 	} else if json.IncludeFavoriteArtists {
-		tracks, err = track.GetSaveTracks(specify_ms, userId)
+		tracks, err = track.GetSaveTracks(dbInstance, specify_ms, userId)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		tracks, err = track.GetTracks(specify_ms)
+		tracks, err = track.GetTracks(dbInstance, specify_ms)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	user, err := database.GetUser(userId)
+	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
 		return "", err
 	}
-
-	token, err := spotify.RefreshToken(user)
-	if err != nil {
-		return "", err
-	}
-	user.AccessToken = token.AccessToken
-	user.RefreshToken = token.RefreshToken
-	user.TokenExpiration = token.Expiry.Second()
 
 	playlist, err := spotify.CreatePlaylist(user, specify_ms)
 	if err != nil {
@@ -81,7 +79,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
 	if err != nil {
-		database.DeletePlaylists(string(playlist.ID), user.Id)
+		database.DeletePlaylists(dbInstance, string(playlist.ID), user.Id)
 		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
 		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
 		if strings.Contains(err.Error(), "token expired") {
@@ -91,7 +89,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	err = database.SavePlaylist(playlist, userId)
+	err = database.SavePlaylist(dbInstance, playlist, userId)
 	if err != nil {
 		return "", err
 	}

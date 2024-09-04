@@ -2,6 +2,7 @@ package json
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
 type Json struct {
@@ -79,6 +80,7 @@ func exist() (bool, error) {
 			// その他のエラー
 			return false, err
 		}
+		defer file.Close()
 
 		var config struct {
 			Tracks []struct{} `json:"tracks"`
@@ -86,10 +88,8 @@ func exist() (bool, error) {
 
 		decoder := json.NewDecoder(file)
 		if err := decoder.Decode(&config); err != nil {
-			file.Close() // デコードエラーが発生した場合、ファイルを閉じます
 			return false, err
 		}
-		file.Close() // デコードが完了したらファイルを閉じます
 
 		if len(config.Tracks) == 0 {
 			// トラックが空の場合
@@ -100,8 +100,8 @@ func exist() (bool, error) {
 	return true, nil
 }
 
-func createJson() error {
-	allTracks, err := database.GetAllTracks()
+func createJson(db *sql.DB) error {
+	allTracks, err := database.GetAllTracks(db)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error
 	return nil
 }
 
-func Create() error {
+func Create(db *sql.DB,) error {
 	// jsonがあれば何もしない
 	exists, err := exist()
 	if err != nil {
@@ -187,7 +187,7 @@ func Create() error {
 		return nil
 	}
 
-	err = createJson()
+	err = createJson(db)
 	if err != nil {
 		log.Printf("Error creating JSON: %v", err)
 		return err

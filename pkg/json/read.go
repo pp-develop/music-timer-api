@@ -1,6 +1,7 @@
 package json
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -8,12 +9,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
-func GetAllTracks() ([]model.Track, error) {
+func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	// ファイルの作成
-	err := Create()
+	err := Create(db)
 	if err != nil {
 		return nil, err
 	}
@@ -66,19 +67,18 @@ func GetAllTracks() ([]model.Track, error) {
 
 func readJSONFileWithRetry(filePath string, retries int) (map[string]interface{}, error) {
 	var data map[string]interface{}
+	var err error
+
 	for i := 0; i < retries; i++ {
-		file, err := os.Open(filePath)
-		if err != nil {
-			log.Printf("Error opening file %s: %v", filePath, err)
-			return nil, err
+		file, openErr := os.Open(filePath)
+		if openErr != nil {
+			log.Printf("Error opening file %s: %v", filePath, openErr)
+			return nil, openErr
 		}
+		defer file.Close() // ファイルを関数終了時に自動的に閉じる
 
-		// JSONデコーダの作成
 		decoder := json.NewDecoder(file)
-
-		// JSONのパース
 		err = decoder.Decode(&data)
-		file.Close() // ファイルを閉じる
 		if err == nil {
 			// 成功した場合
 			return data, nil
@@ -88,7 +88,7 @@ func readJSONFileWithRetry(filePath string, retries int) (map[string]interface{}
 		log.Printf("Error decoding JSON from file %s (attempt %d/%d): %v", filePath, i+1, retries, err)
 		time.Sleep(1 * time.Second) // 少し待ってから再試行
 	}
-	return nil, fmt.Errorf("failed to read and decode JSON from file %s after %d attempts", filePath, retries)
+	return nil, fmt.Errorf("failed to read and decode JSON from file %s after %d attempts: %w", filePath, retries, err)
 }
 
 func ShuffleTracks(tracks []model.Track) []model.Track {
@@ -112,9 +112,9 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetTracksByArtistsFromAllFiles(artists []model.Artists) ([]model.Track, error) {
+func GetTracksByArtistsFromAllFiles(db *sql.DB,artists []model.Artists) ([]model.Track, error) {
 	// ファイルの作成
-	err := Create()
+	err := Create(db)
 	if err != nil {
 		log.Printf("Error creating file: %v", err)
 		return nil, err

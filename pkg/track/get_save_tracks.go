@@ -1,16 +1,17 @@
 package track
 
 import (
+	"database/sql"
 	"log"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/json"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetSaveTracks(specify_ms int, userId string) ([]model.Track, error) {
+func GetSaveTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
@@ -19,7 +20,7 @@ func GetSaveTracks(specify_ms int, userId string) ([]model.Track, error) {
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
-		saveTracks, err := database.GetFavoriteTracks(userId)
+		saveTracks, err := database.GetFavoriteTracks(db, userId)
 		if err != nil {
 			errChan <- err
 			return

@@ -5,16 +5,22 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/artist"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/artist"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
 func SpotifyCallback(c *gin.Context) error {
 	code := c.Query("code")
 	qState := c.Query("state")
 	log.Println(qState)
+
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
 
 	session := sessions.Default(c)
 	v := session.Get("state")
@@ -36,13 +42,13 @@ func SpotifyCallback(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	err = database.SaveAccessToken(token, user.ID)
+	err = database.SaveAccessToken(dbInstance, token, user.ID)
 	if err != nil {
 		return err
 	}
 
 	// フォローしてるアーティストを保存
-	err = artist.SaveFollowedArtists(token, user.ID)
+	err = artist.SaveFollowedArtists(dbInstance, token, user.ID)
 	if err != nil {
 		return err
 	}

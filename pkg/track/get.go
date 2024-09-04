@@ -1,13 +1,15 @@
 package track
 
 import (
+	"context"
+	"database/sql"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/json"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/json"
+	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 var (
@@ -17,7 +19,7 @@ var (
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
-func GetTracks(specify_ms int) ([]model.Track, error) {
+func GetTracks(db *sql.DB, specify_ms int) ([]model.Track, error) {
 	allTracksMutex.Lock()
 	localTracks := allTracks // ローカルコピーを作成
 	allTracksMutex.Unlock()
@@ -25,12 +27,15 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel() // タイムアウト後にキャンセル
+
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
-		localTracks, err = json.GetAllTracks()
+		localTracks, err = json.GetAllTracks(db)
 		if err != nil {
 			errChan <- err
 			return
@@ -38,23 +43,26 @@ func GetTracks(specify_ms int) ([]model.Track, error) {
 
 		success := false
 		for !success {
-			tryCount++ // 試行回数をインクリメント
-			shuffleTracks := json.ShuffleTracks(localTracks)
-			success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			select {
+			case <-ctx.Done(): // タイムアウトまたはキャンセル時にループを終了
+				errChan <- ctx.Err()
+				return
+			default:
+				tryCount++
+				shuffleTracks := json.ShuffleTracks(localTracks)
+				success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			}
 		}
 		c1 <- tracks
 	}()
 
 	select {
 	case tracks := <-c1:
-		if tracks == nil {
-			return nil, <-errChan
-		}
 		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-ctx.Done(): // タイムアウト時
 		if err != nil {
 			logger.LogError(err)
 		}

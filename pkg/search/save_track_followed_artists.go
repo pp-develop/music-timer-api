@@ -7,12 +7,17 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/model"
+	"github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/utils"
 )
 
-func SaveTracksByFollowedArtists(c *gin.Context) error {
+const maxConcurrency = 5
+
+var semaphore = make(chan struct{}, maxConcurrency)
+
+func SaveTracksFromFollowedArtists(c *gin.Context) error {
 	// sessionからuserIdを取得
 	session := sessions.Default(c)
 	v := session.Get("userId")
@@ -21,7 +26,12 @@ func SaveTracksByFollowedArtists(c *gin.Context) error {
 	}
 	userId := v.(string)
 
-	artists, err := database.GetFollowedArtists(userId)
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		return model.ErrFailedGetDB
+	}
+
+	artists, err := database.GetFollowedArtists(dbInstance, userId)
 	if err != nil {
 		return err
 	}
@@ -31,8 +41,12 @@ func SaveTracksByFollowedArtists(c *gin.Context) error {
 
 	for _, artist := range artists {
 		wg.Add(1)
+
 		go func(artist model.Artists) {
 			defer wg.Done()
+
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
 
 			albums, err := spotify.GetArtistAlbums(artist.Id)
 			if err != nil {
@@ -56,7 +70,7 @@ func SaveTracksByFollowedArtists(c *gin.Context) error {
 				}
 
 				for _, track := range tracks.Tracks {
-					if err := database.SaveSimpleTrack(&track); err != nil {
+					if err := database.SaveSimpleTrack(dbInstance, &track); err != nil {
 						// todo:: 再考慮
 						errChan <- err
 					}

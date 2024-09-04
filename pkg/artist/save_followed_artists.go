@@ -1,30 +1,32 @@
 package artist
 
 import (
-	spotifyApi "github.com/pp-develop/make-playlist-by-specify-time-api/api/spotify"
-	"github.com/pp-develop/make-playlist-by-specify-time-api/database"
+	"database/sql"
+
+	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
+	"github.com/pp-develop/music-timer-api/database"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
 
 // SaveFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得し、データベースに保存します。
-func SaveFollowedArtists(token *oauth2.Token, userId string) error {
+func SaveFollowedArtists(db *sql.DB, token *oauth2.Token, userId string) error {
 
 	artists, err := spotifyApi.GetFollowedArtists(token)
 	if err != nil {
 		return err
 	}
 
-	err = database.DeleteArtists(userId)
+	err = database.DeleteArtists(db, userId)
 	if err != nil {
 		return err
 	}
-	err = saveArtists(artists.Artists, userId)
+	err = saveArtists(db, artists.Artists, userId)
 	if err != nil {
 		return err
 	}
 
-	err = processNextArtists(token, artists, userId)
+	err = processNextArtists(db, token, artists, userId)
 	if err != nil {
 		return err
 	}
@@ -32,7 +34,7 @@ func SaveFollowedArtists(token *oauth2.Token, userId string) error {
 	return nil
 }
 
-func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPage, userId string) error {
+func processNextArtists(db *sql.DB, token *oauth2.Token, artists *spotify.FullArtistCursorPage, userId string) error {
 	existAfter := artists.Cursor.After != ""
 
 	for existAfter {
@@ -41,7 +43,7 @@ func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 			return err
 		}
 
-		err = saveArtists(artists.Artists, userId)
+		err = saveArtists(db, artists.Artists, userId)
 		if err != nil {
 			return err
 		}
@@ -53,8 +55,8 @@ func processNextArtists(token *oauth2.Token, artists *spotify.FullArtistCursorPa
 	return nil
 }
 
-func saveArtists(artists []spotify.FullArtist, userId string) error {
-	err := database.SaveArtists(artists, userId)
+func saveArtists(db *sql.DB, artists []spotify.FullArtist, userId string) error {
+	err := database.SaveArtists(db, artists, userId)
 	if err != nil {
 		return err
 	}
