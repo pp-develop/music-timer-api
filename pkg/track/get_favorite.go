@@ -1,6 +1,7 @@
 package track
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"time"
@@ -15,11 +16,17 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track
 	var tracks []model.Track
 	var err error
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel() // タイムアウト後にキャンセル
+
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
+		defer close(c1)
+		defer close(errChan)
+
 		saveTracks, err := database.GetFavoriteTracks(db, userId)
 		if err != nil {
 			errChan <- err
@@ -28,9 +35,15 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track
 
 		success := false
 		for !success {
-			tryCount++ // 試行回数をインクリメント
-			shuffleTracks := json.ShuffleTracks(saveTracks)
-			success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			select {
+			case <-ctx.Done(): // タイムアウトまたはキャンセル時にループを終了
+				errChan <- ctx.Err()
+				return
+			default:
+				tryCount++
+				shuffleTracks := json.ShuffleTracks(saveTracks)
+				success, tracks = MakeTracks(shuffleTracks, specify_ms)
+			}
 		}
 		c1 <- tracks
 	}()
@@ -44,7 +57,7 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(time.Duration(timeout) * time.Second):
+	case <-ctx.Done(): // タイムアウト時
 		if err != nil {
 			logger.LogError(err)
 		}

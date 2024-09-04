@@ -35,6 +35,9 @@ func GetTracks(db *sql.DB, specify_ms int) ([]model.Track, error) {
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
+		defer close(c1)
+		defer close(errChan)
+
 		localTracks, err = json.GetAllTracks(db)
 		if err != nil {
 			errChan <- err

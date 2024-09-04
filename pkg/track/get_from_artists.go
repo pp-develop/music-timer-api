@@ -24,10 +24,14 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
+		defer close(c1)
+		defer close(errChan)
+
 		var artists []model.Artists
 		for _, id := range artistIds {
 			artists = append(artists, model.Artists{Id: id})
 		}
+
 		followedArtistsTracks, err := getSpecifyArtistsAllTracks(db, artists)
 		if err != nil {
 			errChan <- err
