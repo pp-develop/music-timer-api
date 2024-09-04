@@ -51,7 +51,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 			return "", err
 		}
 	} else if json.IncludeFavoriteArtists {
-		tracks, err = track.GetSaveTracks(dbInstance, specify_ms, userId)
+		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, userId)
 		if err != nil {
 			return "", err
 		}

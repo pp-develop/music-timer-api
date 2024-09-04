@@ -11,7 +11,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetSaveTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
+func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
