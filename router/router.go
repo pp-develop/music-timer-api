@@ -69,7 +69,7 @@ func Create() *gin.Engine {
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
-	router.POST("/tracks/followed-artists ", saveTracksFromFollowedArtists)
+	router.POST("/tracks/followed-artists", saveTracksFromFollowedArtists)
 	router.DELETE("/tracks", deleteTracks)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
