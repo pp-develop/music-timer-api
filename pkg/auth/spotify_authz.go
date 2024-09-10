@@ -21,7 +21,7 @@ func SpotifyAuthz(c *gin.Context) (string, error) {
 		spotifyauth.WithScopes(
 			spotifyauth.ScopePlaylistModifyPublic,
 			spotifyauth.ScopePlaylistModifyPrivate,
-			// spotifyauth.ScopeUserLibraryRead,
+			spotifyauth.ScopeUserLibraryRead,
 			spotifyauth.ScopeUserFollowRead,
 		),
 		spotifyauth.WithClientID(os.Getenv("SPOTIFY_ID")),

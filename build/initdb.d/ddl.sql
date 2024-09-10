@@ -5,6 +5,7 @@ create table users(
     "refresh_token" text,
     "token_expiration" int,
     "session" VARCHAR(255),
+    "favorite_track" jsonb,
     "created_at" TIMESTAMP,
     "updated_at" TIMESTAMP
 );

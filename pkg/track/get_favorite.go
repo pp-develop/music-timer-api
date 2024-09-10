@@ -12,7 +12,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
+func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
@@ -27,12 +27,7 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 		defer close(c1)
 		defer close(errChan)
 
-		var artists []model.Artists
-		for _, id := range artistIds {
-			artists = append(artists, model.Artists{Id: id})
-		}
-
-		followedArtistsTracks, err := getSpecifyArtistsAllTracks(db, artists)
+		saveTracks, err := database.GetFavoriteTracks(db, userId)
 		if err != nil {
 			errChan <- err
 			return
@@ -46,7 +41,7 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 				return
 			default:
 				tryCount++
-				shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
+				shuffleTracks := json.ShuffleTracks(saveTracks)
 				success, tracks = MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
@@ -55,7 +50,10 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 
 	select {
 	case tracks := <-c1:
-		log.Printf("試行回数: %d\n", tryCount)
+		if tracks == nil {
+			return nil, <-errChan
+		}
+		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
@@ -65,23 +63,4 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
-}
-
-func getSpecifyArtistsAllTracks(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
-	var tracks []model.Track
-
-	tracks, err := json.GetTracksByArtistsFromAllFiles(db, artists)
-	if err != nil {
-		return nil, err
-	}
-	if len(tracks) == 0 {
-		tracks, err = database.GetTracksByArtists(db, artists)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if len(tracks) == 0 {
-		return nil, model.ErrNotFoundTracks
-	}
-	return tracks, nil
 }
