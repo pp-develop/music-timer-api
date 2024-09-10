@@ -76,6 +76,7 @@ func Create() *gin.Engine {
 	router.GET("/playlist", getPlaylist)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
+	router.POST("/update-favorite-tracks", updateFavoriteTracks)
 	return router
 }
 
@@ -163,6 +164,16 @@ func deleteTracks(c *gin.Context) {
 	}
 
 	err := database.DeleteTracks(dbInstance)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+	} else {
+		c.Status(http.StatusOK)
+	}
+}
+
+func updateFavoriteTracks(c *gin.Context) {
+	err := search.SaveFavoriteTracks(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
