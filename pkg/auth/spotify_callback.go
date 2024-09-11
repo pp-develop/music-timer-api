@@ -8,7 +8,6 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
@@ -43,12 +42,6 @@ func SpotifyCallback(c *gin.Context) error {
 		return err
 	}
 	err = database.SaveAccessToken(dbInstance, token, user.ID)
-	if err != nil {
-		return err
-	}
-
-	// フォローしてるアーティストを保存
-	err = artist.SaveFollowedArtists(dbInstance, token, user.ID)
 	if err != nil {
 		return err
 	}
