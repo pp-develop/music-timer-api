@@ -11,14 +11,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type ArtistInfo struct {
-	ID       string
-	Name     string
-	ImageUrl string
-}
-
 // GetFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得します。
-func GetFollowedArtists(c *gin.Context) ([]ArtistInfo, error) {
+func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
 	session := sessions.Default(c)
 	v := session.Get("userId")
 	if v == nil {
@@ -60,7 +54,7 @@ func GetFollowedArtists(c *gin.Context) ([]ArtistInfo, error) {
 	return allArtists, nil
 }
 
-func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursorPage, allArtists []ArtistInfo) ([]ArtistInfo, error) {
+func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursorPage, allArtists []model.Artists) ([]model.Artists, error) {
 	for currentPage.Cursor.After != "" {
 		var err error
 		currentPage, err = spotifyApi.GetAfterFollowedArtists(token, currentPage.Cursor.After)
@@ -76,18 +70,18 @@ func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursor
 }
 
 // extractArtistInfo は、spotify.FullArtist のスライスから ArtistInfo のスライスを生成します。
-func extractArtistInfo(artists []spotify.FullArtist) []ArtistInfo {
-	var artistInfos []ArtistInfo
+func extractArtistInfo(artists []spotify.FullArtist) []model.Artists {
+	var artistInfos []model.Artists
 	for _, artist := range artists {
 		if len(artist.Images) > 0 {
-			artistInfos = append(artistInfos, ArtistInfo{
+			artistInfos = append(artistInfos, model.Artists{
 				ImageUrl: artist.Images[0].URL,
-				ID:       string(artist.ID),
+				Id:       string(artist.ID),
 				Name:     artist.Name})
 		} else {
-			artistInfos = append(artistInfos, ArtistInfo{
+			artistInfos = append(artistInfos, model.Artists{
 				ImageUrl: "", // 画像がない場合のデフォルト値
-				ID:       string(artist.ID),
+				Id:       string(artist.ID),
 				Name:     artist.Name})
 		}
 	}

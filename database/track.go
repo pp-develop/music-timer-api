@@ -53,7 +53,7 @@ func SaveSimpleTrack(db *sql.DB, track *spotify.SimpleTrack) error {
             artists_name = EXCLUDED.artists_name,
             duration_ms = EXCLUDED.duration_ms,
             isrc = EXCLUDED.isrc,
-            updated_at = NOW()`, track.URI, artistIdJson, artistNameJson, track.Duration, "JP")
+            updated_at = NOW()`, track.URI, artistIdJson, artistNameJson, track.Duration, track.ExternalIDs.ISRC)
 	if err != nil {
 		return err
 	}

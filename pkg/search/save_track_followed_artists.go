@@ -5,11 +5,11 @@ import (
 	"log"
 	"sync"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
@@ -18,20 +18,13 @@ const maxConcurrency = 5
 var semaphore = make(chan struct{}, maxConcurrency)
 
 func SaveTracksFromFollowedArtists(c *gin.Context) error {
-	// sessionからuserIdを取得
-	session := sessions.Default(c)
-	v := session.Get("userId")
-	if v == nil {
-		return model.ErrFailedGetSession
-	}
-	userId := v.(string)
-
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
 		return model.ErrFailedGetDB
 	}
 
-	artists, err := database.GetFollowedArtists(dbInstance, userId)
+	// TODO:: 必要な関数の切り出し
+	artists, err := artist.GetFollowedArtists(c)
 	if err != nil {
 		return err
 	}
