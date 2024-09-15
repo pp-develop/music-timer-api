@@ -2,7 +2,6 @@ package search
 
 import (
 	"database/sql"
-	"log"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -34,13 +33,12 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		return err
 	}
 
-	// 更新日時のチェック
-	updateAt, err := time.Parse(time.RFC3339, user.UpdateAt)
+	updateAt, err := database.GetUpdatedAt(db, userId)
 	if err != nil {
-		log.Printf("failed to parse UpdatedAt: %v", err)
 		return err
 	}
 
+	// 更新日時のチェック
 	if time.Since(updateAt).Hours() <= 24 {
 		// 24時間以内なら更新の必要なし
 		return nil
@@ -78,7 +76,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 	}
 
 	// 更新日時を現在の時間に更新
-	err = database.UpdateUserUpdateAt(db, userId, time.Now())
+	err = database.UpdateFavoriteTracksUpdateAt(db, userId, time.Now())
 	if err != nil {
 		return err
 	}
