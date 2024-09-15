@@ -71,7 +71,7 @@ func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursor
 
 // extractArtistInfo は、spotify.FullArtist のスライスから ArtistInfo のスライスを生成します。
 func extractArtistInfo(artists []spotify.FullArtist) []model.Artists {
-	var artistInfos []model.Artists
+	artistInfos := []model.Artists{}
 	for _, artist := range artists {
 		if len(artist.Images) > 0 {
 			artistInfos = append(artistInfos, model.Artists{
