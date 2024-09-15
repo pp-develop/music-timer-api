@@ -5,7 +5,6 @@ create table users(
     "refresh_token" text,
     "token_expiration" int,
     "session" VARCHAR(255),
-    "favorite_track" jsonb,
     "created_at" TIMESTAMP,
     "updated_at" TIMESTAMP
 );
@@ -27,4 +26,12 @@ create table playlists(
     index id_index (id),
     "user_id" VARCHAR(255),
     CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+DROP TABLE IF EXISTS favorite_tracks CASCADE;
+CREATE TABLE favorite_tracks (
+    "user_id" VARCHAR(255) PRIMARY KEY,   
+    "tracks" JSONB,                  
+    "updated_at" TIMESTAMP,                 
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
