@@ -1,6 +1,7 @@
 package playlist
 
 import (
+	"log"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
@@ -48,16 +49,19 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	if json.IncludeFavoriteArtists && len(json.ArtistIds) > 0 {
 		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
+			log.Println(err)
 			return "", err
 		}
 	} else if json.IncludeFavoriteArtists {
 		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, userId)
 		if err != nil {
+			log.Println(err)
 			return "", err
 		}
 	} else {
 		tracks, err = track.GetTracks(dbInstance, specify_ms)
 		if err != nil {
+			log.Println(err)
 			return "", err
 		}
 	}
