@@ -33,17 +33,6 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		return err
 	}
 
-	updateAt, err := database.GetUpdatedAt(db, userId)
-	if err != nil {
-		return err
-	}
-
-	// 更新日時のチェック
-	if time.Since(updateAt).Hours() <= 24 {
-		// 24時間以内なら更新の必要なし
-		return nil
-	}
-
 	// 24時間以上経過している場合はトークンを取得して処理を続行
 	token := &oauth2.Token{
 		AccessToken:  user.AccessToken,
@@ -110,8 +99,13 @@ func ProcessNextTracks(db *sql.DB, token *oauth2.Token, tracks *spotify.SavedTra
 }
 
 func convertToTrackModel(savedTrack *spotify.SavedTrack) model.Track {
+	artistsId := make([]string, len(savedTrack.Artists))
+	for i, artist := range savedTrack.Artists {
+		artistsId[i] = artist.ID.String()
+	}
 	return model.Track{
 		Uri:        string(savedTrack.URI),
 		DurationMs: int(savedTrack.Duration),
+		ArtistsId:  artistsId,
 	}
 }

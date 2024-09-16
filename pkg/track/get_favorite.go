@@ -12,7 +12,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
-func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
+func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
 	var tracks []model.Track
 	var err error
 
@@ -31,6 +31,10 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track
 		if err != nil {
 			errChan <- err
 			return
+		}
+
+		if len(artistIds) > 0 {
+			saveTracks = filterTracksByArtistIds(saveTracks, artistIds)
 		}
 
 		success := false
@@ -63,4 +67,37 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track
 		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
+}
+
+// 関数: 特定のアーティストIDを含むトラックをフィルタリング
+func filterTracksByArtistIds(tracks []model.Track, artistIds []string) []model.Track {
+	var filteredTracks []model.Track
+
+	// トラックのループ
+	for _, track := range tracks {
+		// アーティストIDのチェック
+		if containsAny(track.ArtistsId, artistIds) {
+			filteredTracks = append(filteredTracks, track)
+		}
+	}
+
+	return filteredTracks
+}
+
+// 特定のアーティストIDがトラックのArtistsIdに含まれているかチェックする関数
+func containsAny(trackArtistIds []string, artistIds []string) bool {
+	// アーティストIDのセットを作成して効率化
+	artistIdSet := make(map[string]struct{})
+	for _, id := range artistIds {
+		artistIdSet[id] = struct{}{}
+	}
+
+	// トラックのアーティストIDに特定のIDが含まれているかチェック
+	for _, id := range trackArtistIds {
+		if _, exists := artistIdSet[id]; exists {
+			return true
+		}
+	}
+
+	return false
 }

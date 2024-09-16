@@ -69,14 +69,14 @@ func Create() *gin.Engine {
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
 	router.POST("/tracks", saveTracks)
-	router.POST("/tracks/followed-artists", saveTracksFromFollowedArtists)
+	router.POST("/tracks/followed-artists", updateTracksFromFollowedArtists)
+	router.POST("/tracks/favorite-tracks", updateFavoriteTracks)
 	router.DELETE("/tracks", deleteTracks)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
 	router.GET("/playlist", getPlaylist)
 	router.POST("/playlist", createPlaylist)
 	router.DELETE("/playlist", deletePlaylists)
-	router.POST("/update-favorite-tracks", updateFavoriteTracks)
 	return router
 }
 
@@ -146,7 +146,7 @@ func saveTracks(c *gin.Context) {
 	}
 }
 
-func saveTracksFromFollowedArtists(c *gin.Context) {
+func updateTracksFromFollowedArtists(c *gin.Context) {
 	err := search.SaveTracksFromFollowedArtists(c)
 	if err != nil {
 		logger.LogError(err)
