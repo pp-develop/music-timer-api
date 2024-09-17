@@ -2,6 +2,7 @@ package search
 
 import (
 	"database/sql"
+	"log"
 	"net/url"
 	"strings"
 
@@ -39,6 +40,7 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Total number of tracks: %d\n", items.Tracks.Total)
 	return nil
 }
 
