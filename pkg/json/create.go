@@ -176,7 +176,7 @@ func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error
 	return nil
 }
 
-func Create(db *sql.DB,) error {
+func Create(db *sql.DB) error {
 	// jsonがあれば何もしない
 	exists, err := exist()
 	if err != nil {

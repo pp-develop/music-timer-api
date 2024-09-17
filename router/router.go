@@ -16,6 +16,7 @@ import (
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/pkg/auth"
+	"github.com/pp-develop/music-timer-api/pkg/json"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/pkg/playlist"
 	"github.com/pp-develop/music-timer-api/pkg/search"
@@ -71,6 +72,7 @@ func Create() *gin.Engine {
 	router.POST("/tracks", saveTracks)
 	router.POST("/tracks/followed-artists", updateTracksFromFollowedArtists)
 	router.POST("/tracks/favorite-tracks", updateFavoriteTracks)
+	router.POST("/reset-tracks", resetTracks)
 	router.DELETE("/tracks", deleteTracks)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
@@ -148,6 +150,16 @@ func saveTracks(c *gin.Context) {
 
 func updateTracksFromFollowedArtists(c *gin.Context) {
 	err := search.SaveTracksFromFollowedArtists(c)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+	} else {
+		c.Status(http.StatusOK)
+	}
+}
+
+func resetTracks(c *gin.Context) {
+	err := json.ReCreate(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
