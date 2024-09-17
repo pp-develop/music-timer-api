@@ -5,17 +5,22 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 
-type RequestJson struct {
-	IncludeFavoriteArtists bool `json:"includeFavoriteArtists"`
-}
+var (
+	Market string
+)
 
-func SaveTracks(db *sql.DB) error {
-	items, err := spotify.SearchTracks()
+func SaveTracks(c *gin.Context, db *sql.DB) error {
+	if c != nil {
+		Market = strings.ToUpper(c.Query("market"))
+	}
+
+	items, err := spotify.SearchTracks(Market)
 	if err != nil {
 		return err
 	}
@@ -82,9 +87,12 @@ func nextSearchTracks(db *sql.DB, items *spotifylibrary.SearchResult) error {
 }
 
 func validateTrack(track *spotifylibrary.FullTrack) bool {
-	return isIsrcJp(track.ExternalIDs["isrc"])
+	return isIsrcForMarket(track.ExternalIDs["isrc"])
 }
 
-func isIsrcJp(isrc string) bool {
-	return strings.Contains(isrc, "JP")
+func isIsrcForMarket(isrc string) bool {
+	if Market == "" {
+		return true
+	}
+	return strings.Contains(isrc, Market)
 }

@@ -22,7 +22,7 @@ func main() {
 				return err
 			}
 
-			err = search.SaveTracks(db)
+			err = search.SaveTracks(nil, db)
 			if err != nil {
 				log.Println(err)
 				return err

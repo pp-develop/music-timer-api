@@ -12,7 +12,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-func SearchTracks() (*spotify.SearchResult, error) {
+func SearchTracks(market string) (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -32,7 +32,11 @@ func SearchTracks() (*spotify.SearchResult, error) {
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
-	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
+	// 検索オプションを設定 (market が空文字でない場合のみマーケットを指定)
+	options := []spotify.RequestOption{spotify.Limit(50)}
+	if market != "" {
+		options = append(options, spotify.Market(market))
+	}
 
 	results, err := client.Search(context.Background(), getRandomQuery(), spotify.SearchTypeTrack, options...)
 	if err != nil {
@@ -42,7 +46,7 @@ func SearchTracks() (*spotify.SearchResult, error) {
 	return results, nil
 }
 
-func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
+func SearchTracksByArtists(artistName string, market string) (*spotify.SearchResult, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -62,7 +66,12 @@ func SearchTracksByArtists(artistName string) (*spotify.SearchResult, error) {
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
-	options := []spotify.RequestOption{spotify.Market("JP"), spotify.Limit(50)}
+	// 検索オプションを設定 (market が空文字でない場合のみマーケットを指定)
+	options := []spotify.RequestOption{spotify.Limit(50)}
+	if market != "" {
+		options = append(options, spotify.Market(market))
+	}
+
 	results, err := client.Search(context.Background(), "artist:"+artistName, spotify.SearchTypeTrack, options...)
 	if err != nil {
 		return nil, err

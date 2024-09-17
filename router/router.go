@@ -139,7 +139,7 @@ func saveTracks(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	err := search.SaveTracks(dbInstance)
+	err := search.SaveTracks(c, dbInstance)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
