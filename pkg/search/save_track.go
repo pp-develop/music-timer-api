@@ -15,9 +15,14 @@ var (
 	Market string
 )
 
+var requestBody struct {
+	Market string `json:"market"`
+}
+
 func SaveTracks(c *gin.Context, db *sql.DB) error {
-	if c != nil {
-		Market = strings.ToUpper(c.Query("market"))
+	c.BindJSON(&requestBody)
+	if requestBody.Market != "" {
+		Market = strings.ToUpper(requestBody.Market)
 	}
 
 	items, err := spotify.SearchTracks(Market)
