@@ -58,6 +58,7 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 		track := model.Track{
 			Uri:         item["uri"].(string),
 			DurationMs:  int(item["duration_ms"].(float64)), // float64型をint型に変換
+			Isrc:        item["isrc"].(string),
 			ArtistsName: artistsNames,
 		}
 		tracks = append(tracks, track)
@@ -112,7 +113,7 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func GetTracksByArtistsFromAllFiles(db *sql.DB,artists []model.Artists) ([]model.Track, error) {
+func GetTracksByArtistsFromAllFiles(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
 	// ファイルの作成
 	err := Create(db)
 	if err != nil {
@@ -166,6 +167,7 @@ func getTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]mod
 		track := model.Track{
 			Uri:        item["uri"].(string),
 			DurationMs: int(item["duration_ms"].(float64)), // float64型をint型に変換
+			Isrc:       item["isrc"].(string),
 			ArtistsId:  artistIds,
 		}
 

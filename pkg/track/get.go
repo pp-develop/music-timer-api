@@ -19,7 +19,7 @@ var (
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
-func GetTracks(db *sql.DB, specify_ms int) ([]model.Track, error) {
+func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error) {
 	allTracksMutex.Lock()
 	localTracks := allTracks // ローカルコピーを作成
 	allTracksMutex.Unlock()
@@ -53,6 +53,9 @@ func GetTracks(db *sql.DB, specify_ms int) ([]model.Track, error) {
 			default:
 				tryCount++
 				shuffleTracks := json.ShuffleTracks(localTracks)
+				if market != "" {
+					shuffleTracks = filterByISRC(shuffleTracks, market)
+				}
 				success, tracks = MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
@@ -114,4 +117,17 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 		tracks = append(tracks, getTrack...)
 	}
 	return isTrackFound, tracks
+}
+
+// 特定のISRCに基づいてトラックをフィルタリングする関数
+func filterByISRC(tracks []model.Track, targetISRC string) []model.Track {
+	var filteredTracks []model.Track
+
+	for _, track := range tracks {
+		if track.Isrc == targetISRC {
+			filteredTracks = append(filteredTracks, track)
+		}
+	}
+
+	return filteredTracks
 }

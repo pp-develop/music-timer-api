@@ -33,7 +33,6 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		return err
 	}
 
-	// 24時間以上経過している場合はトークンを取得して処理を続行
 	token := &oauth2.Token{
 		AccessToken:  user.AccessToken,
 		RefreshToken: user.RefreshToken,
@@ -105,6 +104,7 @@ func convertToTrackModel(savedTrack *spotify.SavedTrack) model.Track {
 	}
 	return model.Track{
 		Uri:        string(savedTrack.URI),
+		Isrc:       savedTrack.ExternalIDs["isrc"],
 		DurationMs: int(savedTrack.Duration),
 		ArtistsId:  artistsId,
 	}

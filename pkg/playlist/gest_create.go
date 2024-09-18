@@ -32,7 +32,7 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	}
 
 	// DBからトラックを取得
-	tracks, err := track.GetTracks(dbInstance, specify_ms)
+	tracks, err := track.GetTracks(dbInstance, specify_ms, "")
 	if err != nil {
 		return "", err
 	}

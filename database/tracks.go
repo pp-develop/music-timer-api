@@ -67,7 +67,7 @@ func GetTracks(db *sql.DB, pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, artists_name, artists_id FROM tracks LIMIT $1 OFFSET $2"
+	query := "SELECT uri, duration_ms, isrc, artists_name, artists_id FROM tracks LIMIT $1 OFFSET $2"
 	rows, err := db.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func GetTracks(db *sql.DB, pageNumber, pageSize int) ([]model.Track, error) {
 		var track model.Track
 		var artistsNameJSON string // JSON 文字列を格納するための一時変数
 		var artistsIdJSON string   // JSON 文字列を格納するための一時変数
-		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsNameJSON, &artistsIdJSON); err != nil {
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &track.Isrc, &artistsNameJSON, &artistsIdJSON); err != nil {
 			return nil, err
 		}
 		// JSON 文字列を構造体に変換
@@ -169,7 +169,7 @@ func GetTracksByArtists(db *sql.DB, artists []model.Artists) ([]model.Track, err
 	}
 
 	// Query to select tracks where the artists_id JSON contains any of the provided artist IDs
-	query := `SELECT uri, duration_ms, artists_name, artists_id FROM tracks WHERE artists_id @> $1`
+	query := `SELECT uri, duration_ms, isrc, artists_name, artists_id FROM tracks WHERE artists_id @> $1`
 
 	// Executing the query
 	rows, err := db.Query(query, artistIdsJson)
@@ -183,7 +183,7 @@ func GetTracksByArtists(db *sql.DB, artists []model.Artists) ([]model.Track, err
 		var track model.Track
 		var artistsNameJSON, artistsIdJSON string
 
-		if err := rows.Scan(&track.Uri, &track.DurationMs, &artistsNameJSON, &artistsIdJSON); err != nil {
+		if err := rows.Scan(&track.Uri, &track.DurationMs, &track.Isrc, &artistsNameJSON, &artistsIdJSON); err != nil {
 			return nil, err
 		}
 

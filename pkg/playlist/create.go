@@ -15,10 +15,10 @@ import (
 )
 
 type RequestJson struct {
-	Minute                 int      `json:"minute"`
-	IncludeFavoriteArtists bool     `json:"includeFavoriteArtists"`
-	IncludeFavoriteTracks  bool     `json:"includeFavoriteTracks"`
-	ArtistIds              []string `json:"artistIds"`
+	Minute                int      `json:"minute"`
+	Market                string   `json:"market"`
+	IncludeFavoriteTracks bool     `json:"includeFavoriteTracks"`
+	ArtistIds             []string `json:"artistIds"`
 }
 
 func CreatePlaylist(c *gin.Context) (string, error) {
@@ -47,7 +47,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteTracks {
-		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms,json.ArtistIds, userId)
+		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			log.Println(err)
 			return "", err
@@ -59,7 +59,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 			return "", err
 		}
 	} else {
-		tracks, err = track.GetTracks(dbInstance, specify_ms)
+		tracks, err = track.GetTracks(dbInstance, specify_ms, json.Market)
 		if err != nil {
 			log.Println(err)
 			return "", err
