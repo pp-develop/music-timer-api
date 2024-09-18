@@ -41,7 +41,7 @@ func SpotifyCallback(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	err = database.SaveAccessToken(dbInstance, token, user.ID)
+	err = database.SaveAccessToken(dbInstance, token, user)
 	if err != nil {
 		return err
 	}

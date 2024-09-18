@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS users CASCADE;
 create table users(
     "id" VARCHAR(255) primary key,
+    "country" VARCHAR(255),
     "access_token" text,
     "refresh_token" text,
     "token_expiration" int,

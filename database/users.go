@@ -4,19 +4,21 @@ import (
 	"database/sql"
 
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
 
-func SaveAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
+func SaveAccessToken(db *sql.DB, token *oauth2.Token, user *spotify.PrivateUser) error {
 	_, err := db.Exec(`
-        INSERT INTO users (id, access_token, refresh_token, token_expiration, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        INSERT INTO users (id, country, access_token, refresh_token, token_expiration, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         ON CONFLICT (id) DO UPDATE SET
+			country = EXCLUDED.country,
             access_token = EXCLUDED.access_token,
             refresh_token = EXCLUDED.refresh_token,
             token_expiration = EXCLUDED.token_expiration,
             updated_at = NOW()`,
-		id, token.AccessToken, token.RefreshToken, token.Expiry.Unix())
+		user.ID, user.Country, token.AccessToken, token.RefreshToken, token.Expiry.Unix())
 	if err != nil {
 		return err
 	}
@@ -38,8 +40,8 @@ func GetUser(db *sql.DB, id string) (model.User, error) {
 	var user model.User
 
 	err := db.QueryRow(`
-        SELECT id, access_token, refresh_token, token_expiration, updated_at FROM users
-        WHERE id = $1`, id).Scan(&user.Id, &user.AccessToken, &user.RefreshToken, &user.TokenExpiration, &user.UpdateAt)
+        SELECT id, country, access_token, refresh_token, token_expiration, updated_at FROM users
+        WHERE id = $1`, id).Scan(&user.Id, &user.Country, &user.AccessToken, &user.RefreshToken, &user.TokenExpiration, &user.UpdateAt)
 	if err != nil {
 		return user, err
 	}

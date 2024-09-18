@@ -25,22 +25,23 @@ import (
 //   - database関連のエラー: アクセストークンのデータベースへの更新に失敗した場合。
 //
 // 成功した場合はnilを返し、エラーが発生した場合はそのエラーを返します。
-func Auth(c *gin.Context) error {
+func Auth(c *gin.Context) (model.User, error) {
+	var user model.User
 	session := sessions.Default(c)
 	v := session.Get("userId")
 	if v == nil {
-		return model.ErrFailedGetSession
+		return user, model.ErrFailedGetSession
 	}
 	userId := v.(string)
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		return model.ErrFailedGetDB
+		return user, model.ErrFailedGetDB
 	}
 
 	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
-		return err
+		return user, err
 	}
 
 	// トークンの有効期限チェック
@@ -48,13 +49,13 @@ func Auth(c *gin.Context) error {
 		// トークンリフレッシュ
 		token, err := spotify.RefreshToken(user)
 		if err != nil {
-			return err
+			return user, err
 		}
 
 		// アクセストークンの更新
 		err = database.UpdateAccessToken(dbInstance, token, user.Id)
 		if err != nil {
-			return err
+			return user, err
 		}
 	}
 
@@ -62,9 +63,9 @@ func Auth(c *gin.Context) error {
 	session.Set("userId", user.Id)
 	err = session.Save()
 	if err != nil {
-		return err
+		return user, err
 	}
-	return nil
+	return user, nil
 }
 
 func checkTokenExpiration(user model.User) bool {

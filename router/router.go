@@ -103,7 +103,7 @@ func callback(c *gin.Context) {
 }
 
 func getAuth(c *gin.Context) {
-	err := auth.Auth(c)
+	user, err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
 		logger.LogError(err)
@@ -112,7 +112,7 @@ func getAuth(c *gin.Context) {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
 	} else {
-		c.Status(http.StatusOK)
+		c.JSON(http.StatusOK, gin.H{"country": user.Country})
 	}
 }
 
