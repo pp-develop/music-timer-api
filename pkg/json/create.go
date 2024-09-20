@@ -69,7 +69,7 @@ func (cm *ConfigManager) load() error {
 }
 
 func exist() (bool, error) {
-	for i := 1; i <= 100; i++ {
+	for i := 1; i <= 10; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
 		file, err := os.Open(filePath)
 		if err != nil {
@@ -106,16 +106,12 @@ func createJson(db *sql.DB) error {
 		return err
 	}
 
-	// トラックを100個の部分に分割
-	numFiles := 100
+	// トラックを10個の部分に分割
+	numFiles := 10
 	numTracksPerFile := (len(allTracks) + numFiles - 1) / numFiles // 均等に分割できない場合は切り上げ
 
 	for i := 0; i < numFiles; i++ {
 		start := i * numTracksPerFile
-		if start >= len(allTracks) {
-			break // 全てのトラックが処理されたらループを終了
-		}
-
 		end := start + numTracksPerFile
 		if end > len(allTracks) {
 			end = len(allTracks)
@@ -123,6 +119,7 @@ func createJson(db *sql.DB) error {
 
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
 
+		// リトライを追加
 		err := retry(3, 1*time.Second, func() error {
 			configManager, err := NewConfigManager(filePath)
 			if err != nil {
