@@ -1,0 +1,69 @@
+{
+  "tracks": [
+    {
+      "uri": "spotify:track:0qGutNtflbqZYznKH1ibhd",
+      "duration_ms": 201200,
+      "isrc": "",
+      "artists_id": [
+        "7n2wHs1TKAczGzO7Dd2rGr"
+      ],
+      "artists_name": [
+        "Shawn Mendes"
+      ]
+    },
+    {
+      "uri": "spotify:track:0qJD0bB9jjzzNC3vpUPewm",
+      "duration_ms": 45826,
+      "isrc": "",
+      "artists_id": [
+        "6u56dfjDdvwElDx0hwtCES"
+      ],
+      "artists_name": [
+        "PSG"
+      ]
+    },
+    {
+      "uri": "spotify:track:0qVJM2ewvlCdALOl57FbeU",
+      "duration_ms": 197919,
+      "isrc": "",
+      "artists_id": [
+        "55ci5kA4LZrGVdJRbIe6E6",
+        "4hvC2AdoMyTDQ49HjOdE7N",
+        "2gLRAkIfasw2ydt1omK41j"
+      ],
+      "artists_name": [
+        "TEMPLIME",
+        "LADY'S ONLY",
+        "星宮とと"
+      ]
+    },
+    {
+      "uri": "spotify:track:0qYg2KFjLtQpx14yfNN5dh",
+      "duration_ms": 298400,
+      "isrc": "",
+      "artists_id": [
+        "3VEG6gxFIMfl4Cdog26avS"
+      ],
+      "artists_name": [
+        "Bill Evans Trio"
+      ]
+    },
+    {
+      "uri": "spotify:track:0qdRUuT8CGlRwWtxqAqKLH",
+      "duration_ms": 148634,
+      "isrc": "",
+      "artists_id": [
+        "5Zg5lgH9GmkewONPMJlhbv",
+        "3XbRDLuNVAkJA7iKH2Xu1M",
+        "1IEretLePzJKj8R6KCEaBA",
+        "7llU3klHvIpronnCKW5pUh"
+      ],
+      "artists_name": [
+        "Dos Monos",
+        "SMTK",
+        "Soushi Sakiyama",
+        "小田朋美"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,560 @@
+{
+  "tracks": [
+    {
+      "uri": "spotify:track:43cW7aLSIbmLGX99q7nkqV",
+      "duration_ms": 270160,
+      "isrc": "",
+      "artists_id": [
+        "1RmnvqR353vF3qgoxNflTE",
+        "6lOHiFhLuXnKeqIE1nmNw7",
+        "0QAcEXadTmH3S9EBNA5VT6"
+      ],
+      "artists_name": [
+        "Pat Moran",
+        "Scott Lafaro",
+        "Johnny Whited"
+      ]
+    },
+    {
+      "uri": "spotify:track:43jrQnknnIkJK38LMsAzEM",
+      "duration_ms": 324613,
+      "isrc": "",
+      "artists_id": [
+        "239OR3ZY9wKxFTrrDQHfkF"
+      ],
+      "artists_name": [
+        "DEPAPEPE"
+      ]
+    },
+    {
+      "uri": "spotify:track:43mcXc4p7BABiZ346xaWaq",
+      "duration_ms": 174946,
+      "isrc": "FIFMF5900071",
+      "artists_id": [
+        "7pu4aXgRxXwFvtdBD7HZhw"
+      ],
+      "artists_name": [
+        "Eemeli"
+      ]
+    },
+    {
+      "uri": "spotify:track:43s0LBzdi2YklYCrhejJU0",
+      "duration_ms": 378826,
+      "isrc": "",
+      "artists_id": [
+        "5k3NfhEeZHpouIGDpjKOPo"
+      ],
+      "artists_name": [
+        "Shiro SAGISU"
+      ]
+    },
+    {
+      "uri": "spotify:track:43u8aaS31Ci2NeZ71S66wZ",
+      "duration_ms": 210750,
+      "isrc": "",
+      "artists_id": [
+        "7HfUJxeVTgrvhk0eWHFzV7",
+        "4FXGRMSHh2JjHxVwS8dhH1"
+      ],
+      "artists_name": [
+        "underscores",
+        "Virtual Riot"
+      ]
+    },
+    {
+      "uri": "spotify:track:44A0cTsQF8RMLXGm41bgPX",
+      "duration_ms": 161837,
+      "isrc": "",
+      "artists_id": [
+        "5bdiD2ANkGjawGUiBFYmRu"
+      ],
+      "artists_name": [
+        "lilbesh ramko"
+      ]
+    },
+    {
+      "uri": "spotify:track:44OToMMszuXCFbBZE4HGnw",
+      "duration_ms": 193951,
+      "isrc": "JPW562102248",
+      "artists_id": [
+        "53UfU5Etv91LUU69GzTQ1X"
+      ],
+      "artists_name": [
+        "上海アリス幻樂団"
+      ]
+    },
+    {
+      "uri": "spotify:track:44PTv45n8ci2wtsg5PS5We",
+      "duration_ms": 277640,
+      "isrc": "",
+      "artists_id": [
+        "6u56dfjDdvwElDx0hwtCES"
+      ],
+      "artists_name": [
+        "PSG"
+      ]
+    },
+    {
+      "uri": "spotify:track:44QbEVm3iSUEpb5JO1QjIB",
+      "duration_ms": 160461,
+      "isrc": "",
+      "artists_id": [
+        "55ci5kA4LZrGVdJRbIe6E6",
+        "2gLRAkIfasw2ydt1omK41j"
+      ],
+      "artists_name": [
+        "TEMPLIME",
+        "星宮とと"
+      ]
+    },
+    {
+      "uri": "spotify:track:44QkAwzeMtBsGJx4pINeDM",
+      "duration_ms": 491209,
+      "isrc": "",
+      "artists_id": [
+        "1zFunj86dcCrWAnX7EwXpA"
+      ],
+      "artists_name": [
+        "La Dagon Fam"
+      ]
+    },
+    {
+      "uri": "spotify:track:44V71xZUBIyYcNTW08MEtx",
+      "duration_ms": 19200,
+      "isrc": "",
+      "artists_id": [
+        "57DlMWmbVIf2ssJ8QBpBau"
+      ],
+      "artists_name": [
+        "Toby Fox"
+      ]
+    },
+    {
+      "uri": "spotify:track:44xnNR0OUUamEbnlu4IpXm",
+      "duration_ms": 30000,
+      "isrc": "",
+      "artists_id": [
+        "57DlMWmbVIf2ssJ8QBpBau"
+      ],
+      "artists_name": [
+        "Toby Fox"
+      ]
+    },
+    {
+      "uri": "spotify:track:44xvHbX7lkqQw58dsVYOl8",
+      "duration_ms": 248866,
+      "isrc": "",
+      "artists_id": [
+        "4NWVe0JxXsEF26EkjQvzVf"
+      ],
+      "artists_name": [
+        "ノリアキ"
+      ]
+    },
+    {
+      "uri": "spotify:track:44y97SlTXI21qarZ5C5VAw",
+      "duration_ms": 184680,
+      "isrc": "",
+      "artists_id": [
+        "239OR3ZY9wKxFTrrDQHfkF"
+      ],
+      "artists_name": [
+        "DEPAPEPE"
+      ]
+    },
+    {
+      "uri": "spotify:track:44zNXx6vKoo3Z4asLit54c",
+      "duration_ms": 176893,
+      "isrc": "",
+      "artists_id": [
+        "0XraR5DqW6Vpp86omsB88K",
+        "1whAPNHAalmyNIsfapcIcR"
+      ],
+      "artists_name": [
+        "kamome sano",
+        "Teto Kasane"
+      ]
+    },
+    {
+      "uri": "spotify:track:451ZP2osgl5I3gftkkPGwp",
+      "duration_ms": 296040,
+      "isrc": "",
+      "artists_id": [
+        "3VEG6gxFIMfl4Cdog26avS"
+      ],
+      "artists_name": [
+        "Bill Evans Trio"
+      ]
+    },
+    {
+      "uri": "spotify:track:45ArZ9lprVE7He4dH0hjoQ",
+      "duration_ms": 183013,
+      "isrc": "",
+      "artists_id": [
+        "6KQWWzFLPQbqomJrieHAW5"
+      ],
+      "artists_name": [
+        "Tokyo Incidents"
+      ]
+    },
+    {
+      "uri": "spotify:track:45Dj7t0fZm2QgRhci6EzGr",
+      "duration_ms": 260213,
+      "isrc": "",
+      "artists_id": [
+        "3VEG6gxFIMfl4Cdog26avS"
+      ],
+      "artists_name": [
+        "Bill Evans Trio"
+      ]
+    },
+    {
+      "uri": "spotify:track:45MqdoybvTDFuZRtGx1kWW",
+      "duration_ms": 135529,
+      "isrc": "",
+      "artists_id": [
+        "6rop3rDr8Dtl7uNwsONcyP"
+      ],
+      "artists_name": [
+        "James Roach"
+      ]
+    },
+    {
+      "uri": "spotify:track:45PpUS387CdRsJWPGi3bXn",
+      "duration_ms": 101045,
+      "isrc": "",
+      "artists_id": [
+        "2gLRAkIfasw2ydt1omK41j",
+        "5Sl6u7z0V3NfZHf07bSVCW"
+      ],
+      "artists_name": [
+        "星宮とと",
+        "藤沢ハルカ"
+      ]
+    },
+    {
+      "uri": "spotify:track:45dfqkFFmMQfxg69lbmKhz",
+      "duration_ms": 251394,
+      "isrc": "",
+      "artists_id": [
+        "7lbSsjYACZHn1MSDXPxNF2"
+      ],
+      "artists_name": [
+        "Hikaru Utada"
+      ]
+    },
+    {
+      "uri": "spotify:track:45iPe5Qe16VO3xNSphu86G",
+      "duration_ms": 274390,
+      "isrc": "",
+      "artists_id": [
+        "6u56dfjDdvwElDx0hwtCES"
+      ],
+      "artists_name": [
+        "PSG"
+      ]
+    },
+    {
+      "uri": "spotify:track:45scx5d7NK8dbfG4q3RI3d",
+      "duration_ms": 266346,
+      "isrc": "",
+      "artists_id": [
+        "55ci5kA4LZrGVdJRbIe6E6",
+        "4vFZAUVnDZBvqR4mIJF26K",
+        "6bOI44vIWQPwNzm0ORkK8Q"
+      ],
+      "artists_name": [
+        "TEMPLIME",
+        "をとは",
+        "yaca"
+      ]
+    },
+    {
+      "uri": "spotify:track:466O0g7FPEMhndyYb9g8bn",
+      "duration_ms": 19573,
+      "isrc": "",
+      "artists_id": [
+        "0XraR5DqW6Vpp86omsB88K"
+      ],
+      "artists_name": [
+        "kamome sano"
+      ]
+    },
+    {
+      "uri": "spotify:track:46BAKrPE4EQUYjq15EDqMK",
+      "duration_ms": 263586,
+      "isrc": "",
+      "artists_id": [
+        "4jXfFzeP66Zy67HM2mvIIF"
+      ],
+      "artists_name": [
+        "Bill Evans"
+      ]
+    },
+    {
+      "uri": "spotify:track:46IF4UqW7rBWJrZAn7o5xC",
+      "duration_ms": 317546,
+      "isrc": "INA091815817",
+      "artists_id": [
+        "1vV9qZV4kwr4iQgKWabv2r"
+      ],
+      "artists_name": [
+        "Sri Kommineni"
+      ]
+    },
+    {
+      "uri": "spotify:track:46K2dbQrN94hY1vJW5cl2j",
+      "duration_ms": 254403,
+      "isrc": "",
+      "artists_id": [
+        "3ssBfPaamcxmTrzSXcc2cb"
+      ],
+      "artists_name": [
+        "ピーナッツくん"
+      ]
+    },
+    {
+      "uri": "spotify:track:46M7FWzranzOEieeLTMG29",
+      "duration_ms": 225253,
+      "isrc": "",
+      "artists_id": [
+        "3u3c4OmCbU7PDgDvyYWfpM",
+        "4gm2uZ3iY6Pi9ua3Bwb09N",
+        "3UmM5KtsxGmK5g4CbSxIq9"
+      ],
+      "artists_name": [
+        "BEAT MARIO",
+        "伊東ライフ",
+        "USAGI Production"
+      ]
+    },
+    {
+      "uri": "spotify:track:46NA1svmQeBSXVJaU9zf76",
+      "duration_ms": 248973,
+      "isrc": "",
+      "artists_id": [
+        "5k3NfhEeZHpouIGDpjKOPo"
+      ],
+      "artists_name": [
+        "Shiro SAGISU"
+      ]
+    },
+    {
+      "uri": "spotify:track:46QVWvcIv83XNL6RVGjFkm",
+      "duration_ms": 64318,
+      "isrc": "",
+      "artists_id": [
+        "6YbQDmSNnb9RxI3NMk4BN4"
+      ],
+      "artists_name": [
+        "moreru"
+      ]
+    },
+    {
+      "uri": "spotify:track:46Vla0dqXfnEC3qSRqu5nQ",
+      "duration_ms": 277706,
+      "isrc": "",
+      "artists_id": [
+        "3dkhk6RTgOerN0NQEmt8Nc",
+        "6INv5oyVNZlG2INLcrMFqX"
+      ],
+      "artists_name": [
+        "EVISBEATS",
+        "CHIYORI"
+      ]
+    },
+    {
+      "uri": "spotify:track:46ZQElm1pWTRMcR3nRfhc9",
+      "duration_ms": 114886,
+      "isrc": "",
+      "artists_id": [
+        "5k3NfhEeZHpouIGDpjKOPo"
+      ],
+      "artists_name": [
+        "Shiro SAGISU"
+      ]
+    },
+    {
+      "uri": "spotify:track:46baZ2rnnxRXVAlh3FU5DO",
+      "duration_ms": 195720,
+      "isrc": "",
+      "artists_id": [
+        "0DBbtgOhLjX47Ml8bPWb0U"
+      ],
+      "artists_name": [
+        "nyankobrq"
+      ]
+    },
+    {
+      "uri": "spotify:track:46eRTCCNR1tEDX6imONu7I",
+      "duration_ms": 214093,
+      "isrc": "",
+      "artists_id": [
+        "6fHETUBbKmdmgybtFOFQuc"
+      ],
+      "artists_name": [
+        "Dirty Pretty Things"
+      ]
+    },
+    {
+      "uri": "spotify:track:46n0QRNNao6IZDqB4CHJni",
+      "duration_ms": 334706,
+      "isrc": "JPW562104194",
+      "artists_id": [
+        "5J3AVQ30ac1UbttX380LQo"
+      ],
+      "artists_name": [
+        "東京アクティブNEETs"
+      ]
+    },
+    {
+      "uri": "spotify:track:470J3mh8w2Gnb0VR0qzIKP",
+      "duration_ms": 257333,
+      "isrc": "",
+      "artists_id": [
+        "7lbSsjYACZHn1MSDXPxNF2"
+      ],
+      "artists_name": [
+        "Hikaru Utada"
+      ]
+    },
+    {
+      "uri": "spotify:track:47HaypTzoHICoua8b71GPW",
+      "duration_ms": 202192,
+      "isrc": "",
+      "artists_id": [
+        "00FQb4jTyendYWaN8pK0wa"
+      ],
+      "artists_name": [
+        "Lana Del Rey"
+      ]
+    },
+    {
+      "uri": "spotify:track:47NaTEPlCpA9owkdsn6ok7",
+      "duration_ms": 216829,
+      "isrc": "",
+      "artists_id": [
+        "7lbSsjYACZHn1MSDXPxNF2"
+      ],
+      "artists_name": [
+        "Hikaru Utada"
+      ]
+    },
+    {
+      "uri": "spotify:track:47Xl8xgfnMOKnWFyy7EogO",
+      "duration_ms": 224640,
+      "isrc": "",
+      "artists_id": [
+        "25eQCECJH4VTpBYV9jhpyE"
+      ],
+      "artists_name": [
+        "Joyce Jonathan"
+      ]
+    },
+    {
+      "uri": "spotify:track:47dT9iYIZqEYo9xmp3Pziz",
+      "duration_ms": 308380,
+      "isrc": "",
+      "artists_id": [
+        "55ci5kA4LZrGVdJRbIe6E6"
+      ],
+      "artists_name": [
+        "TEMPLIME"
+      ]
+    },
+    {
+      "uri": "spotify:track:47doLw9LD3G3M3rBD63AFV",
+      "duration_ms": 208316,
+      "isrc": "",
+      "artists_id": [
+        "5k3NfhEeZHpouIGDpjKOPo"
+      ],
+      "artists_name": [
+        "Shiro SAGISU"
+      ]
+    },
+    {
+      "uri": "spotify:track:47nGXCukN3jsHeymu6eIzL",
+      "duration_ms": 188937,
+      "isrc": "",
+      "artists_id": [
+        "3ssBfPaamcxmTrzSXcc2cb",
+        "06JqjFb1TiJGn9DtbKFKZr",
+        "032MHGcRenPOawe6HxFIZz"
+      ],
+      "artists_name": [
+        "ピーナッツくん",
+        "チャンチョ",
+        "オレンジ博士"
+      ]
+    },
+    {
+      "uri": "spotify:track:47wF0hxXS8LFyHmSrYJRYF",
+      "duration_ms": 122253,
+      "isrc": "",
+      "artists_id": [
+        "3dkhk6RTgOerN0NQEmt8Nc"
+      ],
+      "artists_name": [
+        "EVISBEATS"
+      ]
+    },
+    {
+      "uri": "spotify:track:47wPdyHy7tGpwwY5pbRgbV",
+      "duration_ms": 145828,
+      "isrc": "",
+      "artists_id": [
+        "5bdiD2ANkGjawGUiBFYmRu"
+      ],
+      "artists_name": [
+        "lilbesh ramko"
+      ]
+    },
+    {
+      "uri": "spotify:track:480cJfZbu3nnl6MZ5OukCE",
+      "duration_ms": 268401,
+      "isrc": "",
+      "artists_id": [
+        "65Kq02oh0g3gRqfZ0fo8eG"
+      ],
+      "artists_name": [
+        "Lizdek"
+      ]
+    },
+    {
+      "uri": "spotify:track:487g0LJPXr3r6kgMTlZjz6",
+      "duration_ms": 263000,
+      "isrc": "",
+      "artists_id": [
+        "2Xea2ALOsuvQfvn4wYtvI2",
+        "57DlMWmbVIf2ssJ8QBpBau"
+      ],
+      "artists_name": [
+        "ND Music",
+        "Toby Fox"
+      ]
+    },
+    {
+      "uri": "spotify:track:48MzXWLphN5TL9iBU70C2Y",
+      "duration_ms": 289200,
+      "isrc": "",
+      "artists_id": [
+        "3VEG6gxFIMfl4Cdog26avS"
+      ],
+      "artists_name": [
+        "Bill Evans Trio"
+      ]
+    },
+    {
+      "uri": "spotify:track:48Vg76JDjPRAApB7DgVEin",
+      "duration_ms": 354306,
+      "isrc": "",
+      "artists_id": [
+        "5k3NfhEeZHpouIGDpjKOPo"
+      ],
+      "artists_name": [
+        "Shiro SAGISU"
+      ]
+    }
+  ]
+}

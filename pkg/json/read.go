@@ -22,8 +22,8 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	// ランダムにファイルを選択するための設定
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
-	// ランダムな数（1から10）を生成
-	partNumber := r.Intn(10) + 1
+	// ランダムな数（1から100）を生成
+	partNumber := r.Intn(100) + 1
 	randomFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, partNumber))
 
 	// ファイルの内容を確認して読み込み
@@ -122,7 +122,7 @@ func GetTracksByArtistsFromAllFiles(db *sql.DB, artists []model.Artists) ([]mode
 	}
 
 	var allTracks []model.Track
-	for i := 1; i <= 10; i++ {
+	for i := 1; i <= 100; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
 		tracks, err := getTracksByArtistsFromFile(filePath, artists)
 		if err != nil {
