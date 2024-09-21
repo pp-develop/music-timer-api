@@ -169,19 +169,25 @@ func resetTracks(c *gin.Context) {
 }
 
 func deleteTracks(c *gin.Context) {
-	dbInstance, ok := utils.GetDB(c)
+	db, ok := utils.GetDB(c)
 	if !ok {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	err := database.DeleteTracks(dbInstance)
+	err := database.DeleteTracks(db)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+		return
 	}
+	err = database.DeleteOldTracksIfOverLimit(db)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
 }
 
 func updateFavoriteTracks(c *gin.Context) {
