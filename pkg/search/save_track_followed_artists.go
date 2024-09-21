@@ -1,9 +1,11 @@
 package search
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
@@ -13,7 +15,10 @@ import (
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
-const maxConcurrency = 5
+const (
+	maxConcurrency = 5
+	timeout        = 300 * time.Second
+)
 
 var semaphore = make(chan struct{}, maxConcurrency)
 
@@ -32,14 +37,24 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 	errChan := make(chan error, len(artists))
 	var wg sync.WaitGroup
 
+	// タイムアウト付きのコンテキストを作成
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	for _, artist := range artists {
 		wg.Add(1)
 
 		go func(artist model.Artists) {
 			defer wg.Done()
 
-			semaphore <- struct{}{}
-			defer func() { <-semaphore }()
+			// タイムアウトを確認し、終了する
+			select {
+			case <-ctx.Done():
+				errChan <- ctx.Err()
+				return
+			case semaphore <- struct{}{}: // 空きがあれば取得
+				defer func() { <-semaphore }() // 処理後に解放
+			}
 
 			albums, err := spotify.GetArtistAlbums(artist.Id)
 			if err != nil {
@@ -72,11 +87,13 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 		}(artist)
 	}
 
+	// Goroutineを待機し、完了後にチャンネルを閉じる
 	go func() {
 		wg.Wait()
 		close(errChan)
 	}()
 
+	// エラーチェック
 	for err := range errChan {
 		if err != nil {
 			return err
