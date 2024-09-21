@@ -123,22 +123,19 @@ func GetArtistTracks(db *sql.DB, id string) ([]model.Track, error) {
 	return tracks, nil
 }
 
-func AddArtistTrack(db *sql.DB, id string, newTrack model.Track) error {
+func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 	var existingTracks []model.Track
 
 	// 既存のトラックURIリストを取得
 	var trackJSON *string
 	err := db.QueryRow(`
         SELECT tracks FROM artists WHERE id = $1`, id).Scan(&trackJSON)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// レコードが存在しない場合、新規作成として処理
-			return SaveArtist(db, id, newTrack)
-		}
+	if err != nil && err != sql.ErrNoRows {
 		log.Printf("Error fetching artist tracks for ID %s: %v", id, err)
 		return err
 	}
 
+	// 既存トラックがあれば、それをパースする
 	if trackJSON != nil && *trackJSON != "" {
 		err = json.Unmarshal([]byte(*trackJSON), &existingTracks)
 		if err != nil {
@@ -147,16 +144,17 @@ func AddArtistTrack(db *sql.DB, id string, newTrack model.Track) error {
 		}
 	}
 
-	// 新しいトラックが既存のトラックリストに存在するか確認
+	// 新しいトラックを既存のトラックに追加（重複を避ける）
+	trackMap := make(map[string]bool)
 	for _, track := range existingTracks {
-		if track.Uri == newTrack.Uri {
-			// トラックが既に存在する場合は何もせず終了
-			return nil
-		}
+		trackMap[track.Uri] = true
 	}
 
-	// 新しいトラックをリストに追加
-	existingTracks = append(existingTracks, newTrack)
+	for _, newTrack := range newTracks {
+		if !trackMap[newTrack.Uri] {
+			existingTracks = append(existingTracks, newTrack)
+		}
+	}
 
 	// 更新されたトラックリストをJSONBにエンコード
 	updatedTrackJSON, err := json.Marshal(existingTracks)
@@ -165,12 +163,16 @@ func AddArtistTrack(db *sql.DB, id string, newTrack model.Track) error {
 		return err
 	}
 
-	// JSONBカラムを更新
+	// ON CONFLICT を使って、既存レコードがあれば更新、なければ挿入
 	_, err = db.Exec(`
-        UPDATE artists SET tracks = $1, updated_at = NOW()
-        WHERE id = $2`, updatedTrackJSON, id)
+        INSERT INTO artists (id, tracks, updated_at)
+        VALUES ($1, $2::jsonb, NOW())
+        ON CONFLICT (id) DO UPDATE SET
+            tracks = EXCLUDED.tracks,
+            updated_at = NOW()`,
+		id, updatedTrackJSON)
 	if err != nil {
-		log.Printf("Error updating artist tracks for artist ID %s: %v", id, err)
+		log.Printf("Error upserting artist tracks for artist ID %s: %v", id, err)
 		return err
 	}
 

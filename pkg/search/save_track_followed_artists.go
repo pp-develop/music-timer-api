@@ -71,6 +71,8 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 			// 	return
 			// }
 
+			var allTracks []model.Track
+
 			for _, album := range albums.Albums {
 				if album.ID.String() == "" {
 					// todo:: 再考慮
@@ -78,21 +80,27 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 					continue
 				}
 
-				tracks, err := spotifyApi.GetAlbumTracks(album.ID.String())
+				albumTracks, err := spotifyApi.GetAlbumTracks(album.ID.String())
 				if err != nil {
 					// todo:: 再考慮
 					log.Printf("Error retrieving album tracks: %v", err)
 					continue
 				}
 
-				for _, item := range tracks.Tracks {
-					track := convertToTrackFromSimple(&item)
-					if err := database.AddArtistTrack(db, artist.Id, track); err != nil {
-						// todo:: 再考慮
-						log.Printf("Error add artists table: %v", err)
-						errChan <- err
+				for _, albumTrack := range albumTracks.Tracks {
+					for _, albumArtist := range albumTrack.Artists {
+						if albumArtist.ID.String() == artist.Id {
+							track := convertToTrackFromSimple(&albumTrack)
+							allTracks = append(allTracks, track)
+						}
 					}
 				}
+			}
+
+			// 一度に全てのトラックを追加
+			if err := database.AddArtistTracks(db, artist.Id, allTracks); err != nil {
+				log.Printf("Error updating artist tracks for artist ID %s: %v", artist.Id, err)
+				errChan <- err
 			}
 		}(artist)
 	}
