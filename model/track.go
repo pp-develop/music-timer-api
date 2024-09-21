@@ -5,5 +5,4 @@ type Track struct {
 	DurationMs  int      `json:"duration_ms"`
 	Isrc        string   `json:"isrc"`
 	ArtistsId   []string `json:"artists_id"`
-	ArtistsName []string `json:"artists_name"`
 }

@@ -76,12 +76,6 @@ func getSpecifyArtistsAllTracks(db *sql.DB, artists []model.Artists) ([]model.Tr
 		return nil, err
 	}
 	if len(tracks) == 0 {
-		tracks, err = database.GetTracksByArtists(db, artists)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if len(tracks) == 0 {
 		return nil, model.ErrNotFoundTracks
 	}
 	return tracks, nil
