@@ -122,6 +122,5 @@ func convertToTrackFromSimple(savedTrack *spotify.SimpleTrack) model.Track {
 		Uri:        string(savedTrack.URI),
 		Isrc:       savedTrack.ExternalIDs.ISRC,
 		DurationMs: int(savedTrack.Duration),
-		ArtistsId:  artistsId,
 	}
 }

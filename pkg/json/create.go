@@ -11,11 +11,16 @@ import (
 	"time"
 
 	"github.com/pp-develop/music-timer-api/database"
-	"github.com/pp-develop/music-timer-api/model"
 )
 
+type TrackWithoutArtistsId struct {
+	Uri        string `json:"uri"`
+	DurationMs int    `json:"duration_ms"`
+	Isrc       string `json:"isrc"`
+}
+
 type Json struct {
-	Tracks []model.Track `json:"tracks"`
+	Tracks []TrackWithoutArtistsId `json:"tracks"`
 }
 
 type ConfigManager struct {
@@ -61,7 +66,7 @@ func (cm *ConfigManager) load() error {
 			return fmt.Errorf("error decoding JSON from file %s: %w", cm.configFilePath, err)
 		}
 
-		cm.config.Tracks = []model.Track{}
+		cm.config.Tracks = []TrackWithoutArtistsId{}
 		return nil
 	})
 
@@ -121,12 +126,22 @@ func createJson(db *sql.DB) error {
 
 		// リトライを追加
 		err := retry(3, 1*time.Second, func() error {
+			// ArtistsIdを含まないトラックのスライスを作成
+			tracksWithoutArtistsId := make([]TrackWithoutArtistsId, len(allTracks[start:end]))
+			for j, track := range allTracks[start:end] {
+				tracksWithoutArtistsId[j] = TrackWithoutArtistsId{
+					Uri:        track.Uri,
+					DurationMs: track.DurationMs,
+					Isrc:       track.Isrc,
+				}
+			}
+
+			// 設定マネージャを作成してファイルに保存
 			configManager, err := NewConfigManager(filePath)
 			if err != nil {
 				return err
 			}
-
-			return configManager.saveToFile(filePath, allTracks[start:end])
+			return configManager.saveToFile(filePath, tracksWithoutArtistsId)
 		})
 		if err != nil {
 			return err
@@ -147,7 +162,7 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
-func (cm *ConfigManager) saveToFile(filePath string, tracks []model.Track) error {
+func (cm *ConfigManager) saveToFile(filePath string, tracks []TrackWithoutArtistsId) error {
 	cm.mutex.Lock()
 	defer cm.mutex.Unlock()
 

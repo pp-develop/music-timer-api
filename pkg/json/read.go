@@ -26,44 +26,54 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	partNumber := r.Intn(10) + 1
 	randomFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, partNumber))
 
-	// ファイルの内容を確認して読み込み
-	data, err := readJSONFileWithRetry(randomFilePath, 3)
-	if err != nil {
+	// 非同期でファイルを読み込む
+	tracksChan := make(chan []model.Track)
+	errChan := make(chan error)
+
+	go func() {
+		defer close(errChan) // エラーチャネルをクローズ
+		data, err := readJSONFileWithRetry(randomFilePath, 3)
+		if err != nil {
+			errChan <- err
+			return
+		}
+
+		// 配列型のキーを取得
+		key := "tracks"
+		value, ok := data[key]
+		if !ok {
+			errChan <- fmt.Errorf("key %s not found", key)
+			return
+		}
+
+		// 配列にキャスト
+		array, ok := value.([]interface{})
+		if !ok {
+			errChan <- fmt.Errorf("key %s is not an array", key)
+			return
+		}
+
+		// []interface{}型の配列を[]Track型に変換
+		tracks := make([]model.Track, 0, len(array))
+		for _, v := range array {
+			item := v.(map[string]interface{})
+			track := model.Track{
+				Uri:        item["uri"].(string),
+				DurationMs: int(item["duration_ms"].(float64)),
+				Isrc:       item["isrc"].(string),
+			}
+			tracks = append(tracks, track)
+		}
+		tracksChan <- tracks
+		close(tracksChan) // トラックチャネルをクローズ
+	}()
+
+	select {
+	case tracks := <-tracksChan:
+		return tracks, nil
+	case err := <-errChan:
 		return nil, err
 	}
-
-	// 配列型のキーを取得
-	key := "tracks"
-	value, ok := data[key]
-	if !ok {
-		return nil, fmt.Errorf("key %s not found", key)
-	}
-
-	// 配列にキャスト
-	array, ok := value.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("key %s is not an array", key)
-	}
-
-	// []interface{}型の配列を[]Track型に変換
-	tracks := make([]model.Track, 0, len(array))
-	for _, v := range array {
-		item := v.(map[string]interface{})
-
-		var artistsNames []string
-		for _, name := range item["artists_name"].([]interface{}) {
-			artistsNames = append(artistsNames, name.(string))
-		}
-
-		track := model.Track{
-			Uri:         item["uri"].(string),
-			DurationMs:  int(item["duration_ms"].(float64)), // float64型をint型に変換
-			Isrc:        item["isrc"].(string),
-			ArtistsName: artistsNames,
-		}
-		tracks = append(tracks, track)
-	}
-	return tracks, nil
 }
 
 func readJSONFileWithRetry(filePath string, retries int) (map[string]interface{}, error) {
@@ -108,75 +118,6 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 		if track.DurationMs == msec {
 			tracks = append(tracks, track)
 			break
-		}
-	}
-	return tracks, nil
-}
-
-func GetTracksByArtistsFromAllFiles(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
-	// ファイルの作成
-	err := Create(db)
-	if err != nil {
-		log.Printf("Error creating file: %v", err)
-		return nil, err
-	}
-
-	var allTracks []model.Track
-	for i := 1; i <= 10; i++ {
-		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
-		tracks, err := getTracksByArtistsFromFile(filePath, artists)
-		if err != nil {
-			log.Printf("Error processing file %s: %v", filePath, err)
-			return nil, err
-		}
-		allTracks = append(allTracks, tracks...)
-	}
-	return allTracks, nil
-}
-
-func getTracksByArtistsFromFile(filePath string, artists []model.Artists) ([]model.Track, error) {
-	// ファイルの内容を確認して読み込み
-	data, err := readJSONFileWithRetry(filePath, 3)
-	if err != nil {
-		return nil, err
-	}
-
-	// 配列型のキーを取得
-	key := "tracks"
-	value, ok := data[key]
-	if !ok {
-		return nil, fmt.Errorf("key %s not found", key)
-	}
-
-	// 配列にキャスト
-	array, ok := value.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("key %s is not an array", key)
-	}
-
-	// []interface{}型の配列を[]Track型に変換
-	var tracks []model.Track
-	for _, v := range array {
-		item := v.(map[string]interface{})
-
-		var artistIds []string
-		for _, id := range item["artists_id"].([]interface{}) {
-			artistIds = append(artistIds, id.(string))
-		}
-
-		track := model.Track{
-			Uri:        item["uri"].(string),
-			DurationMs: int(item["duration_ms"].(float64)), // float64型をint型に変換
-			Isrc:       item["isrc"].(string),
-			ArtistsId:  artistIds,
-		}
-
-		// アーティスト名によるフィルタリング
-		for _, artist := range artists {
-			if contains(artistIds, artist.Id) {
-				tracks = append(tracks, track)
-				break
-			}
 		}
 	}
 	return tracks, nil
