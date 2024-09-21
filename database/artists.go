@@ -147,9 +147,11 @@ func AddArtistTrack(db *sql.DB, id string, newTrack model.Track) error {
 		}
 	}
 
+	// 新しいトラックが既存のトラックリストに存在するか確認
 	for _, track := range existingTracks {
 		if track.Uri == newTrack.Uri {
-			return fmt.Errorf("track already exists")
+			// トラックが既に存在する場合は何もせず終了
+			return nil
 		}
 	}
 
