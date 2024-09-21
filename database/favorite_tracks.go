@@ -8,7 +8,7 @@ import (
 	"github.com/pp-develop/music-timer-api/model"
 )
 
-func GetUpdatedAt(db *sql.DB, userId string) (time.Time, error) {
+func GetTracksUpdatedAt(db *sql.DB, userId string) (time.Time, error) {
 	var updatedAt time.Time
 
 	// データベースから updated_at を取得

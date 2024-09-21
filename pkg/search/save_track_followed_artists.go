@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/music-timer-api/api/spotify"
+	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/utils"
+	"github.com/zmb3/spotify/v2"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 var semaphore = make(chan struct{}, maxConcurrency)
 
 func SaveTracksFromFollowedArtists(c *gin.Context) error {
-	dbInstance, ok := utils.GetDB(c)
+	db, ok := utils.GetDB(c)
 	if !ok {
 		return model.ErrFailedGetDB
 	}
@@ -56,12 +57,19 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				defer func() { <-semaphore }() // 処理後に解放
 			}
 
-			albums, err := spotify.GetArtistAlbums(artist.Id)
+			albums, err := spotifyApi.GetArtistAlbums(artist.Id)
 			if err != nil {
 				// todo:: 再考慮
 				errChan <- err
 				return
 			}
+
+			// err = database.ClearArtistsTracks(db, artist.Id)
+			// if err != nil {
+			// 	log.Printf("Error clear artists table: %v", err)
+			// 	errChan <- err
+			// 	return
+			// }
 
 			for _, album := range albums.Albums {
 				if album.ID.String() == "" {
@@ -70,16 +78,18 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 					continue
 				}
 
-				tracks, err := spotify.GetAlbumTracks(album.ID.String())
+				tracks, err := spotifyApi.GetAlbumTracks(album.ID.String())
 				if err != nil {
 					// todo:: 再考慮
 					log.Printf("Error retrieving album tracks: %v", err)
 					continue
 				}
 
-				for _, track := range tracks.Tracks {
-					if err := database.SaveSimpleTrack(dbInstance, &track); err != nil {
+				for _, item := range tracks.Tracks {
+					track := convertToTrackFromSimple(&item)
+					if err := database.AddArtistTrack(db, artist.Id, track); err != nil {
 						// todo:: 再考慮
+						log.Printf("Error add artists table: %v", err)
 						errChan <- err
 					}
 				}
@@ -101,4 +111,17 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 	}
 
 	return nil
+}
+
+func convertToTrackFromSimple(savedTrack *spotify.SimpleTrack) model.Track {
+	artistsId := make([]string, len(savedTrack.Artists))
+	for i, artist := range savedTrack.Artists {
+		artistsId[i] = artist.ID.String()
+	}
+	return model.Track{
+		Uri:        string(savedTrack.URI),
+		Isrc:       savedTrack.ExternalIDs.ISRC,
+		DurationMs: int(savedTrack.Duration),
+		ArtistsId:  artistsId,
+	}
 }

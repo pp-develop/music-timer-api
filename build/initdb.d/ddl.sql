@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS users CASCADE;
+
 create table users(
     "id" VARCHAR(255) primary key,
     "country" VARCHAR(255),
@@ -11,6 +12,7 @@ create table users(
 );
 
 DROP TABLE IF EXISTS tracks CASCADE;
+
 create table tracks(
     "uri" VARCHAR(255) primary key,
     "artists_id" jsonb,
@@ -22,6 +24,7 @@ create table tracks(
 );
 
 DROP TABLE IF EXISTS playlists CASCADE;
+
 create table playlists(
     "id" VARCHAR(255) PRIMARY KEY,
     index id_index (id),
@@ -30,9 +33,19 @@ create table playlists(
 );
 
 DROP TABLE IF EXISTS favorite_tracks CASCADE;
+
 CREATE TABLE favorite_tracks (
-    "user_id" VARCHAR(255) PRIMARY KEY,   
-    "tracks" JSONB,                  
-    "updated_at" TIMESTAMP,                 
+    "user_id" VARCHAR(255) PRIMARY KEY,
+    "tracks" JSONB,
+    "updated_at" TIMESTAMP,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+DROP TABLE IF EXISTS artists CASCADE;
+
+CREATE TABLE artists (
+    "id" VARCHAR(255) PRIMARY KEY,
+    index id_index (id),
+    "tracks" JSONB,
+    "updated_at" TIMESTAMP
 );

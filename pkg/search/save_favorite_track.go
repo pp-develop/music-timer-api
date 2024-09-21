@@ -2,7 +2,6 @@ package search
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -50,7 +49,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 
 	// トラック情報を保存
 	for _, item := range tracks.Tracks {
-		track := convertToTrackModel(&item)
+		track := convertToTrackFromSaved(&item)
 		err := database.AddFavoriteTrack(db, userId, track)
 		if err != nil {
 			return err
@@ -59,12 +58,6 @@ func SaveFavoriteTracks(c *gin.Context) error {
 
 	// 次のトラックが存在する場合の処理
 	err = ProcessNextTracks(db, token, tracks, userId)
-	if err != nil {
-		return err
-	}
-
-	// 更新日時を現在の時間に更新
-	err = database.UpdateFavoriteTracksUpdateAt(db, userId, time.Now())
 	if err != nil {
 		return err
 	}
@@ -82,7 +75,7 @@ func ProcessNextTracks(db *sql.DB, token *oauth2.Token, tracks *spotify.SavedTra
 		}
 
 		for _, item := range tracks.Tracks {
-			track := convertToTrackModel(&item)
+			track := convertToTrackFromSaved(&item)
 			err := database.AddFavoriteTrack(db, userId, track)
 			if err != nil {
 				return err
@@ -97,7 +90,7 @@ func ProcessNextTracks(db *sql.DB, token *oauth2.Token, tracks *spotify.SavedTra
 	return nil
 }
 
-func convertToTrackModel(savedTrack *spotify.SavedTrack) model.Track {
+func convertToTrackFromSaved(savedTrack *spotify.SavedTrack) model.Track {
 	artistsId := make([]string, len(savedTrack.Artists))
 	for i, artist := range savedTrack.Artists {
 		artistsId[i] = artist.ID.String()

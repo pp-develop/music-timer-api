@@ -70,7 +70,8 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 func getSpecifyArtistsAllTracks(db *sql.DB, artists []model.Artists) ([]model.Track, error) {
 	var tracks []model.Track
 
-	tracks, err := json.GetTracksByArtistsFromAllFiles(db, artists)
+	artistsIds := ConvertArtistsToIDs(artists)
+	tracks, err := database.GetTracksByArtistIds(db, artistsIds)
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +85,15 @@ func getSpecifyArtistsAllTracks(db *sql.DB, artists []model.Artists) ([]model.Tr
 		return nil, model.ErrNotFoundTracks
 	}
 	return tracks, nil
+}
+
+// Artists の各要素から ID フィールドを抽出します。
+func ConvertArtistsToIDs(artists []model.Artists) []string {
+	artistIDs := make([]string, len(artists)) // アーティストの数だけ string スライスを作成
+
+	for i, artist := range artists {
+		artistIDs[i] = artist.Id // 各アーティストの ID を抽出
+	}
+
+	return artistIDs
 }
