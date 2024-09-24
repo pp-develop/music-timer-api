@@ -124,42 +124,10 @@ func GetArtistTracks(db *sql.DB, id string) ([]model.Track, error) {
 }
 
 func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
-	var existingTracks []model.Track
-
-	// 既存のトラックURIリストを取得
-	var trackJSON *string
-	err := db.QueryRow(`
-        SELECT tracks FROM artists WHERE id = $1`, id).Scan(&trackJSON)
-	if err != nil && err != sql.ErrNoRows {
-		log.Printf("Error fetching artist tracks for ID %s: %v", id, err)
-		return err
-	}
-
-	// 既存トラックがあれば、それをパースする
-	if trackJSON != nil && *trackJSON != "" {
-		err = json.Unmarshal([]byte(*trackJSON), &existingTracks)
-		if err != nil {
-			log.Printf("Error unmarshaling existing tracks for artist ID %s: %v", id, err)
-			return err
-		}
-	}
-
-	// 新しいトラックを既存のトラックに追加（重複を避ける）
-	trackMap := make(map[string]bool)
-	for _, track := range existingTracks {
-		trackMap[track.Uri] = true
-	}
-
-	for _, newTrack := range newTracks {
-		if !trackMap[newTrack.Uri] {
-			existingTracks = append(existingTracks, newTrack)
-		}
-	}
-
 	// 更新されたトラックリストをJSONBにエンコード
-	updatedTrackJSON, err := json.Marshal(existingTracks)
+	updatedTrackJSON, err := json.Marshal(newTracks)
 	if err != nil {
-		log.Printf("Error marshaling updated tracks for artist ID %s: %v", id, err)
+		log.Printf("Error marshaling new tracks for artist ID %s: %v", id, err)
 		return err
 	}
 
