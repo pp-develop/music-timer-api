@@ -122,13 +122,8 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 }
 
 func convertToTrackFromSimple(savedTrack *spotify.SimpleTrack) model.Track {
-	artistsId := make([]string, len(savedTrack.Artists))
-	for i, artist := range savedTrack.Artists {
-		artistsId[i] = artist.ID.String()
-	}
 	return model.Track{
 		Uri:        string(savedTrack.URI),
-		Isrc:       savedTrack.ExternalIDs.ISRC,
 		DurationMs: int(savedTrack.Duration),
 	}
 }
