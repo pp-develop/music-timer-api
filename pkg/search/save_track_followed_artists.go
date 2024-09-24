@@ -20,7 +20,7 @@ import (
 
 const (
 	maxConcurrency = 3
-	timeout        = 360 * time.Second
+	timeout        = 600 * time.Second
 )
 
 var semaphore = make(chan struct{}, maxConcurrency)
