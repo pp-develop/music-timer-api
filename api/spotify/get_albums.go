@@ -2,32 +2,14 @@ package spotify
 
 import (
 	"context"
-	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify/v2"
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
-	"golang.org/x/oauth2/clientcredentials"
+	"golang.org/x/oauth2"
 )
 
-func GetArtistAlbums(artistID string) ([]spotify.SimpleAlbum, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
+func GetArtistAlbums(token *oauth2.Token, artistID string) ([]spotify.SimpleAlbum, error) {
 	ctx := context.Background()
-	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-		TokenURL:     spotifyauth.TokenURL,
-	}
-	token, err := config.Token(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := spotifyauth.New().Client(ctx, token)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	var allAlbums []spotify.SimpleAlbum
@@ -55,24 +37,9 @@ func GetArtistAlbums(artistID string) ([]spotify.SimpleAlbum, error) {
 	return allAlbums, nil
 }
 
-func GetAlbumTracks(albumID string) ([]spotify.SimpleTrack, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
+func GetAlbumTracks(token *oauth2.Token, albumID string) ([]spotify.SimpleTrack, error) {
 	ctx := context.Background()
-	config := &clientcredentials.Config{
-		ClientID:     os.Getenv("SPOTIFY_ID"),
-		ClientSecret: os.Getenv("SPOTIFY_SECRET"),
-		TokenURL:     spotifyauth.TokenURL,
-	}
-	token, err := config.Token(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := spotifyauth.New().Client(ctx, token)
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	var allTracks []spotify.SimpleTrack

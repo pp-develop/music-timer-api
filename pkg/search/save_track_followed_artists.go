@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
@@ -14,6 +15,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/artist"
 	"github.com/pp-develop/music-timer-api/utils"
 	"github.com/zmb3/spotify/v2"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -24,9 +26,25 @@ const (
 var semaphore = make(chan struct{}, maxConcurrency)
 
 func SaveTracksFromFollowedArtists(c *gin.Context) error {
+	session := sessions.Default(c)
+	v := session.Get("userId")
+	if v == nil {
+		return model.ErrFailedGetSession
+	}
+	userId := v.(string)
+
 	db, ok := utils.GetDB(c)
 	if !ok {
 		return model.ErrFailedGetDB
+	}
+
+	user, err := database.GetUser(db, userId)
+	if err != nil {
+		return err
+	}
+	token := &oauth2.Token{
+		AccessToken:  user.AccessToken,
+		RefreshToken: user.RefreshToken,
 	}
 
 	// TODO:: 必要な関数の切り出し
@@ -57,7 +75,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				defer func() { <-semaphore }() // 処理後に解放
 			}
 
-			albums, err := spotifyApi.GetArtistAlbums(artist.Id)
+			albums, err := spotifyApi.GetArtistAlbums(token, artist.Id)
 			if err != nil {
 				// todo:: 再考慮
 				errChan <- err
@@ -85,7 +103,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 					continue
 				}
 
-				albumTracks, err := spotifyApi.GetAlbumTracks(album.ID.String())
+				albumTracks, err := spotifyApi.GetAlbumTracks(token, album.ID.String())
 				if err != nil {
 					// todo:: 再考慮
 					log.Printf("Error retrieving album tracks: %v", err)
