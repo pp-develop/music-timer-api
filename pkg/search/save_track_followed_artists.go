@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	maxConcurrency = 5
-	timeout        = 300 * time.Second
+	maxConcurrency = 3
+	timeout        = 360 * time.Second
 )
 
 var semaphore = make(chan struct{}, maxConcurrency)
@@ -76,7 +76,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 			for _, album := range albums.Albums {
 				if album.ID.String() == "" {
 					// todo:: 再考慮
-					errChan <- fmt.Errorf("Album ID is empty")
+					errChan <- fmt.Errorf("album ID is empty")
 					continue
 				}
 
