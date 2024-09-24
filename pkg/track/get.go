@@ -3,6 +3,7 @@ package track
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -41,6 +42,12 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 		localTracks, err = json.GetAllTracks(db)
 		if err != nil {
 			errChan <- err
+			return
+		}
+
+		if len(localTracks) == 0 {
+			// 全トラックが空の場合
+			errChan <- fmt.Errorf("tracks table is empty")
 			return
 		}
 
@@ -111,7 +118,7 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 
 	// 差分を埋めるためのトラックを取得します。
 	var isTrackFound bool
-	getTrack, _ := json.GetTrackByMsec(allTracks, remainingTime)
+	getTrack := json.GetTrackByMsec(allTracks, remainingTime)
 	if len(getTrack) > 0 {
 		isTrackFound = true
 		tracks = append(tracks, getTrack...)

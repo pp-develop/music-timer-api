@@ -112,7 +112,7 @@ func ShuffleTracks(tracks []model.Track) []model.Track {
 	return tracks
 }
 
-func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
+func GetTrackByMsec(allTracks []model.Track, msec int) []model.Track {
 	tracks := []model.Track{}
 	for _, track := range allTracks {
 		if track.DurationMs == msec {
@@ -120,7 +120,7 @@ func GetTrackByMsec(allTracks []model.Track, msec int) ([]model.Track, error) {
 			break
 		}
 	}
-	return tracks, nil
+	return tracks
 }
 
 func contains(slice []string, val string) bool {
