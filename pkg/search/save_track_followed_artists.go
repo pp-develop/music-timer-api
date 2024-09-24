@@ -75,6 +75,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 			if artist.Id == "3ssBfPaamcxmTrzSXcc2cb" {
 				log.Println("name")
 				log.Println(artist.Name)
+				log.Println(len(albums))
 			}
 
 			for _, album := range albums {
@@ -94,7 +95,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				for _, albumTrack := range albumTracks {
 					for _, albumArtist := range albumTrack.Artists {
 						if albumArtist.ID.String() == artist.Id {
-							track := convertToTrackFromSimple(&albumTrack)
+							track := convertToTrackFromSimple(albumTrack)
 							allTracks = append(allTracks, track)
 						}
 					}
@@ -130,7 +131,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 	return nil
 }
 
-func convertToTrackFromSimple(savedTrack *spotify.SimpleTrack) model.Track {
+func convertToTrackFromSimple(savedTrack spotify.SimpleTrack) model.Track {
 	return model.Track{
 		Uri:        string(savedTrack.URI),
 		DurationMs: int(savedTrack.Duration),
