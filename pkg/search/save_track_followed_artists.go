@@ -77,7 +77,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				log.Println(artist.Name)
 			}
 
-			for _, album := range albums.Albums {
+			for _, album := range albums {
 				if album.ID.String() == "" {
 					// todo:: 再考慮
 					errChan <- fmt.Errorf("album ID is empty")
@@ -91,7 +91,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 					continue
 				}
 
-				for _, albumTrack := range albumTracks.Tracks {
+				for _, albumTrack := range albumTracks {
 					for _, albumArtist := range albumTrack.Artists {
 						if albumArtist.ID.String() == artist.Id {
 							track := convertToTrackFromSimple(&albumTrack)

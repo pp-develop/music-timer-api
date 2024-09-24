@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-func GetArtistAlbums(artistID string) (*spotify.SimpleAlbumPage, error) {
+func GetArtistAlbums(artistID string) ([]spotify.SimpleAlbum, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -29,14 +29,32 @@ func GetArtistAlbums(artistID string) (*spotify.SimpleAlbumPage, error) {
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient, spotify.WithRetry(true))
-	albums, err := client.GetArtistAlbums(context.Background(), spotify.ID(artistID), nil)
+
+	var allAlbums []spotify.SimpleAlbum
+
+	// 最初のページを取得
+	albumsPage, err := client.GetArtistAlbums(ctx, spotify.ID(artistID), nil)
 	if err != nil {
 		return nil, err
 	}
-	return albums, nil
+
+	// アルバムをallAlbumsに追加
+	allAlbums = append(allAlbums, albumsPage.Albums...)
+
+	// 次のページがある間はループして取得
+	for albumsPage.Next != "" {
+		// 次のページを取得
+		err = client.NextPage(ctx, albumsPage)
+		if err != nil {
+			return nil, err
+		}
+		allAlbums = append(allAlbums, albumsPage.Albums...)
+	}
+
+	return allAlbums, nil
 }
 
-func GetAlbumTracks(albumID string) (*spotify.SimpleTrackPage, error) {
+func GetAlbumTracks(albumID string) ([]spotify.SimpleTrack, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -55,9 +73,28 @@ func GetAlbumTracks(albumID string) (*spotify.SimpleTrackPage, error) {
 
 	httpClient := spotifyauth.New().Client(ctx, token)
 	client := spotify.New(httpClient, spotify.WithRetry(true))
-	tracks, err := client.GetAlbumTracks(context.Background(), spotify.ID(albumID))
+
+	var allTracks []spotify.SimpleTrack
+	options := []spotify.RequestOption{spotify.Limit(50)}
+
+	// 最初のページを取得
+	tracksPage, err := client.GetAlbumTracks(ctx, spotify.ID(albumID), options...)
 	if err != nil {
 		return nil, err
 	}
-	return tracks, nil
+
+	// トラックをallTracksに追加
+	allTracks = append(allTracks, tracksPage.Tracks...)
+
+	// 次のページがある間はループして取得
+	for tracksPage.Next != "" {
+		// `NextPage`メソッドで次のページを取得
+		err = client.NextPage(ctx, tracksPage)
+		if err != nil {
+			return nil, err
+		}
+		allTracks = append(allTracks, tracksPage.Tracks...)
+	}
+
+	return allTracks, nil
 }
