@@ -90,11 +90,6 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 			// }
 
 			var allTracks []model.Track
-			if artist.Id == "3ssBfPaamcxmTrzSXcc2cb" {
-				log.Println("name")
-				log.Println(artist.Name)
-				log.Println(len(albums))
-			}
 
 			for _, album := range albums {
 				if album.ID.String() == "" {
@@ -120,11 +115,6 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				}
 			}
 
-			if artist.Id == "3ssBfPaamcxmTrzSXcc2cb" {
-				log.Println("name")
-				log.Println(artist.Name)
-				log.Println(allTracks)
-			}
 			// 一度に全てのトラックを追加
 			if err := database.AddArtistTracks(db, artist.Id, allTracks); err != nil {
 				log.Printf("Error updating artist tracks for artist ID %s: %v", artist.Id, err)
