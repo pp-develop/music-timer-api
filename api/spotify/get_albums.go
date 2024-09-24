@@ -31,9 +31,10 @@ func GetArtistAlbums(artistID string) ([]spotify.SimpleAlbum, error) {
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
 	var allAlbums []spotify.SimpleAlbum
+	options := []spotify.RequestOption{spotify.Limit(50)}
 
 	// 最初のページを取得
-	albumsPage, err := client.GetArtistAlbums(ctx, spotify.ID(artistID), nil)
+	albumsPage, err := client.GetArtistAlbums(ctx, spotify.ID(artistID), nil, options...)
 	if err != nil {
 		return nil, err
 	}
