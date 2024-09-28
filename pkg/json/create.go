@@ -207,6 +207,7 @@ func Create(db *sql.DB) error {
 		log.Printf("Error creating JSON: %v", err)
 		return err
 	}
+	log.Println("creating JSON")
 
 	return nil
 }
