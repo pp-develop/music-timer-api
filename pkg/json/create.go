@@ -75,11 +75,14 @@ func (cm *ConfigManager) load() error {
 
 func exist() (bool, error) {
 	for i := 1; i <= 10; i++ {
-		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
+		log.Printf("Checking file: %s", filePath)
+
 		file, err := os.Open(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				// ファイルが存在しない場合
+				log.Printf("File does not exist: %s", filePath)
 				return false, nil
 			}
 			// その他のエラー
@@ -98,6 +101,7 @@ func exist() (bool, error) {
 
 		if len(config.Tracks) == 0 {
 			// トラックが空の場合
+			log.Printf("Tracks are empty in file: %s", filePath)
 			return false, nil
 		}
 	}
@@ -111,9 +115,16 @@ func createJson(db *sql.DB) error {
 		return err
 	}
 
-	// トラックを10個の部分に分割
+	// トラックを10個のファイルに分割
 	numFiles := 10
-	numTracksPerFile := (len(allTracks) + numFiles - 1) / numFiles // 均等に分割できない場合は切り上げ
+	numTracksPerFile := (len(allTracks) + numFiles - 1) / numFiles
+
+	// ディレクトリの存在確認
+	if _, err := os.Stat(baseDirectory); os.IsNotExist(err) {
+		if err := os.MkdirAll(baseDirectory, os.ModePerm); err != nil {
+			return err
+		}
+	}
 
 	for i := 0; i < numFiles; i++ {
 		start := i * numTracksPerFile
@@ -123,8 +134,8 @@ func createJson(db *sql.DB) error {
 		}
 
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
+		log.Printf("Creating file: %s", filePath)
 
-		// リトライを追加
 		err := retry(3, 1*time.Second, func() error {
 			// ArtistsIdを含まないトラックのスライスを作成
 			tracksWithoutArtistsId := make([]TrackWithoutArtistsId, len(allTracks[start:end]))
@@ -136,11 +147,12 @@ func createJson(db *sql.DB) error {
 				}
 			}
 
-			// 設定マネージャを作成してファイルに保存
 			configManager, err := NewConfigManager(filePath)
 			if err != nil {
 				return err
 			}
+
+			log.Printf("Saving tracks to file: %s", filePath)
 			return configManager.saveToFile(filePath, tracksWithoutArtistsId)
 		})
 		if err != nil {
