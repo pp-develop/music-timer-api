@@ -148,13 +148,20 @@ func saveTracks(c *gin.Context) {
 }
 
 func initTrackData(c *gin.Context) {
-	err := search.SaveTracksFromFollowedArtists(c)
+	err := search.SaveFavoriteTracks(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+		return
 	}
+
+	err = search.SaveTracksFromFollowedArtists(c)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
 }
 
 func resetTracks(c *gin.Context) {

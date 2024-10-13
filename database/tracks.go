@@ -9,7 +9,7 @@ import (
 	"github.com/zmb3/spotify/v2"
 )
 
-func SaveTrack(db *sql.DB, track *spotify.FullTrack) error {
+func SaveTrack(db *sql.DB, track spotify.FullTrack) error {
 	_, err := db.Exec(`
         INSERT INTO tracks (uri, duration_ms, isrc, created_at, updated_at)
         VALUES ($1, $2, $3, NOW(), NOW())

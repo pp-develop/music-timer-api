@@ -7,32 +7,32 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetFollowedArtists(token *oauth2.Token) (*spotify.FullArtistCursorPage, error) {
-	var artists *spotify.FullArtistCursorPage
+func GetFollowedArtists(token *oauth2.Token) ([]spotify.FullArtist, error) {
+	var allArtists []spotify.FullArtist
 
 	ctx := context.Background()
 	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
 	client := spotify.New(httpClient, spotify.WithRetry(true))
 
-	artists, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50))
+	artistPage, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50))
 	if err != nil {
-		return artists, err
+		return nil, err
+	}
+	allArtists = append(allArtists, artistPage.Artists...)
+
+	// 次のページがある間はループして取得
+	for {
+		if artistPage.Cursor.After == "" {
+			break
+		}
+
+		// 次のページを取得
+		artistPage, err = client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50), spotify.After(artistPage.Cursor.After))
+		if err != nil {
+			return nil, err
+		}
+		allArtists = append(allArtists, artistPage.Artists...)
 	}
 
-	return artists, nil
-}
-
-func GetAfterFollowedArtists(token *oauth2.Token, after string) (*spotify.FullArtistCursorPage, error) {
-	var artists *spotify.FullArtistCursorPage
-
-	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient, spotify.WithRetry(true))
-
-	artists, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50), spotify.After(after))
-	if err != nil {
-		return artists, err
-	}
-
-	return artists, nil
+	return allArtists, nil
 }

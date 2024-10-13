@@ -1,8 +1,6 @@
 package search
 
 import (
-	"database/sql"
-
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
@@ -37,7 +35,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		RefreshToken: user.RefreshToken,
 	}
 
-	tracks, err := spotifyApi.GetSavedTracks(token)
+	savedTracks, err := spotifyApi.GetSavedTracks(token)
 	if err != nil {
 		return err
 	}
@@ -48,42 +46,11 @@ func SaveFavoriteTracks(c *gin.Context) error {
 	}
 
 	// トラック情報を保存
-	for _, item := range tracks.Tracks {
+	for _, item := range savedTracks {
 		track := convertToTrackFromSaved(&item)
 		err := database.AddFavoriteTrack(db, userId, track)
 		if err != nil {
 			return err
-		}
-	}
-
-	// 次のトラックが存在する場合の処理
-	err = ProcessNextTracks(db, token, tracks, userId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ProcessNextTracks(db *sql.DB, token *oauth2.Token, tracks *spotify.SavedTrackPage, userId string) error {
-	existNextUrl := true
-
-	for existNextUrl {
-		err := spotifyApi.GetNextSavedTrakcs(token, tracks)
-		if err != nil {
-			return err
-		}
-
-		for _, item := range tracks.Tracks {
-			track := convertToTrackFromSaved(&item)
-			err := database.AddFavoriteTrack(db, userId, track)
-			if err != nil {
-				return err
-			}
-		}
-
-		if tracks.Next == "" {
-			existNextUrl = false
 		}
 	}
 

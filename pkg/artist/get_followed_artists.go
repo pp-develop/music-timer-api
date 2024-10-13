@@ -30,7 +30,7 @@ func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
 		return nil, err
 	}
 
-	artistsPage, err := spotifyApi.GetFollowedArtists(&oauth2.Token{
+	followedArtists, err := spotifyApi.GetFollowedArtists(&oauth2.Token{
 		AccessToken:  user.AccessToken,
 		RefreshToken: user.RefreshToken,
 	})
@@ -39,32 +39,7 @@ func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
 	}
 
 	// 最初のページのアーティストを取得し、IDと名前を抽出
-	allArtists := extractArtistInfo(artistsPage.Artists)
-
-	// 次のページが存在する場合、追加のアーティストを取得
-	allArtists, err = fetchNextArtists(
-		&oauth2.Token{
-			AccessToken:  user.AccessToken,
-			RefreshToken: user.RefreshToken,
-		}, artistsPage, allArtists)
-	if err != nil {
-		return nil, err
-	}
-
-	return allArtists, nil
-}
-
-func fetchNextArtists(token *oauth2.Token, currentPage *spotify.FullArtistCursorPage, allArtists []model.Artists) ([]model.Artists, error) {
-	for currentPage.Cursor.After != "" {
-		var err error
-		currentPage, err = spotifyApi.GetAfterFollowedArtists(token, currentPage.Cursor.After)
-		if err != nil {
-			return nil, err
-		}
-
-		// 新しいページのアーティストのIDと名前を追加
-		allArtists = append(allArtists, extractArtistInfo(currentPage.Artists)...)
-	}
+	allArtists := extractArtistInfo(followedArtists)
 
 	return allArtists, nil
 }
