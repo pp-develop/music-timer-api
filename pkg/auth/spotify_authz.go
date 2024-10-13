@@ -3,11 +3,11 @@ package auth
 import (
 	"os"
 
-	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
 )
 
 func SpotifyAuthz(c *gin.Context) (string, error) {
@@ -21,7 +21,7 @@ func SpotifyAuthz(c *gin.Context) (string, error) {
 		spotifyauth.WithScopes(
 			spotifyauth.ScopePlaylistModifyPublic,
 			spotifyauth.ScopePlaylistModifyPrivate,
-			// spotifyauth.ScopeUserLibraryRead,
+			spotifyauth.ScopeUserLibraryRead,
 			spotifyauth.ScopeUserFollowRead,
 		),
 		spotifyauth.WithClientID(os.Getenv("SPOTIFY_ID")),
