@@ -11,7 +11,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.27.5
-	github.com/zmb3/spotify/v2 v2.4.2
+	github.com/zmb3/spotify/v2 v2.4.3
 	golang.org/x/oauth2 v0.24.0
 )
 
