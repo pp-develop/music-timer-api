@@ -48,6 +48,10 @@ func GetFavoriteTracks(db *sql.DB, userId string) ([]model.Track, error) {
 	err := db.QueryRow(`
         SELECT tracks FROM favorite_tracks WHERE user_id = $1`, userId).Scan(&tracksJSON)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// データが存在しない場合は、空のリストを返す
+			return []model.Track{}, nil
+		}
 		return nil, err
 	}
 
