@@ -8,7 +8,8 @@ create table users(
     "token_expiration" int,
     "session" VARCHAR(255),
     "created_at" TIMESTAMP,
-    "updated_at" TIMESTAMP
+    "updated_at" TIMESTAMP,
+    "playlist_count" INTEGER DEFAULT 0
 );
 
 DROP TABLE IF EXISTS tracks CASCADE;

@@ -98,5 +98,10 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
+	err = database.IncrementPlaylistCount(dbInstance, userId)
+	if err != nil {
+		// return "", err
+	}
+
 	return string(playlist.ID), nil
 }

@@ -48,3 +48,14 @@ func GetUser(db *sql.DB, id string) (model.User, error) {
 
 	return user, nil
 }
+
+func IncrementPlaylistCount(db *sql.DB, id string) error {
+	_, err := db.Exec(`
+        UPDATE users SET playlist_count = playlist_count + 1, updated_at = NOW()
+        WHERE id = $1`,
+		id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
