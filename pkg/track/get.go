@@ -3,14 +3,12 @@ package track
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/json"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 var (
@@ -21,15 +19,36 @@ var (
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
 func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error) {
+	// Phase 1: データ取得と検証（即座にエラー判定）
 	allTracksMutex.Lock()
 	localTracks := allTracks // ローカルコピーを作成
 	allTracksMutex.Unlock()
 
-	var tracks []model.Track
-	var err error
+	localTracks, err := json.GetAllTracks(db)
+	if err != nil {
+		return nil, err
+	}
 
+	if len(localTracks) == 0 {
+		// 全トラックが空の場合
+		return nil, model.ErrNotFoundTracks // 即座に返す
+	}
+
+	// Phase 2: マーケットフィルタリング（必要な場合）
+	var tracksToProcess []model.Track
+	if market != "" {
+		tracksToProcess = filterByISRC(localTracks, market)
+		if len(tracksToProcess) == 0 {
+			return nil, model.ErrNotEnoughTracks // フィルタ後にトラックがない
+		}
+	} else {
+		tracksToProcess = localTracks
+	}
+
+	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
+	var tracks []model.Track
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel() // タイムアウト後にキャンセル
+	defer cancel()
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
@@ -39,18 +58,6 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 		defer close(c1)
 		defer close(errChan)
 
-		localTracks, err = json.GetAllTracks(db)
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		if len(localTracks) == 0 {
-			// 全トラックが空の場合
-			errChan <- fmt.Errorf("tracks table is empty")
-			return
-		}
-
 		success := false
 		for !success {
 			select {
@@ -59,10 +66,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 				return
 			default:
 				tryCount++
-				shuffleTracks := json.ShuffleTracks(localTracks)
-				if market != "" {
-					shuffleTracks = filterByISRC(shuffleTracks, market)
-				}
+				shuffleTracks := json.ShuffleTracks(tracksToProcess)
 				success, tracks = MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
@@ -76,9 +80,6 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	case err := <-errChan:
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
-		if err != nil {
-			logger.LogError(err)
-		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }

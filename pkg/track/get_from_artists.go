@@ -9,15 +9,24 @@ import (
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/json"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
-	var tracks []model.Track
-	var err error
+	// Phase 1: データ取得と検証（即座にエラー判定）
+	var artists []model.Artists
+	for _, id := range artistIds {
+		artists = append(artists, model.Artists{Id: id})
+	}
 
+	followedArtistsTracks, err := getSpecifyArtistsAllTracks(db, artists)
+	if err != nil {
+		return nil, err // ErrNotFoundTracksも含む
+	}
+
+	// Phase 2: 組み合わせ計算（時間がかかる可能性がある処理）
+	var tracks []model.Track
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel() // タイムアウト後にキャンセル
+	defer cancel()
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
@@ -26,17 +35,6 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 	go func() {
 		defer close(c1)
 		defer close(errChan)
-
-		var artists []model.Artists
-		for _, id := range artistIds {
-			artists = append(artists, model.Artists{Id: id})
-		}
-
-		followedArtistsTracks, err := getSpecifyArtistsAllTracks(db, artists)
-		if err != nil {
-			errChan <- err
-			return
-		}
 
 		success := false
 		for !success {
@@ -60,9 +58,6 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 	case err := <-errChan:
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
-		if err != nil {
-			logger.LogError(err)
-		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }

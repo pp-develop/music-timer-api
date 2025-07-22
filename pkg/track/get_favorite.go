@@ -9,15 +9,31 @@ import (
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/json"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
-	var tracks []model.Track
-	var err error
+	// Phase 1: データ取得と検証（即座にエラー判定）
+	saveTracks, err := database.GetFavoriteTracks(db, userId)
+	if err != nil {
+		return nil, err
+	}
 
+	if len(saveTracks) == 0 {
+		return nil, model.ErrNoFavoriteTracks // 即座に返す
+	}
+
+	// Phase 2: フィルタリング（即座にエラー判定）
+	if len(artistIds) > 0 {
+		saveTracks = filterTracksByArtistIds(saveTracks, artistIds)
+		if len(saveTracks) == 0 {
+			return nil, model.ErrNotEnoughTracks // 即座に返す
+		}
+	}
+
+	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
+	var tracks []model.Track
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel() // タイムアウト後にキャンセル
+	defer cancel()
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
@@ -26,25 +42,6 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 	go func() {
 		defer close(c1)
 		defer close(errChan)
-
-		saveTracks, err := database.GetFavoriteTracks(db, userId)
-		if err != nil {
-			errChan <- err
-			return
-		}
-
-		if len(saveTracks) == 0 {
-			errChan <- model.ErrNoFavoriteTracks
-			return
-		}
-
-		if len(artistIds) > 0 {
-			saveTracks = filterTracksByArtistIds(saveTracks, artistIds)
-			if len(saveTracks) == 0 {
-				errChan <- model.ErrNotEnoughTracks
-				return
-			}
-		}
 
 		success := false
 		for !success {
@@ -63,17 +60,11 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 
 	select {
 	case tracks := <-c1:
-		if tracks == nil {
-			return nil, <-errChan
-		}
 		log.Printf("試行回数: %d\n", tryCount) // 試行回数を出力
 		return tracks, nil
 	case err := <-errChan:
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
-		if err != nil {
-			logger.LogError(err)
-		}
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }
