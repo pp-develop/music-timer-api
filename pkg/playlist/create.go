@@ -4,7 +4,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
@@ -31,13 +30,11 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	oneminuteToMsec := 60000
 	specify_ms := json.Minute * oneminuteToMsec
 
-	// sessionからuserIdを取得
-	session := sessions.Default(c)
-	v := session.Get("userId")
-	if v == nil {
-		return "", model.ErrFailedGetSession
+	// セッションまたはJWTからユーザーIDを取得
+	userId, err := utils.GetUserID(c)
+	if err != nil {
+		return "", err
 	}
-	userId := v.(string)
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {

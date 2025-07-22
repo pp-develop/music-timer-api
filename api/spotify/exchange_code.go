@@ -2,15 +2,14 @@ package spotify
 
 import (
 	"context"
-	"os"
 
+	"github.com/joho/godotenv"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2"
-	"github.com/joho/godotenv"
 )
 
 // https://developer.spotify.com/documentation/general/guides/authorization/code-flow/
-func ExchangeSpotifyCode(code string) (*oauth2.Token, error) {
+func ExchangeSpotifyCode(code string, redirectURI string) (*oauth2.Token, error) {
 	var token *oauth2.Token
 
 	err := godotenv.Load()
@@ -19,7 +18,7 @@ func ExchangeSpotifyCode(code string) (*oauth2.Token, error) {
 	}
 
 	ctx := context.Background()
-	auth := spotifyauth.New(spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI")))
+	auth := spotifyauth.New(spotifyauth.WithRedirectURL(redirectURI))
 	token, err = auth.Exchange(ctx, code)
 	if err != nil {
 		return token, err

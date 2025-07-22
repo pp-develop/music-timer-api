@@ -1,7 +1,6 @@
 package playlist
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -9,12 +8,11 @@ import (
 )
 
 func GetPlaylists(c *gin.Context) ([]model.Playlist, error) {
-	session := sessions.Default(c)
-	v := session.Get("userId")
-	if v == nil {
-		return nil, model.ErrFailedGetSession
+	// セッションまたはJWTからユーザーIDを取得
+	userId, err := utils.GetUserID(c)
+	if err != nil {
+		return nil, err
 	}
-	userId := v.(string)
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {

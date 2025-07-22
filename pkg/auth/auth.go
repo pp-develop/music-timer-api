@@ -3,12 +3,12 @@ package auth
 import (
 	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/utils"
 
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,19 +27,19 @@ import (
 // 成功した場合はnilを返し、エラーが発生した場合はそのエラーを返します。
 func Auth(c *gin.Context) (model.User, error) {
 	var user model.User
-	session := sessions.Default(c)
-	v := session.Get("userId")
-	if v == nil {
-		return user, model.ErrFailedGetSession
+
+	// セッションまたはJWTからユーザーIDを取得
+	userId, err := utils.GetUserID(c)
+	if err != nil {
+		return user, err
 	}
-	userId := v.(string)
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
 		return user, model.ErrFailedGetDB
 	}
 
-	user, err := database.GetUser(dbInstance, userId)
+	user, err = database.GetUser(dbInstance, userId)
 	if err != nil {
 		return user, err
 	}
@@ -60,6 +60,7 @@ func Auth(c *gin.Context) (model.User, error) {
 	}
 
 	// セッションの保存
+	session := sessions.Default(c)
 	session.Set("userId", user.Id)
 	err = session.Save()
 	if err != nil {

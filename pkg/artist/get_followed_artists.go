@@ -1,7 +1,6 @@
 package artist
 
 import (
-	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
@@ -13,12 +12,11 @@ import (
 
 // GetFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得します。
 func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
-	session := sessions.Default(c)
-	v := session.Get("userId")
-	if v == nil {
-		return nil, model.ErrFailedGetSession
+	// セッションまたはJWTからユーザーIDを取得
+	userId, err := utils.GetUserID(c)
+	if err != nil {
+		return nil, err
 	}
-	userId := v.(string)
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {

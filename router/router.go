@@ -69,6 +69,8 @@ func Create() *gin.Engine {
 	router.GET("/auth", getAuth)
 	router.GET("/authz-url", getAuthzUrl)
 	router.DELETE("/session", deleteSession)
+	// Protected endpoints (support both session and JWT auth)
+	router.Use(middleware.OptionalAuthMiddleware())
 	router.POST("/tracks", saveTracks)
 	router.POST("/tracks/init", initTrackData)
 	router.POST("/reset-tracks", resetTracks)
@@ -90,6 +92,7 @@ func callback(c *gin.Context) {
 	if err != nil {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, "/")
+		return
 	}
 
 	err = auth.SpotifyCallback(c)
