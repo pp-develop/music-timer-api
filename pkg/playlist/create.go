@@ -62,6 +62,11 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 			return "", err
 		}
 	}
+	
+	// トラックが見つからない場合のエラー
+	if len(tracks) == 0 {
+		return "", model.ErrNotEnoughTracks
+	}
 
 	user, err := database.GetUser(dbInstance, userId)
 	if err != nil {
@@ -75,7 +80,13 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		if strings.Contains(err.Error(), "token expired") {
 			return "", model.ErrAccessTokenExpired
 		}
-		return "", err
+		if strings.Contains(err.Error(), "rate limit") {
+			return "", model.ErrSpotifyRateLimit
+		}
+		if strings.Contains(err.Error(), "quota") {
+			return "", model.ErrPlaylistQuotaExceeded
+		}
+		return "", model.ErrPlaylistCreationFailed
 	}
 
 	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
@@ -86,8 +97,11 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		if strings.Contains(err.Error(), "token expired") {
 			return "", model.ErrAccessTokenExpired
 		}
+		if strings.Contains(err.Error(), "rate limit") {
+			return "", model.ErrSpotifyRateLimit
+		}
 		logger.LogError(spotify.UnfollowPlaylist(playlist.ID, user))
-		return "", err
+		return "", model.ErrTrackAdditionFailed
 	}
 
 	err = database.SavePlaylist(dbInstance, playlist, userId)

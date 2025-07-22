@@ -34,12 +34,16 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 		}
 
 		if len(saveTracks) == 0 {
-			errChan <- model.ErrNotFoundTracks
+			errChan <- model.ErrNoFavoriteTracks
 			return
 		}
 
 		if len(artistIds) > 0 {
 			saveTracks = filterTracksByArtistIds(saveTracks, artistIds)
+			if len(saveTracks) == 0 {
+				errChan <- model.ErrNotEnoughTracks
+				return
+			}
 		}
 
 		success := false

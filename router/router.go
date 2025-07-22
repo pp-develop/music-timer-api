@@ -231,20 +231,43 @@ func getPlaylist(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
-	if err == model.ErrFailedGetSession {
-		logger.LogError(err)
-		c.Status(http.StatusSeeOther)
-	} else if err == model.ErrAccessTokenExpired {
-		logger.LogError(err)
-		c.Status(http.StatusUnauthorized)
-	} else if err == model.ErrTimeoutCreatePlaylist || err == model.ErrNotFoundTracks {
-		logger.LogError(err)
-		c.Status(http.StatusNotFound)
-	} else if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
+	if err == nil {
 		c.IndentedJSON(http.StatusCreated, playlistId)
+		return
+	}
+
+	logger.LogError(err)
+
+	// エラーケースごとに適切なレスポンスを返す
+	switch err {
+	case model.ErrNotFoundTracks:
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeTracksNotFound,
+		})
+	case model.ErrNotEnoughTracks:
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeNotEnoughTracks,
+		})
+	case model.ErrNoFavoriteTracks:
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeNoFavoriteTracks,
+		})
+	case model.ErrSpotifyRateLimit:
+		c.JSON(http.StatusTooManyRequests, model.ErrorResponse{
+			Code: model.CodeSpotifyRateLimit,
+		})
+	case model.ErrPlaylistQuotaExceeded:
+		c.JSON(http.StatusTooManyRequests, model.ErrorResponse{
+			Code: model.CodePlaylistQuotaExceeded,
+		})
+	case model.ErrPlaylistCreationFailed:
+		c.JSON(http.StatusBadGateway, model.ErrorResponse{
+			Code: model.CodePlaylistCreationFailed,
+		})
+	default:
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
+			Code: model.CodeInternalError,
+		})
 	}
 }
 
