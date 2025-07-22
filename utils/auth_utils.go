@@ -20,12 +20,12 @@ func GetUserID(c *gin.Context) (string, error) {
 	session := sessions.Default(c)
 	v := session.Get("userId")
 	if v == nil {
-		return "", model.ErrUnauthorized
+		return "", model.ErrFailedGetSession
 	}
 
 	userId, ok := v.(string)
 	if !ok || userId == "" {
-		return "", model.ErrUnauthorized
+		return "", model.ErrFailedGetSession
 	}
 
 	return userId, nil
