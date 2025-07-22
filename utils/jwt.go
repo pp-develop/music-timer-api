@@ -2,10 +2,12 @@ package utils
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 )
 
 var jwtSecret = []byte(getJWTSecret())
@@ -18,7 +20,7 @@ type Claims struct {
 
 type RefreshClaims struct {
 	UserID string `json:"user_id"`
-	JTI    string `json:"jti"` // JWT ID for tracking
+	JTI    string `json:"jti"`  // JWT ID for tracking
 	Type   string `json:"type"` // "refresh"
 	jwt.RegisteredClaims
 }
@@ -31,6 +33,11 @@ type TokenPair struct {
 }
 
 func getJWTSecret() string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file")
+	}
+
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		panic("JWT_SECRET environment variable is not set")
@@ -113,13 +120,13 @@ func GenerateTokenPair(userID string, jti string) (*TokenPair, error) {
 // ValidateJWT validates a JWT token and returns the user ID
 func ValidateJWT(tokenString string) (string, error) {
 	claims := &Claims{}
-	
+
 	// パーサーオプションでクロックスキューを設定（5分の猶予）
 	parser := jwt.NewParser(
-		jwt.WithLeeway(5 * time.Minute),
+		jwt.WithLeeway(5*time.Minute),
 		jwt.WithValidMethods([]string{"HS256"}), // 許可する署名メソッドを明示的に指定
 	)
-	
+
 	token, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// 署名メソッドの検証
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -156,13 +163,13 @@ func ValidateJWT(tokenString string) (string, error) {
 // ValidateRefreshToken validates a refresh token and returns the user ID and JTI
 func ValidateRefreshToken(tokenString string) (string, string, error) {
 	claims := &RefreshClaims{}
-	
+
 	// パーサーオプションでクロックスキューを設定（5分の猶予）
 	parser := jwt.NewParser(
-		jwt.WithLeeway(5 * time.Minute),
+		jwt.WithLeeway(5*time.Minute),
 		jwt.WithValidMethods([]string{"HS256"}),
 	)
-	
+
 	token, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// 署名メソッドの検証
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
