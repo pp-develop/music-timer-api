@@ -90,6 +90,7 @@ func callback(c *gin.Context) {
 	if err != nil {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, "/")
+		return
 	}
 
 	err = auth.SpotifyCallback(c)

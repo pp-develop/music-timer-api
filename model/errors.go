@@ -12,4 +12,6 @@ var (
 	ErrAccessTokenExpired    = errors.New("token expired")
 	ErrInvalidState          = errors.New("invalid state")
 	ErrFailedGetDB           = errors.New("Failed to get database instance")
+	ErrInvalidRequest        = errors.New("Invalid request")
+	ErrUnauthorized          = errors.New("Unauthorized")
 )
