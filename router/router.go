@@ -20,6 +20,7 @@ import (
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/pkg/playlist"
 	"github.com/pp-develop/music-timer-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/pkg/track"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
@@ -75,6 +76,7 @@ func Create() *gin.Engine {
 	router.POST("/tracks/init", initTrackData)
 	router.POST("/reset-tracks", resetTracks)
 	router.DELETE("/tracks", deleteTracks)
+	router.GET("/tracks/genre/:genre_name", track.GetTracksByGenre)
 	router.GET("/artists", getArtists)
 	router.POST("/gest-playlist", gestCreatePlaylist)
 	router.GET("/playlist", getPlaylist)
