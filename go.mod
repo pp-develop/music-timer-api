@@ -1,6 +1,6 @@
 module github.com/pp-develop/music-timer-api
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.1
 
@@ -15,7 +15,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.27.6
 	github.com/zmb3/spotify/v2 v2.4.3
-	golang.org/x/oauth2 v0.29.0
+	golang.org/x/oauth2 v0.31.0
 )
 
 require (
