@@ -30,11 +30,16 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
+	tryCountChan := make(chan int, 1) // 試行回数を送信するチャネル
 	tryCount := 0 // 試行回数をカウントする変数
 
 	go func() {
 		defer close(c1)
 		defer close(errChan)
+		defer func() {
+			tryCountChan <- tryCount // goroutine終了時に試行回数を送信
+			close(tryCountChan)
+		}()
 
 		success := false
 		for !success {
@@ -53,11 +58,23 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 
 	select {
 	case tracks := <-c1:
-		log.Printf("試行回数: %d\n", tryCount)
+		finalTryCount := <-tryCountChan
+		log.Printf("試行回数: %d\n", finalTryCount)
 		return tracks, nil
 	case err := <-errChan:
+		finalTryCount := <-tryCountChan
+		log.Printf("タイムアウト: 試行回数: %d\n", finalTryCount)
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
+		finalTryCount := <-tryCountChan
+		// タイムアウト時の詳細情報をログ出力
+		log.Printf("[タイムアウト詳細] 関数: GetTracksFromArtists, 再生時間: %d分, 利用可能トラック数: %d, 試行回数: %d, タイムアウト: %d秒, アーティスト数: %d",
+			specify_ms/60000,
+			len(followedArtistsTracks),
+			finalTryCount,
+			timeout,
+			len(artistIds),
+		)
 		return nil, model.ErrTimeoutCreatePlaylist
 	}
 }

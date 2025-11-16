@@ -244,7 +244,7 @@ func createPlaylist(c *gin.Context) {
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
 			Code: model.CodeTracksNotFound,
 		})
-	case model.ErrNotEnoughTracks:
+	case model.ErrNotEnoughTracks, model.ErrTimeoutCreatePlaylist:
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
 			Code: model.CodeNotEnoughTracks,
 		})
@@ -264,6 +264,10 @@ func createPlaylist(c *gin.Context) {
 		c.JSON(http.StatusBadGateway, model.ErrorResponse{
 			Code: model.CodePlaylistCreationFailed,
 		})
+	case model.ErrAccessTokenExpired:
+		c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+			Code: model.CodeTokenExpired,
+		})
 	default:
 		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
 			Code: model.CodeInternalError,
@@ -275,10 +279,14 @@ func gestCreatePlaylist(c *gin.Context) {
 	playlistId, err := playlist.GestCreatePlaylist(c)
 	if err == model.ErrTimeoutCreatePlaylist {
 		logger.LogError(err)
-		c.Status(http.StatusNotFound)
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeNotEnoughTracks,
+		})
 	} else if err != nil {
 		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
+			Code: model.CodeInternalError,
+		})
 	} else {
 		c.IndentedJSON(http.StatusCreated, playlistId)
 	}
