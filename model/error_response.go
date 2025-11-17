@@ -20,6 +20,10 @@ const (
 	// 認証エラー
 	CodeTokenExpired = "TOKEN_EXPIRED" // アクセストークンの有効期限切れ
 
+	// タイムアウト関連エラー
+	CodeTimeoutInsufficientTracks = "TIMEOUT_INSUFFICIENT_TRACKS" // タイムアウト：トラックの総再生時間が不足
+	CodeTimeoutNoMatch            = "TIMEOUT_NO_MATCH"            // タイムアウト：トラックは足りているが組み合わせが見つからない
+
 	// 処理エラー
 	CodePlaylistCreationFailed = "PLAYLIST_CREATION_FAILED" // Spotify上でプレイリストの作成に失敗
 	CodeInternalError          = "INTERNAL_ERROR"           // その他の内部エラー

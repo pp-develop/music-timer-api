@@ -89,15 +89,34 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
 		finalTryCount := <-tryCountChan
-		// タイムアウト時の詳細情報をログ出力
-		log.Printf("[タイムアウト詳細] 関数: GetTracks, 再生時間: %d分, 利用可能トラック数: %d, 試行回数: %d, タイムアウト: %d秒, マーケット: %s",
-			specify_ms/MillisecondsPerMinute,
-			len(tracksToProcess),
-			finalTryCount,
-			timeout,
-			market,
-		)
-		return nil, model.ErrTimeoutCreatePlaylist
+
+		// トラックの総再生時間を計算
+		totalAvailableDuration := 0
+		for _, track := range tracksToProcess {
+			totalAvailableDuration += track.DurationMs
+		}
+
+		hasEnoughDuration := totalAvailableDuration >= specify_ms
+
+		if !hasEnoughDuration {
+			log.Printf("[タイムアウト] GetTracks: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, マーケット=%s",
+				specify_ms/MillisecondsPerMinute,
+				totalAvailableDuration/MillisecondsPerMinute,
+				len(tracksToProcess),
+				finalTryCount,
+				market,
+			)
+			return nil, model.ErrNotEnoughTracks
+		} else {
+			log.Printf("[タイムアウト] GetTracks: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, マーケット=%s",
+				specify_ms/MillisecondsPerMinute,
+				len(tracksToProcess),
+				totalAvailableDuration/MillisecondsPerMinute,
+				finalTryCount,
+				market,
+			)
+			return nil, model.ErrTimeoutCreatePlaylist
+		}
 	}
 }
 

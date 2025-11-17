@@ -244,9 +244,13 @@ func createPlaylist(c *gin.Context) {
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
 			Code: model.CodeTracksNotFound,
 		})
-	case model.ErrNotEnoughTracks, model.ErrTimeoutCreatePlaylist:
+	case model.ErrNotEnoughTracks:
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeNotEnoughTracks,
+			Code: model.CodeTimeoutInsufficientTracks,
+		})
+	case model.ErrTimeoutCreatePlaylist:
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeTimeoutNoMatch,
 		})
 	case model.ErrNoFavoriteTracks:
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
@@ -277,10 +281,15 @@ func createPlaylist(c *gin.Context) {
 
 func gestCreatePlaylist(c *gin.Context) {
 	playlistId, err := playlist.GestCreatePlaylist(c)
-	if err == model.ErrTimeoutCreatePlaylist {
+	if err == model.ErrNotEnoughTracks {
 		logger.LogError(err)
 		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeNotEnoughTracks,
+			Code: model.CodeTimeoutInsufficientTracks,
+		})
+	} else if err == model.ErrTimeoutCreatePlaylist {
+		logger.LogError(err)
+		c.JSON(http.StatusNotFound, model.ErrorResponse{
+			Code: model.CodeTimeoutNoMatch,
 		})
 	} else if err != nil {
 		logger.LogError(err)

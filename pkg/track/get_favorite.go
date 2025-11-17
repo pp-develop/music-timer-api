@@ -74,15 +74,34 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
 		finalTryCount := <-tryCountChan
-		// タイムアウト時の詳細情報をログ出力
-		log.Printf("[タイムアウト詳細] 関数: GetFavoriteTracks, 再生時間: %d分, 利用可能トラック数: %d, 試行回数: %d, タイムアウト: %d秒, お気に入り: true, アーティスト数: %d",
-			specify_ms/MillisecondsPerMinute,
-			len(saveTracks),
-			finalTryCount,
-			timeout,
-			len(artistIds),
-		)
-		return nil, model.ErrTimeoutCreatePlaylist
+
+		// トラックの総再生時間を計算
+		totalAvailableDuration := 0
+		for _, track := range saveTracks {
+			totalAvailableDuration += track.DurationMs
+		}
+
+		hasEnoughDuration := totalAvailableDuration >= specify_ms
+
+		if !hasEnoughDuration {
+			log.Printf("[タイムアウト] GetFavoriteTracks: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, アーティスト数=%d",
+				specify_ms/MillisecondsPerMinute,
+				totalAvailableDuration/MillisecondsPerMinute,
+				len(saveTracks),
+				finalTryCount,
+				len(artistIds),
+			)
+			return nil, model.ErrNotEnoughTracks
+		} else {
+			log.Printf("[タイムアウト] GetFavoriteTracks: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, アーティスト数=%d",
+				specify_ms/MillisecondsPerMinute,
+				len(saveTracks),
+				totalAvailableDuration/MillisecondsPerMinute,
+				finalTryCount,
+				len(artistIds),
+			)
+			return nil, model.ErrTimeoutCreatePlaylist
+		}
 	}
 }
 
