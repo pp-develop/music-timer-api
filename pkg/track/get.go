@@ -14,7 +14,7 @@ import (
 var (
 	allTracks      []model.Track
 	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
-	timeout        = 15       // 15秒
+	timeout        = DefaultTimeoutSeconds
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
@@ -53,7 +53,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
 	tryCountChan := make(chan int, 1) // 試行回数を送信するチャネル
-	tryCount := 0 // 試行回数をカウントする変数
+	tryCount := 0                     // 試行回数をカウントする変数
 
 	go func() {
 		defer close(c1)
@@ -91,7 +91,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 		finalTryCount := <-tryCountChan
 		// タイムアウト時の詳細情報をログ出力
 		log.Printf("[タイムアウト詳細] 関数: GetTracks, 再生時間: %d分, 利用可能トラック数: %d, 試行回数: %d, タイムアウト: %d秒, マーケット: %s",
-			specify_ms/60000,
+			specify_ms/MillisecondsPerMinute,
 			len(tracksToProcess),
 			finalTryCount,
 			timeout,
@@ -129,8 +129,7 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 
 	// 差分が15秒以内で、指定された再生時間が10分（600秒）以上の場合、
 	// 差分を埋めるためのトラックは必要ないと見なします。
-	allowance_ms := 15000
-	if remainingTime == allowance_ms && totalPlayTimeMs >= 600000 {
+	if remainingTime == AllowanceMs && totalPlayTimeMs >= MinPlaylistDurationForAllowanceMs {
 		return true, tracks
 	}
 

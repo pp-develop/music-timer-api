@@ -38,7 +38,7 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 	c1 := make(chan []model.Track, 1)
 	errChan := make(chan error, 1)
 	tryCountChan := make(chan int, 1) // 試行回数を送信するチャネル
-	tryCount := 0 // 試行回数をカウントする変数
+	tryCount := 0                     // 試行回数をカウントする変数
 
 	go func() {
 		defer close(c1)
@@ -76,7 +76,7 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 		finalTryCount := <-tryCountChan
 		// タイムアウト時の詳細情報をログ出力
 		log.Printf("[タイムアウト詳細] 関数: GetFavoriteTracks, 再生時間: %d分, 利用可能トラック数: %d, 試行回数: %d, タイムアウト: %d秒, お気に入り: true, アーティスト数: %d",
-			specify_ms/60000,
+			specify_ms/MillisecondsPerMinute,
 			len(saveTracks),
 			finalTryCount,
 			timeout,
