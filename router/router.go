@@ -55,12 +55,28 @@ func Create() *gin.Engine {
 		MaxAge:           24 * time.Hour,
 	}))
 
+	// Cookie configuration: Secure and SameSite based on environment
+	// Development: Secure=false, SameSite=Lax (allows HTTP)
+	// Production: Secure=true, SameSite=None (HTTPS only, cross-site allowed)
+	isProduction := os.Getenv("ENVIRONMENT") == "production"
+
+	var sameSiteMode http.SameSite
+	if isProduction {
+		sameSiteMode = http.SameSiteNoneMode // Cross-site allowed (requires HTTPS)
+	} else {
+		sameSiteMode = http.SameSiteLaxMode // Normal mode (works with HTTP)
+	}
+
 	store := cookie.NewStore([]byte(os.Getenv("COOKIE_SECRET")))
 	store.Options(sessions.Options{
-		Secure:   true,
+		Secure:   isProduction,
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: sameSiteMode,
+		Path:     "/",
 	})
+
+	log.Printf("[INFO] Session configuration - Environment: %s, Secure: %v, SameSite: %v",
+		os.Getenv("ENVIRONMENT"), isProduction, sameSiteMode)
 	router.Use(sessions.Sessions("mysession", store))
 	router.Use(middleware.DBMiddleware())
 
