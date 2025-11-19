@@ -13,6 +13,7 @@ var (
 	ErrInvalidState          = errors.New("invalid state")
 	ErrFailedGetDB           = errors.New("Failed to get database instance")
 	ErrInvalidRequest        = errors.New("Invalid request")
+	ErrInvalidRefreshToken   = errors.New("Invalid or expired refresh token")
 
 	// リソース不足エラー
 	ErrNotEnoughTracks       = errors.New("Not enough tracks for specified duration")

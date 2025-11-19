@@ -65,10 +65,26 @@ func Create() *gin.Engine {
 	router.Use(middleware.DBMiddleware())
 
 	router.GET("/health", healthCheck)
-	router.GET("/callback", callback)
-	router.GET("/auth", getAuth)
-	router.GET("/authz-url", getAuthzUrl)
-	router.DELETE("/session", deleteSession)
+
+	// Web authentication endpoints
+	authWeb := router.Group("/auth/web")
+	{
+		authWeb.GET("/authz-url", getAuthzUrlWeb)
+		authWeb.GET("/callback", callbackWeb)
+		authWeb.DELETE("/session", deleteSession)
+	}
+
+	// Native authentication endpoints
+	authNative := router.Group("/auth/native")
+	{
+		authNative.GET("/authz-url", getAuthzUrlNative)
+		authNative.GET("/callback", callbackNative)
+		authNative.POST("/refresh", refreshTokenNative)
+	}
+
+	// Common authentication endpoint
+	router.GET("/auth/status", getAuthStatus)
+
 	// Protected endpoints (support both session and JWT auth)
 	router.Use(middleware.OptionalAuthMiddleware())
 	router.POST("/tracks", saveTracks)
@@ -87,7 +103,8 @@ func healthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "UP"})
 }
 
-func callback(c *gin.Context) {
+// Web authentication handlers
+func callbackWeb(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
 		logger.LogError(err)
@@ -95,7 +112,7 @@ func callback(c *gin.Context) {
 		return
 	}
 
-	err = auth.SpotifyCallback(c)
+	err = auth.SpotifyCallbackWeb(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
@@ -104,7 +121,59 @@ func callback(c *gin.Context) {
 	}
 }
 
-func getAuth(c *gin.Context) {
+func getAuthzUrlWeb(c *gin.Context) {
+	url, err := auth.SpotifyAuthzWeb(c)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+	} else {
+		c.JSON(http.StatusOK, gin.H{"url": url})
+	}
+}
+
+// Native authentication handlers
+func callbackNative(c *gin.Context) {
+	err := godotenv.Load()
+	if err != nil {
+		logger.LogError(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load configuration"})
+		return
+	}
+
+	tokenPair, err := auth.SpotifyCallbackNative(c)
+	if err != nil {
+		logger.LogError(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication failed"})
+		return
+	}
+
+	// Return JWT tokens as JSON
+	c.JSON(http.StatusOK, tokenPair)
+}
+
+func getAuthzUrlNative(c *gin.Context) {
+	url, err := auth.SpotifyAuthzNative(c)
+	if err != nil {
+		logger.LogError(err)
+		c.Status(http.StatusInternalServerError)
+	} else {
+		c.JSON(http.StatusOK, gin.H{"url": url})
+	}
+}
+
+func refreshTokenNative(c *gin.Context) {
+	tokenPair, err := auth.RefreshAccessToken(c)
+	if err != nil {
+		logger.LogError(err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, tokenPair)
+}
+
+// Common authentication handler
+func getAuthStatus(c *gin.Context) {
 	user, err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
@@ -115,16 +184,6 @@ func getAuth(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"country": user.Country})
-	}
-}
-
-func getAuthzUrl(c *gin.Context) {
-	url, err := auth.SpotifyAuthz(c)
-	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.JSON(http.StatusOK, gin.H{"url": url})
 	}
 }
 
