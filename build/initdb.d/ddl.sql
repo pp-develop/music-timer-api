@@ -49,9 +49,10 @@ CREATE TABLE artists (
     "updated_at" TIMESTAMP
 );
 
-DROP TABLE IF EXISTS refresh_tokens CASCADE;
 
-CREATE TABLE refresh_tokens (
+DROP TABLE IF EXISTS jwt_refresh_tokens CASCADE;
+
+CREATE TABLE jwt_refresh_tokens (
     "jti" VARCHAR(255) PRIMARY KEY,
     "user_id" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -59,5 +60,5 @@ CREATE TABLE refresh_tokens (
     "revoked" BOOLEAN DEFAULT FALSE,
     INDEX idx_user_id (user_id),
     INDEX idx_expires_at (expires_at),
-    CONSTRAINT fk_refresh_token_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
