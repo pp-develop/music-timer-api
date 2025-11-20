@@ -90,6 +90,7 @@ func Create() *gin.Engine {
 	{
 		authWeb.GET("/authz-url", getAuthzUrlWeb)
 		authWeb.GET("/callback", callbackWeb)
+		authWeb.GET("/status", getAuthStatusWeb)
 		authWeb.DELETE("/session", deleteSession)
 	}
 
@@ -98,11 +99,9 @@ func Create() *gin.Engine {
 	{
 		authNative.GET("/authz-url", getAuthzUrlNative)
 		authNative.GET("/callback", callbackNative)
+		authNative.GET("/status", getAuthStatusNative)
 		authNative.POST("/refresh", refreshTokenNative)
 	}
-
-	// Common authentication endpoint
-	router.GET("/auth/status", getAuthStatus)
 
 	// Protected endpoints (support both session and JWT auth)
 	router.Use(middleware.OptionalAuthMiddleware())
@@ -200,8 +199,8 @@ func refreshTokenNative(c *gin.Context) {
 	c.JSON(http.StatusOK, tokenPair)
 }
 
-// Common authentication handler
-func getAuthStatus(c *gin.Context) {
+// Web authentication status handler
+func getAuthStatusWeb(c *gin.Context) {
 	user, err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
@@ -210,6 +209,21 @@ func getAuthStatus(c *gin.Context) {
 	} else if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
+	} else {
+		c.JSON(http.StatusOK, gin.H{"country": user.Country})
+	}
+}
+
+// Native authentication status handler
+func getAuthStatusNative(c *gin.Context) {
+	user, err := auth.Auth(c)
+
+	if err == model.ErrFailedGetSession {
+		logger.LogError(err)
+		c.Status(http.StatusSeeOther)
+	} else if err != nil {
+		logger.LogError(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"country": user.Country})
 	}
