@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -34,6 +35,8 @@ func Create() *gin.Engine {
 		AllowOrigins: []string{
 			os.Getenv("BASE_URL"),
 			os.Getenv("API_URL"),
+			os.Getenv("NATIVE_BASE_URL"),
+			os.Getenv("NATIVE_API_URL"),
 		},
 		AllowMethods: []string{
 			"POST",
@@ -152,19 +155,28 @@ func callbackNative(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
 		logger.LogError(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load configuration"})
+		// エラー時はディープリンクでエラーを通知
+		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL_NATIVE")+"?error=config_error")
 		return
 	}
 
 	tokenPair, err := auth.SpotifyCallbackNative(c)
 	if err != nil {
 		logger.LogError(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Authentication failed"})
+		// 認証失敗時
+		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL_NATIVE")+"?error=auth_failed")
 		return
 	}
 
-	// Return JWT tokens as JSON
-	c.JSON(http.StatusOK, tokenPair)
+	// クエリパラメータ（?）を使用してトークンを渡す
+	redirectURL := fmt.Sprintf("%s?access_token=%s&refresh_token=%s&expires_in=%d",
+		os.Getenv("AUTHZ_SUCCESS_URL_NATIVE"),
+		tokenPair.AccessToken,
+		tokenPair.RefreshToken,
+		tokenPair.ExpiresIn,
+	)
+
+	c.Redirect(http.StatusSeeOther, redirectURL)
 }
 
 func getAuthzUrlNative(c *gin.Context) {
