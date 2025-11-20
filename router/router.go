@@ -31,13 +31,50 @@ func Create() *gin.Engine {
 	}
 
 	router := gin.Default()
+
+	// CORS設定: 本番環境ではWeb用のみ、開発環境ではネイティブアプリのURLも含める
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		log.Fatalln("ENVIRONMENT variable must be set (production or development)")
+	}
+	isProduction := environment == "production"
+
+	allowedOrigins := []string{}
+
+	// Web用URL（環境に関わらず必須）
+	baseURL := os.Getenv("BASE_URL")
+	apiURL := os.Getenv("API_URL")
+
+	if baseURL != "" {
+		allowedOrigins = append(allowedOrigins, baseURL)
+	}
+	if apiURL != "" {
+		allowedOrigins = append(allowedOrigins, apiURL)
+	}
+
+	// 開発環境のみネイティブアプリのURLを追加（テスト用）
+	if !isProduction {
+		nativeBaseURL := os.Getenv("NATIVE_BASE_URL")
+		nativeAPIURL := os.Getenv("NATIVE_API_URL")
+
+		if nativeBaseURL != "" {
+			allowedOrigins = append(allowedOrigins, nativeBaseURL)
+		}
+		if nativeAPIURL != "" {
+			allowedOrigins = append(allowedOrigins, nativeAPIURL)
+		}
+	}
+
+	// 最低1つのOriginが設定されていることを確認
+	if len(allowedOrigins) == 0 {
+		log.Fatalln("No valid origins configured for CORS. Check BASE_URL and API_URL environment variables.")
+	}
+
+	log.Printf("[INFO] CORS configuration - Environment: %s, AllowedOrigins: %v",
+		environment, allowedOrigins)
+
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			os.Getenv("BASE_URL"),
-			os.Getenv("API_URL"),
-			os.Getenv("NATIVE_BASE_URL"),
-			os.Getenv("NATIVE_API_URL"),
-		},
+		AllowOrigins: allowedOrigins,
 		AllowMethods: []string{
 			"POST",
 			"GET",
@@ -61,7 +98,6 @@ func Create() *gin.Engine {
 	// Cookie configuration: Secure and SameSite based on environment
 	// Development: Secure=false, SameSite=Lax (allows HTTP)
 	// Production: Secure=true, SameSite=None (HTTPS only, cross-site allowed)
-	isProduction := os.Getenv("ENVIRONMENT") == "production"
 
 	var sameSiteMode http.SameSite
 	if isProduction {
