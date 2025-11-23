@@ -1,50 +1,50 @@
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS spotify_users CASCADE;
 
-create table users(
-    "id" VARCHAR(255) primary key,
+CREATE TABLE spotify_users (
+    "id" VARCHAR(255) PRIMARY KEY,
     "country" VARCHAR(255),
-    "access_token" text,
-    "refresh_token" text,
-    "token_expiration" int,
+    "access_token" TEXT,
+    "refresh_token" TEXT,
+    "token_expiration" INT,
     "session" VARCHAR(255),
     "created_at" TIMESTAMP,
     "updated_at" TIMESTAMP,
     "playlist_count" INTEGER DEFAULT 0
 );
 
-DROP TABLE IF EXISTS tracks CASCADE;
+DROP TABLE IF EXISTS spotify_tracks CASCADE;
 
-create table tracks(
-    "uri" VARCHAR(255) primary key,
-    "duration_ms" int,
+CREATE TABLE spotify_tracks (
+    "uri" VARCHAR(255) PRIMARY KEY,
+    "duration_ms" INT,
     "isrc" VARCHAR(255),
     "created_at" TIMESTAMP,
     "updated_at" TIMESTAMP
 );
 
-DROP TABLE IF EXISTS playlists CASCADE;
+DROP TABLE IF EXISTS spotify_playlists CASCADE;
 
-create table playlists(
+CREATE TABLE spotify_playlists (
     "id" VARCHAR(255) PRIMARY KEY,
-    index id_index (id),
+    INDEX id_index (id),
     "user_id" VARCHAR(255),
-    CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_spotify_playlist_user FOREIGN KEY (user_id) REFERENCES spotify_users(id)
 );
 
-DROP TABLE IF EXISTS favorite_tracks CASCADE;
+DROP TABLE IF EXISTS spotify_favorite_tracks CASCADE;
 
-CREATE TABLE favorite_tracks (
+CREATE TABLE spotify_favorite_tracks (
     "user_id" VARCHAR(255) PRIMARY KEY,
     "tracks" JSONB,
     "updated_at" TIMESTAMP,
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+    CONSTRAINT fk_spotify_favorite_tracks_user FOREIGN KEY (user_id) REFERENCES spotify_users(id)
 );
 
-DROP TABLE IF EXISTS artists CASCADE;
+DROP TABLE IF EXISTS spotify_artists CASCADE;
 
-CREATE TABLE artists (
+CREATE TABLE spotify_artists (
     "id" VARCHAR(255) PRIMARY KEY,
-    index id_index (id),
+    INDEX id_index (id),
     "tracks" JSONB,
     "updated_at" TIMESTAMP
 );
@@ -60,5 +60,5 @@ CREATE TABLE jwt_refresh_tokens (
     "revoked" BOOLEAN DEFAULT FALSE,
     INDEX idx_user_id (user_id),
     INDEX idx_expires_at (expires_at),
-    CONSTRAINT fk_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    CONSTRAINT fk_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES spotify_users(id) ON DELETE CASCADE
 );

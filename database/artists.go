@@ -27,7 +27,7 @@ func GetTracksByArtistIds(db *sql.DB, artistIDs []string) ([]model.Track, error)
 
 	query := fmt.Sprintf(`
         SELECT tracks
-        FROM artists
+        FROM spotify_artists
         WHERE id IN (%s)`, strings.Join(placeholders, ","))
 
 	rows, err := db.Query(query, convertToInterfaceSlice(artistIDs)...)
@@ -77,7 +77,7 @@ func convertToInterfaceSlice(ids []string) []interface{} {
 func GetArtistsUpdatedAt(db *sql.DB, id string) (time.Time, error) {
 	var updatedAt time.Time
 	err := db.QueryRow(`
-        SELECT updated_at FROM artists WHERE id = $1`, id).Scan(&updatedAt)
+        SELECT updated_at FROM spotify_artists WHERE id = $1`, id).Scan(&updatedAt)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -91,7 +91,7 @@ func SaveArtist(db *sql.DB, id string, track model.Track) error {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO artists (id, tracks, updated_at)
+        INSERT INTO spotify_artists (id, tracks, updated_at)
         VALUES ($1, $2::jsonb, NOW())
         ON CONFLICT (id) DO UPDATE SET
             tracks = EXCLUDED.tracks,
@@ -108,7 +108,7 @@ func GetArtistTracks(db *sql.DB, id string) ([]model.Track, error) {
 
 	// データベースからJSONB形式のトラックURIリストを取得
 	err := db.QueryRow(`
-        SELECT tracks FROM artists WHERE id = $1`, id).Scan(&tracksJSON)
+        SELECT tracks FROM spotify_artists WHERE id = $1`, id).Scan(&tracksJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 	// 既存のトラックURIリストを取得
 	var trackJSON *string
 	err := db.QueryRow(`
-        SELECT tracks FROM artists WHERE id = $1`, id).Scan(&trackJSON)
+        SELECT tracks FROM spotify_artists WHERE id = $1`, id).Scan(&trackJSON)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("Error fetching artist tracks for ID %s: %v", id, err)
 		return err
@@ -165,7 +165,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 
 	// ON CONFLICT を使って、既存レコードがあれば更新、なければ挿入
 	_, err = db.Exec(`
-        INSERT INTO artists (id, tracks, updated_at)
+        INSERT INTO spotify_artists (id, tracks, updated_at)
         VALUES ($1, $2::jsonb, NOW())
         ON CONFLICT (id) DO UPDATE SET
             tracks = EXCLUDED.tracks,
@@ -181,7 +181,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 
 func UpdateArtistsUpdateAt(db *sql.DB, id string, updatedAt time.Time) error {
 	_, err := db.Exec(`
-        UPDATE artists SET updated_at = $1
+        UPDATE spotify_artists SET updated_at = $1
         WHERE id = $2`,
 		updatedAt, id)
 	return err
@@ -189,7 +189,7 @@ func UpdateArtistsUpdateAt(db *sql.DB, id string, updatedAt time.Time) error {
 
 func ClearArtistsTracks(db *sql.DB, id string) error {
 	_, err := db.Exec(`
-        UPDATE artists SET tracks = '[]', updated_at = NOW()
+        UPDATE spotify_artists SET tracks = '[]', updated_at = NOW()
         WHERE id = $1`, id)
 	return err
 }

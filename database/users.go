@@ -25,7 +25,7 @@ func SaveAccessToken(db *sql.DB, token *oauth2.Token, user *spotify.PrivateUser)
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO users (id, country, access_token, refresh_token, token_expiration, created_at, updated_at)
+        INSERT INTO spotify_users (id, country, access_token, refresh_token, token_expiration, created_at, updated_at)
         VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
         ON CONFLICT (id) DO UPDATE SET
 			country = EXCLUDED.country,
@@ -49,7 +49,7 @@ func UpdateAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	}
 
 	_, err = db.Exec(`
-        UPDATE users SET access_token = $1, updated_at = NOW()
+        UPDATE spotify_users SET access_token = $1, updated_at = NOW()
         WHERE id = $2`,
 		encryptedAccessToken, id)
 	if err != nil {
@@ -63,7 +63,7 @@ func GetUser(db *sql.DB, id string) (model.User, error) {
 	var encryptedAccessToken, encryptedRefreshToken string
 
 	err := db.QueryRow(`
-        SELECT id, country, access_token, refresh_token, token_expiration, updated_at FROM users
+        SELECT id, country, access_token, refresh_token, token_expiration, updated_at FROM spotify_users
         WHERE id = $1`, id).Scan(&user.Id, &user.Country, &encryptedAccessToken, &encryptedRefreshToken, &user.TokenExpiration, &user.UpdateAt)
 	if err != nil {
 		return user, err
@@ -87,7 +87,7 @@ func GetUser(db *sql.DB, id string) (model.User, error) {
 
 func IncrementPlaylistCount(db *sql.DB, id string) error {
 	_, err := db.Exec(`
-        UPDATE users SET playlist_count = playlist_count + 1, updated_at = NOW()
+        UPDATE spotify_users SET playlist_count = playlist_count + 1, updated_at = NOW()
         WHERE id = $1`,
 		id)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 
 func SavePlaylist(db *sql.DB, playlist *spotify.FullPlaylist, userId string) error {
 	_, err := db.Exec(`
-        INSERT INTO playlists (id, user_id)
+        INSERT INTO spotify_playlists (id, user_id)
         VALUES ($1, $2)
         ON CONFLICT (id) DO NOTHING`, string(playlist.ID), userId)
 	if err != nil {
@@ -20,7 +20,7 @@ func SavePlaylist(db *sql.DB, playlist *spotify.FullPlaylist, userId string) err
 
 func GetAllPlaylists(db *sql.DB, userId string) ([]model.Playlist, error) {
 	var playlists []model.Playlist
-	rows, err := db.Query("SELECT id FROM playlists WHERE user_id = $1", userId)
+	rows, err := db.Query("SELECT id FROM spotify_playlists WHERE user_id = $1", userId)
 	if err != nil {
 		return playlists, err
 	}
@@ -40,7 +40,7 @@ func GetAllPlaylists(db *sql.DB, userId string) ([]model.Playlist, error) {
 }
 
 func DeletePlaylists(db *sql.DB, playlistId string, userId string) error {
-	_, err := db.Exec("DELETE FROM playlists WHERE id = $1 AND user_id = $2", playlistId, userId)
+	_, err := db.Exec("DELETE FROM spotify_playlists WHERE id = $1 AND user_id = $2", playlistId, userId)
 	if err != nil {
 		return err
 	}

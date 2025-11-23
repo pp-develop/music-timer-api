@@ -13,7 +13,7 @@ func GetTracksUpdatedAt(db *sql.DB, userId string) (time.Time, error) {
 
 	// データベースから updated_at を取得
 	err := db.QueryRow(`
-        SELECT updated_at FROM favorite_tracks WHERE user_id = $1`, userId).Scan(&updatedAt)
+        SELECT updated_at FROM spotify_favorite_tracks WHERE user_id = $1`, userId).Scan(&updatedAt)
 	if err != nil {
 		return time.Time{}, err // エラーの場合はゼロ値の time.Time を返す
 	}
@@ -28,7 +28,7 @@ func SaveFavoriteTrack(db *sql.DB, userId string, track model.Track) error {
 	}
 
 	_, err = db.Exec(`
-        INSERT INTO favorite_tracks (user_id, tracks, updated_at)
+        INSERT INTO spotify_favorite_tracks (user_id, tracks, updated_at)
         VALUES ($1, $2::jsonb, NOW())
         ON CONFLICT (user_id) DO UPDATE SET
             tracks = EXCLUDED.tracks,
@@ -46,7 +46,7 @@ func GetFavoriteTracks(db *sql.DB, userId string) ([]model.Track, error) {
 
 	// データベースからJSONB形式のトラックURIリストを取得
 	err := db.QueryRow(`
-        SELECT tracks FROM favorite_tracks WHERE user_id = $1`, userId).Scan(&tracksJSON)
+        SELECT tracks FROM spotify_favorite_tracks WHERE user_id = $1`, userId).Scan(&tracksJSON)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// データが存在しない場合は、空のリストを返す
@@ -70,7 +70,7 @@ func AddFavoriteTrack(db *sql.DB, userId string, newTrack model.Track) error {
 	// 既存のトラックURIリストを取得
 	var trackJSON *string
 	err := db.QueryRow(`
-        SELECT tracks FROM favorite_tracks WHERE user_id = $1`, userId).Scan(&trackJSON)
+        SELECT tracks FROM spotify_favorite_tracks WHERE user_id = $1`, userId).Scan(&trackJSON)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// レコードが存在しない場合、新規作成として処理
@@ -98,7 +98,7 @@ func AddFavoriteTrack(db *sql.DB, userId string, newTrack model.Track) error {
 
 	// JSONBカラムを更新
 	_, err = db.Exec(`
-        UPDATE favorite_tracks SET tracks = $1, updated_at = NOW()
+        UPDATE spotify_favorite_tracks SET tracks = $1, updated_at = NOW()
         WHERE user_id = $2`, updatedTrackJSON, userId)
 	if err != nil {
 		return err
@@ -109,7 +109,7 @@ func AddFavoriteTrack(db *sql.DB, userId string, newTrack model.Track) error {
 
 func UpdateFavoriteTracksUpdateAt(db *sql.DB, userId string, updatedAt time.Time) error {
 	_, err := db.Exec(`
-        UPDATE favorite_tracks SET updated_at = $1
+        UPDATE spotify_favorite_tracks SET updated_at = $1
         WHERE user_id = $2`,
 		updatedAt, userId)
 	if err != nil {
@@ -120,7 +120,7 @@ func UpdateFavoriteTracksUpdateAt(db *sql.DB, userId string, updatedAt time.Time
 
 func ClearFavoriteTracks(db *sql.DB, userId string) error {
 	_, err := db.Exec(`
-        UPDATE favorite_tracks SET tracks = '[]', updated_at = NOW()
+        UPDATE spotify_favorite_tracks SET tracks = '[]', updated_at = NOW()
         WHERE user_id = $1`, userId)
 	if err != nil {
 		return err

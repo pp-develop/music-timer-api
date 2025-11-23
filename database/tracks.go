@@ -11,9 +11,9 @@ import (
 
 func SaveTrack(db *sql.DB, track spotify.FullTrack) error {
 	_, err := db.Exec(`
-        INSERT INTO tracks (uri, duration_ms, isrc, created_at, updated_at)
+        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
         VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET 
+        ON CONFLICT (uri) DO UPDATE SET
             duration_ms = EXCLUDED.duration_ms,
             isrc = EXCLUDED.isrc,
             updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs["isrc"])
@@ -25,9 +25,9 @@ func SaveTrack(db *sql.DB, track spotify.FullTrack) error {
 
 func SaveSimpleTrack(db *sql.DB, track *spotify.SimpleTrack) error {
 	_, err := db.Exec(`
-        INSERT INTO tracks (uri, duration_ms, isrc, created_at, updated_at)
+        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
         VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET 
+        ON CONFLICT (uri) DO UPDATE SET
             duration_ms = EXCLUDED.duration_ms,
             isrc = EXCLUDED.isrc,
             updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs.ISRC)
@@ -44,7 +44,7 @@ func GetTracks(db *sql.DB, pageNumber, pageSize int) ([]model.Track, error) {
 	limit := pageSize
 
 	// クエリ実行
-	query := "SELECT uri, duration_ms, isrc FROM tracks LIMIT $1 OFFSET $2"
+	query := "SELECT uri, duration_ms, isrc FROM spotify_tracks LIMIT $1 OFFSET $2"
 	rows, err := db.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func DeleteTracks(db *sql.DB) error {
 	totalDeleted := 0
 
 	for {
-		query := `DELETE FROM tracks WHERE updated_at < $1 LIMIT $2`
+		query := `DELETE FROM spotify_tracks WHERE updated_at < $1 LIMIT $2`
 		result, err := db.Exec(query, thirtyDaysAgo, chunkSize)
 		if err != nil {
 			return err
@@ -128,7 +128,7 @@ func DeleteOldTracksIfOverLimit(db *sql.DB) error {
 
 	// トラック数を取得するクエリ
 	var rowCount int
-	err := db.QueryRow("SELECT COUNT(*) FROM tracks").Scan(&rowCount)
+	err := db.QueryRow("SELECT COUNT(*) FROM spotify_tracks").Scan(&rowCount)
 	if err != nil {
 		return err
 	}
@@ -139,10 +139,10 @@ func DeleteOldTracksIfOverLimit(db *sql.DB) error {
 
 		// 古いデータから1万行削除
 		query := `
-            DELETE FROM tracks
+            DELETE FROM spotify_tracks
             WHERE ctid IN (
                 SELECT ctid
-                FROM tracks
+                FROM spotify_tracks
                 ORDER BY updated_at ASC
                 LIMIT $1
             )
