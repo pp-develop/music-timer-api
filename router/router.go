@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/handler"
 	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/artist"
@@ -137,6 +138,24 @@ func Create() *gin.Engine {
 		authNative.GET("/callback", callbackNative)
 		authNative.GET("/status", getAuthStatusNative)
 		authNative.POST("/refresh", refreshTokenNative)
+	}
+
+	// YouTube Music authentication endpoints
+	ytmusicAuth := router.Group("/ytmusic/auth")
+	{
+		ytmusicAuth.GET("/authz-url", handler.YTMusicAuthzUrlWeb)
+		ytmusicAuth.GET("/callback", handler.YTMusicCallbackWeb)
+		ytmusicAuth.GET("/status", handler.YTMusicAuthStatus)
+		ytmusicAuth.DELETE("/session", handler.DeleteYTMusicSession)
+	}
+
+	// YouTube Music endpoints
+	ytmusic := router.Group("/ytmusic")
+	{
+		ytmusic.POST("/tracks/save", handler.SaveYTMusicFavoriteTracks)
+		ytmusic.GET("/tracks", handler.GetYTMusicFavoriteTracks)
+		ytmusic.POST("/playlist", handler.CreateYTMusicPlaylist)
+		ytmusic.GET("/playlists", handler.GetYTMusicPlaylists)
 	}
 
 	// Protected endpoints (support both session and JWT auth)

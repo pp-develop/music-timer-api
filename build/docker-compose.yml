@@ -3,8 +3,8 @@ version: "3.9"
 services:
   app:
     build:
-      context: ./dockerfile/golang
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: build/dockerfile/golang/Dockerfile
     container_name: golang
     ports:
       - "8080:8080"
