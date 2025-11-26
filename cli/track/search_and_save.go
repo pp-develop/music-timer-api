@@ -13,7 +13,15 @@ func main() {
 	app := &cli.App{
 		Name:  "search and save track",
 		Usage: "search spotify tracks to DB save",
-		Action: func(*cli.Context) error {
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "market",
+				Aliases: []string{"m"},
+				Usage:   "market code (e.g., JP, US)",
+				Value:   "",
+			},
+		},
+		Action: func(c *cli.Context) error {
 			log.Println("start search and save track")
 
 			db, err := database.GetDatabaseInstance(database.CockroachDB{})
@@ -22,7 +30,8 @@ func main() {
 				return err
 			}
 
-			err = search.SaveTracks(nil, db)
+			market := c.String("market")
+			err = search.SaveTracksForCLI(db, market)
 			if err != nil {
 				log.Println(err)
 				return err

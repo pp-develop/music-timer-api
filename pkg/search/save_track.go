@@ -52,6 +52,25 @@ func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, validate bool) er
 	return nil
 }
 
+func SaveTracksForCLI(db *sql.DB, market string) error {
+	if market != "" {
+		Market = strings.ToUpper(market)
+	}
+
+	tracks, err := spotify.SearchTracks(Market)
+	if err != nil {
+		return err
+	}
+
+	err = saveTracks(db, tracks, true)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Total number of tracks: %d\n", len(tracks))
+	return nil
+}
+
 func validateTrack(track spotifylibrary.FullTrack) bool {
 	return isIsrcForMarket(track.ExternalIDs["isrc"])
 }
