@@ -20,3 +20,10 @@ $ docker-compose up -d
 $ docker exec -it cockroachdb bash
 $ cockroach sql --insecure --host=localhost:26257 < /cockroach/init.sql
 ```
+
+3. Initialize track data (Required for first setup)
+```bash
+$ curl -X POST http://localhost:8080/tracks \
+  -H "Content-Type: application/json" \
+  -d '{"market": "JP"}'
+```
