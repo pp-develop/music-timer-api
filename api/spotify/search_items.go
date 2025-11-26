@@ -53,19 +53,13 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	fullTracks = append(fullTracks, results.Tracks.Tracks...)
 
 	// ページング処理
-	for {
-		var prevUrl = results.Tracks.Next
-
+	for results.Tracks.Next != "" {
 		// 次のページを取得
 		err = client.NextTrackResults(ctx, results)
 		if err != nil {
 			return nil, err
 		}
 		fullTracks = append(fullTracks, results.Tracks.Tracks...)
-
-		if prevUrl == results.Tracks.Next {
-			break
-		}
 	}
 
 	return fullTracks, nil
