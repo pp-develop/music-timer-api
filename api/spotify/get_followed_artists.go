@@ -16,7 +16,7 @@ func GetFollowedArtists(token *oauth2.Token) ([]spotify.FullArtist, error) {
 
 	artistPage, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50))
 	if err != nil {
-		return nil, err
+		return nil, WrapSpotifyError(err)
 	}
 	allArtists = append(allArtists, artistPage.Artists...)
 
@@ -29,7 +29,7 @@ func GetFollowedArtists(token *oauth2.Token) ([]spotify.FullArtist, error) {
 		// 次のページを取得
 		artistPage, err = client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50), spotify.After(artistPage.Cursor.After))
 		if err != nil {
-			return nil, err
+			return nil, WrapSpotifyError(err)
 		}
 		allArtists = append(allArtists, artistPage.Artists...)
 	}

@@ -26,7 +26,7 @@ func CreatePlaylist(user model.User, ms int) (*spotify.FullPlaylist, error) {
 
 	playlist, err := client.CreatePlaylistForUser(ctx, user.Id, strconv.Itoa(ms/ONEMINUTE_TO_MSEC)+"min", "", true, false)
 	if err != nil {
-		return playlist, err
+		return playlist, WrapSpotifyError(err, model.ErrPlaylistCreationFailed)
 	}
 
 	return playlist, nil

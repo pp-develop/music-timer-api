@@ -26,9 +26,5 @@ func AddItemsPlaylist(playlistId string, tracks []model.Track, user model.User) 
 	}
 
 	_, err := client.AddTracksToPlaylist(ctx, spotify.ID(playlistId), ids...)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return WrapSpotifyError(err, model.ErrTrackAdditionFailed)
 }

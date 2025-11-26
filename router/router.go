@@ -118,6 +118,7 @@ func Create() *gin.Engine {
 		os.Getenv("ENVIRONMENT"), isProduction, sameSiteMode)
 	router.Use(sessions.Sessions("mysession", store))
 	router.Use(middleware.DBMiddleware())
+	router.Use(middleware.ErrorHandlerMiddleware())
 
 	router.GET("/health", healthCheck)
 
@@ -275,30 +276,27 @@ func deleteSession(c *gin.Context) {
 func saveTracks(c *gin.Context) {
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		c.Status(http.StatusInternalServerError)
+		c.Error(model.ErrFailedGetDB)
 		return
 	}
 	err := search.SaveTracks(c, dbInstance)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+		c.Error(err)
+		return
 	}
+	c.Status(http.StatusOK)
 }
 
 func initTrackData(c *gin.Context) {
 	err := search.SaveFavoriteTracks(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 
 	err = search.SaveTracksFromFollowedArtists(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -307,30 +305,27 @@ func initTrackData(c *gin.Context) {
 func resetTracks(c *gin.Context) {
 	err := json.ReCreate(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+		c.Error(err)
+		return
 	}
+	c.Status(http.StatusOK)
 }
 
 func deleteTracks(c *gin.Context) {
 	db, ok := utils.GetDB(c)
 	if !ok {
-		c.Status(http.StatusInternalServerError)
+		c.Error(model.ErrFailedGetDB)
 		return
 	}
 
 	err := database.DeleteTracks(db)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 	err = database.DeleteOldTracksIfOverLimit(db)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 	c.Status(http.StatusOK)
@@ -339,18 +334,16 @@ func deleteTracks(c *gin.Context) {
 func updateFavoriteTracks(c *gin.Context) {
 	err := search.SaveFavoriteTracks(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+		c.Error(err)
+		return
 	}
+	c.Status(http.StatusOK)
 }
 
 func getArtists(c *gin.Context) {
 	artists, err := artist.GetFollowedArtists(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, artists)
@@ -359,8 +352,7 @@ func getArtists(c *gin.Context) {
 func getPlaylist(c *gin.Context) {
 	playlist, err := playlist.GetPlaylists(c)
 	if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
+		c.Error(err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, playlist)
@@ -368,91 +360,27 @@ func getPlaylist(c *gin.Context) {
 
 func createPlaylist(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
-	if err == nil {
-		c.IndentedJSON(http.StatusCreated, playlistId)
+	if err != nil {
+		c.Error(err)
 		return
 	}
-
-	logger.LogError(err)
-
-	// エラーケースごとに適切なレスポンスを返す
-	switch err {
-	case model.ErrNotFoundTracks:
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeTracksNotFound,
-		})
-	case model.ErrNotEnoughTracks:
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeTimeoutInsufficientTracks,
-		})
-	case model.ErrTimeoutCreatePlaylist:
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeTimeoutNoMatch,
-		})
-	case model.ErrNoFavoriteTracks:
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeNoFavoriteTracks,
-		})
-	case model.ErrSpotifyRateLimit:
-		c.JSON(http.StatusTooManyRequests, model.ErrorResponse{
-			Code: model.CodeSpotifyRateLimit,
-		})
-	case model.ErrPlaylistQuotaExceeded:
-		c.JSON(http.StatusTooManyRequests, model.ErrorResponse{
-			Code: model.CodePlaylistQuotaExceeded,
-		})
-	case model.ErrPlaylistCreationFailed:
-		c.JSON(http.StatusBadGateway, model.ErrorResponse{
-			Code: model.CodePlaylistCreationFailed,
-		})
-	case model.ErrAccessTokenExpired:
-		c.JSON(http.StatusUnauthorized, model.ErrorResponse{
-			Code: model.CodeTokenExpired,
-		})
-	default:
-		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
-			Code: model.CodeInternalError,
-		})
-	}
+	c.IndentedJSON(http.StatusCreated, playlistId)
 }
 
 func gestCreatePlaylist(c *gin.Context) {
 	playlistId, err := playlist.GestCreatePlaylist(c)
-	if err == model.ErrNotEnoughTracks {
-		logger.LogError(err)
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeTimeoutInsufficientTracks,
-		})
-	} else if err == model.ErrTimeoutCreatePlaylist {
-		logger.LogError(err)
-		c.JSON(http.StatusNotFound, model.ErrorResponse{
-			Code: model.CodeTimeoutNoMatch,
-		})
-	} else if err != nil {
-		logger.LogError(err)
-		c.JSON(http.StatusInternalServerError, model.ErrorResponse{
-			Code: model.CodeInternalError,
-		})
-	} else {
-		c.IndentedJSON(http.StatusCreated, playlistId)
+	if err != nil {
+		c.Error(err)
+		return
 	}
+	c.IndentedJSON(http.StatusCreated, playlistId)
 }
 
 func deletePlaylists(c *gin.Context) {
 	err := playlist.DeletePlaylists(c)
-	if err == model.ErrFailedGetSession {
-		logger.LogError(err)
-		c.Status(http.StatusSeeOther)
-	} else if err == model.ErrNotFoundPlaylist {
-		logger.LogError(err)
-		c.Status(http.StatusNoContent)
-	} else if err == model.ErrAccessTokenExpired {
-		logger.LogError(err)
-		c.Status(http.StatusUnauthorized)
-	} else if err != nil {
-		logger.LogError(err)
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.Status(http.StatusOK)
+	if err != nil {
+		c.Error(err)
+		return
 	}
+	c.Status(http.StatusOK)
 }

@@ -1,8 +1,6 @@
 package playlist
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
@@ -38,11 +36,6 @@ func DeletePlaylists(c *gin.Context) error {
 	for _, item := range playlists {
 		err := spotify.UnfollowPlaylist(sotifySdk.ID(item.ID), user)
 		if err != nil {
-			// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
-			// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
-			if strings.Contains(err.Error(), "token expired") {
-				return model.ErrAccessTokenExpired
-			}
 			return err
 		}
 	}

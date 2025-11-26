@@ -16,7 +16,7 @@ func GetMe(token *oauth2.Token) (*spotify.PrivateUser, error) {
 
 	currentUser, err := client.CurrentUser(ctx)
 	if err != nil {
-		return currentUser, err
+		return currentUser, WrapSpotifyError(err)
 	}
 
 	return currentUser, nil

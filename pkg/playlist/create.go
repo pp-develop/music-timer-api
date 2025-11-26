@@ -2,7 +2,6 @@ package playlist
 
 import (
 	"log"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
@@ -74,33 +73,14 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	playlist, err := spotify.CreatePlaylist(user, specify_ms)
 	if err != nil {
-		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
-		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
-		if strings.Contains(err.Error(), "token expired") {
-			return "", model.ErrAccessTokenExpired
-		}
-		if strings.Contains(err.Error(), "rate limit") {
-			return "", model.ErrSpotifyRateLimit
-		}
-		if strings.Contains(err.Error(), "quota") {
-			return "", model.ErrPlaylistQuotaExceeded
-		}
-		return "", model.ErrPlaylistCreationFailed
+		return "", err
 	}
 
 	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
 	if err != nil {
 		database.DeletePlaylists(dbInstance, string(playlist.ID), user.Id)
-		// 通常、エラーの種類はステータスコードで判定するのが望ましいが、
-		// 現在使用しているフレームワークの制約により、エラーメッセージの文字列を判定する方法を採用している。
-		if strings.Contains(err.Error(), "token expired") {
-			return "", model.ErrAccessTokenExpired
-		}
-		if strings.Contains(err.Error(), "rate limit") {
-			return "", model.ErrSpotifyRateLimit
-		}
 		logger.LogError(spotify.UnfollowPlaylist(playlist.ID, user))
-		return "", model.ErrTrackAdditionFailed
+		return "", err
 	}
 
 	err = database.SavePlaylist(dbInstance, playlist, userId)

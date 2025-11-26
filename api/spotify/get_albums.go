@@ -18,7 +18,7 @@ func GetArtistAlbums(token *oauth2.Token, artistID string) ([]spotify.SimpleAlbu
 	// 最初のページを取得
 	albumsPage, err := client.GetArtistAlbums(ctx, spotify.ID(artistID), nil, options...)
 	if err != nil {
-		return nil, err
+		return nil, WrapSpotifyError(err)
 	}
 
 	// アルバムをallAlbumsに追加
@@ -29,7 +29,7 @@ func GetArtistAlbums(token *oauth2.Token, artistID string) ([]spotify.SimpleAlbu
 		// 次のページを取得
 		err = client.NextPage(ctx, albumsPage)
 		if err != nil {
-			return nil, err
+			return nil, WrapSpotifyError(err)
 		}
 		allAlbums = append(allAlbums, albumsPage.Albums...)
 	}
@@ -48,7 +48,7 @@ func GetAlbumTracks(token *oauth2.Token, albumID string) ([]spotify.SimpleTrack,
 	// 最初のページを取得
 	tracksPage, err := client.GetAlbumTracks(ctx, spotify.ID(albumID), options...)
 	if err != nil {
-		return nil, err
+		return nil, WrapSpotifyError(err)
 	}
 
 	// トラックをallTracksに追加
@@ -59,7 +59,7 @@ func GetAlbumTracks(token *oauth2.Token, albumID string) ([]spotify.SimpleTrack,
 		// `NextPage`メソッドで次のページを取得
 		err = client.NextPage(ctx, tracksPage)
 		if err != nil {
-			return nil, err
+			return nil, WrapSpotifyError(err)
 		}
 		allTracks = append(allTracks, tracksPage.Tracks...)
 	}

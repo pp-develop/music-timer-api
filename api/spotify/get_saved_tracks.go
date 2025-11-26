@@ -16,7 +16,7 @@ func GetSavedTracks(token *oauth2.Token) ([]spotify.SavedTrack, error) {
 
 	tracksPage, err := client.CurrentUsersTracks(ctx, spotify.Limit(50))
 	if err != nil {
-		return nil, err
+		return nil, WrapSpotifyError(err)
 	}
 	allTracks = append(allTracks, tracksPage.Tracks...)
 
@@ -25,7 +25,7 @@ func GetSavedTracks(token *oauth2.Token) ([]spotify.SavedTrack, error) {
 		// 次のページを取得
 		err = client.NextPage(ctx, tracksPage)
 		if err != nil {
-			return nil, err
+			return nil, WrapSpotifyError(err)
 		}
 		allTracks = append(allTracks, tracksPage.Tracks...)
 	}

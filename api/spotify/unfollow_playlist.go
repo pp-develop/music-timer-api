@@ -20,7 +20,7 @@ func UnfollowPlaylist(playlistID spotify.ID, user model.User) error {
 
 	err := client.UnfollowPlaylist(ctx, playlistID)
 	if err != nil {
-		return err
+		return WrapSpotifyError(err)
 	}
 
 	return nil
