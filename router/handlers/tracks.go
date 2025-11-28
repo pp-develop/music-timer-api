@@ -26,15 +26,19 @@ func SaveTracks(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// InitTrackData initializes track data by saving favorite tracks and tracks from followed artists
-func InitTrackData(c *gin.Context) {
+// InitFavoriteTracks initializes track data by saving favorite tracks
+func InitFavoriteTracks(c *gin.Context) {
 	err := search.SaveFavoriteTracks(c)
 	if err != nil {
 		c.Error(err)
 		return
 	}
+	c.Status(http.StatusOK)
+}
 
-	err = search.SaveTracksFromFollowedArtists(c)
+// InitFollowedArtistsTracks initializes track data by saving tracks from followed artists
+func InitFollowedArtistsTracks(c *gin.Context) {
+	err := search.SaveTracksFromFollowedArtists(c)
 	if err != nil {
 		c.Error(err)
 		return

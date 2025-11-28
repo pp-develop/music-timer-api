@@ -58,7 +58,8 @@ func setupRoutes(router *gin.Engine) {
 
 	// Track endpoints
 	router.POST("/tracks", handlers.SaveTracks)
-	router.POST("/tracks/init", handlers.InitTrackData)
+	router.POST("/tracks/init/favorites", handlers.InitFavoriteTracks)
+	router.POST("/tracks/init/followed-artists", handlers.InitFollowedArtistsTracks)
 	router.POST("/reset-tracks", handlers.ResetTracks)
 	router.DELETE("/tracks", handlers.DeleteTracks)
 
