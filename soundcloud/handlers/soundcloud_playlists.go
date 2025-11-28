@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +15,11 @@ import (
 func CreatePlaylistSoundCloud(c *gin.Context) {
 	playlistId, err := playlist.CreatePlaylist(c)
 	if err != nil {
+		log.Printf("[HANDLER] Error creating playlist: %v", err)
 		c.Error(err)
 		return
 	}
+
 	c.JSON(http.StatusOK, gin.H{"playlist_id": playlistId})
 }
 

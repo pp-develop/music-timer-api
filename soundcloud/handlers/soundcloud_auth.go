@@ -64,7 +64,8 @@ func GetAuthStatusSoundCloud(c *gin.Context) {
 // DeleteSessionSoundCloud deletes the SoundCloud user's session
 func DeleteSessionSoundCloud(c *gin.Context) {
 	session := sessions.Default(c)
-	session.Delete("sc_userId")
+	session.Delete("userId")
+	session.Delete("service")
 	session.Save()
 	c.Status(http.StatusOK)
 }

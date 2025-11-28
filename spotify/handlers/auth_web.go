@@ -66,6 +66,7 @@ func GetAuthStatusWeb(c *gin.Context) {
 func DeleteSession(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Delete("userId")
+	session.Delete("service")
 	session.Save()
 	c.Status(http.StatusOK)
 }

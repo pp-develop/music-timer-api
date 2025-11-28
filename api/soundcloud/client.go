@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -203,6 +204,7 @@ func (c *Client) GetFavorites(accessToken string, limit int) ([]model.Track, err
 			DurationMs: scTrack.Duration,
 			Isrc:       "",
 			ArtistsId:  []string{fmt.Sprintf("%d", scTrack.User.ID)},
+			ID:         fmt.Sprintf("%d", scTrack.ID),
 		})
 	}
 
@@ -251,16 +253,18 @@ func (c *Client) CreatePlaylist(accessToken, title, description string) (*SCPlay
 }
 
 // Add tracks to playlist
-func (c *Client) AddTracksToPlaylist(accessToken string, playlistID int, trackURLs []string) error {
-	// Note: SoundCloud API might require track IDs instead of URLs
-	// This is a simplified implementation
+func (c *Client) AddTracksToPlaylist(accessToken string, playlistID int, trackIDs []string) error {
 	data := url.Values{}
-	for i, url := range trackURLs {
-		data.Add(fmt.Sprintf("playlist[tracks][%d][permalink_url]", i), url)
+	for i, trackID := range trackIDs {
+		// Use track ID instead of permalink URL
+		data.Add(fmt.Sprintf("playlist[tracks][%d][id]", i), trackID)
 	}
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/playlists/%d", SoundCloudAPIBase, playlistID), strings.NewReader(data.Encode()))
+	apiURL := fmt.Sprintf("%s/playlists/%d", SoundCloudAPIBase, playlistID)
+
+	req, err := http.NewRequest("PUT", apiURL, strings.NewReader(data.Encode()))
 	if err != nil {
+		log.Printf("[SC-API] Failed to create request: %v", err)
 		return err
 	}
 
@@ -269,13 +273,15 @@ func (c *Client) AddTracksToPlaylist(accessToken string, playlistID int, trackUR
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
+		log.Printf("[SC-API] HTTP request failed: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("add tracks failed: %s", string(body))
+		return fmt.Errorf("add tracks failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
 	return nil

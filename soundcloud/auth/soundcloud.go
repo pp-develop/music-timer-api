@@ -102,7 +102,8 @@ func SoundCloudCallbackWeb(c *gin.Context) error {
 	}
 
 	// Set session data
-	session.Set("sc_userId", user.Id)
+	session.Set("userId", user.Id)
+	session.Set("service", "soundcloud")
 	return session.Save()
 }
 
@@ -110,18 +111,22 @@ func SoundCloudCallbackWeb(c *gin.Context) error {
 func GetSoundCloudAuthStatus(c *gin.Context) (*model.SoundCloudUser, error) {
 	db, ok := utils.GetDB(c)
 	if !ok {
+		log.Println("[SC-AUTH] ERROR: Failed to get DB instance")
 		return nil, model.ErrFailedGetDB
 	}
 
 	session := sessions.Default(c)
-	v := session.Get("sc_userId")
+	v := session.Get("userId")
 	if v == nil {
+		log.Println("[SC-AUTH] ERROR: No userId in session")
 		return nil, model.ErrFailedGetSession
 	}
 
 	userId := v.(string)
+
 	user, err := database.GetSoundCloudUser(db, userId)
 	if err != nil {
+		log.Printf("[SC-AUTH] ERROR: Failed to get user from database: %v", err)
 		return nil, err
 	}
 
@@ -131,6 +136,7 @@ func GetSoundCloudAuthStatus(c *gin.Context) (*model.SoundCloudUser, error) {
 		client := soundcloud.NewClient()
 		tokenResp, err := client.RefreshToken(user.RefreshToken)
 		if err != nil {
+			log.Printf("[SC-AUTH] ERROR: Failed to refresh token: %v", err)
 			return nil, fmt.Errorf("failed to refresh token: %w", err)
 		}
 

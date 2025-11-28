@@ -62,6 +62,7 @@ func Auth(c *gin.Context) (model.User, error) {
 	// セッションの保存
 	session := sessions.Default(c)
 	session.Set("userId", user.Id)
+	session.Set("service", "spotify")
 	err = session.Save()
 	if err != nil {
 		return user, err

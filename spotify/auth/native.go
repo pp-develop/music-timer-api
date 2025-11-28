@@ -68,7 +68,7 @@ func SpotifyCallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 
 	// Generate JWT token pair
 	jti := uuid.New().String()
-	tokenPair, err := utils.GenerateTokenPair(user.ID, jti)
+	tokenPair, err := utils.GenerateTokenPair(user.ID, "spotify", jti)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Validate refresh token
-	userID, jti, err := utils.ValidateRefreshToken(req.RefreshToken)
+	userID, service, jti, err := utils.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 
 	// Generate new token pair
 	newJTI := uuid.New().String()
-	tokenPair, err := utils.GenerateTokenPair(userID, newJTI)
+	tokenPair, err := utils.GenerateTokenPair(userID, service, newJTI)
 	if err != nil {
 		return nil, err
 	}

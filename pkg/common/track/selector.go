@@ -20,7 +20,9 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 	}
 
 	// Remove the last track that caused overflow
-	tracks = tracks[:len(tracks)-1]
+	if len(tracks) > 0 {
+		tracks = tracks[:len(tracks)-1]
+	}
 
 	// Calculate remaining time
 	totalDuration = 0
@@ -42,6 +44,7 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 		isTrackFound = true
 		tracks = append(tracks, getTrack...)
 	}
+
 	return isTrackFound, tracks
 }
 

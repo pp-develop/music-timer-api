@@ -31,8 +31,8 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// JWT トークンを検証してユーザーIDを取得
-		userID, err := utils.ValidateJWT(tokenString)
+		// JWT トークンを検証してユーザーIDとサービスを取得
+		userID, service, err := utils.ValidateJWT(tokenString)
 		if err != nil {
 			// トークンが無効または期限切れの場合
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
@@ -40,8 +40,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// 認証成功: コンテキストにユーザーIDを設定して次のハンドラーに進む
+		// 認証成功: コンテキストにユーザーIDとサービスを設定して次のハンドラーに進む
 		c.Set("userID", userID)
+		c.Set("service", service)
 		c.Next()
 	}
 }
@@ -58,10 +59,11 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 			if tokenString != authHeader {
 				// 正しい Bearer 形式の場合、JWT を検証
-				userID, err := utils.ValidateJWT(tokenString)
+				userID, service, err := utils.ValidateJWT(tokenString)
 				if err == nil {
-					// JWT 認証成功: ユーザーIDと認証タイプを設定
+					// JWT 認証成功: ユーザーID、サービス、認証タイプを設定
 					c.Set("userID", userID)
+					c.Set("service", service)
 					c.Set("authType", "jwt")
 				}
 				// JWT が無効でもエラーにはせず、処理を継続

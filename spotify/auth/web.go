@@ -91,5 +91,6 @@ func SpotifyCallbackWeb(c *gin.Context) error {
 
 	// Set session data
 	session.Set("userId", user.ID)
+	session.Set("service", "spotify")
 	return session.Save()
 }
