@@ -8,6 +8,7 @@ import (
 	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/router/handlers"
 	spotifyHandlers "github.com/pp-develop/music-timer-api/spotify/handlers"
+	soundcloudHandlers "github.com/pp-develop/music-timer-api/soundcloud/handlers"
 )
 
 // Create initializes and configures the Gin router
@@ -89,6 +90,39 @@ func setupRoutes(router *gin.Engine) {
 			playlists.POST("", spotifyHandlers.CreatePlaylist)
 			playlists.DELETE("", spotifyHandlers.DeletePlaylists)
 			playlists.POST("/guest", spotifyHandlers.GestCreatePlaylist)
+		}
+	}
+
+	// SoundCloud API endpoints
+	soundcloud := router.Group("/soundcloud")
+	{
+		// Authentication endpoints
+		auth := soundcloud.Group("/auth")
+		{
+			auth.GET("/authz-url", soundcloudHandlers.GetAuthzURLSoundCloud)
+			auth.GET("/callback", soundcloudHandlers.CallbackSoundCloud)
+			auth.GET("/status", soundcloudHandlers.GetAuthStatusSoundCloud)
+			auth.DELETE("/session", soundcloudHandlers.DeleteSessionSoundCloud)
+		}
+
+		// Protected endpoints (require authentication)
+		soundcloud.Use(middleware.OptionalAuthMiddleware())
+
+		// Track endpoints
+		tracks := soundcloud.Group("/tracks")
+		{
+			tracksInit := tracks.Group("/init")
+			{
+				tracksInit.POST("/favorites", soundcloudHandlers.InitFavoriteTracksSoundCloud)
+			}
+		}
+
+		// Playlist endpoints
+		playlists := soundcloud.Group("/playlists")
+		{
+			playlists.GET("", soundcloudHandlers.GetPlaylistsSoundCloud)
+			playlists.POST("", soundcloudHandlers.CreatePlaylistSoundCloud)
+			playlists.DELETE("", soundcloudHandlers.DeletePlaylistsSoundCloud)
 		}
 	}
 }
