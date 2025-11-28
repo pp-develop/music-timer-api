@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/music-timer-api/pkg/artist"
+	"github.com/pp-develop/music-timer-api/spotify/artist"
 )
 
 // GetArtists returns the user's followed artists

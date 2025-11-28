@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/json"
-	"github.com/pp-develop/music-timer-api/pkg/search"
+	"github.com/pp-develop/music-timer-api/spotify/json"
+	"github.com/pp-develop/music-timer-api/spotify/search"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 

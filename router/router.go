@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/router/handlers"
+	spotifyHandlers "github.com/pp-develop/music-timer-api/spotify/handlers"
 )
 
 // Create initializes and configures the Gin router
@@ -44,19 +45,19 @@ func setupRoutes(router *gin.Engine) {
 			// Web authentication
 			authWeb := auth.Group("/web")
 			{
-				authWeb.GET("/authz-url", handlers.GetAuthzURLWeb)
-				authWeb.GET("/callback", handlers.CallbackWeb)
-				authWeb.GET("/status", handlers.GetAuthStatusWeb)
-				authWeb.DELETE("/session", handlers.DeleteSession)
+				authWeb.GET("/authz-url", spotifyHandlers.GetAuthzURLWeb)
+				authWeb.GET("/callback", spotifyHandlers.CallbackWeb)
+				authWeb.GET("/status", spotifyHandlers.GetAuthStatusWeb)
+				authWeb.DELETE("/session", spotifyHandlers.DeleteSession)
 			}
 
 			// Native authentication
 			authNative := auth.Group("/native")
 			{
-				authNative.GET("/authz-url", handlers.GetAuthzURLNative)
-				authNative.GET("/callback", handlers.CallbackNative)
-				authNative.GET("/status", handlers.GetAuthStatusNative)
-				authNative.POST("/refresh", handlers.RefreshTokenNative)
+				authNative.GET("/authz-url", spotifyHandlers.GetAuthzURLNative)
+				authNative.GET("/callback", spotifyHandlers.CallbackNative)
+				authNative.GET("/status", spotifyHandlers.GetAuthStatusNative)
+				authNative.POST("/refresh", spotifyHandlers.RefreshTokenNative)
 			}
 		}
 
@@ -66,28 +67,28 @@ func setupRoutes(router *gin.Engine) {
 		// Track endpoints
 		tracks := spotify.Group("/tracks")
 		{
-			tracks.POST("", handlers.SaveTracks)
-			tracks.DELETE("", handlers.DeleteTracks)
-			tracks.POST("/reset", handlers.ResetTracks)
+			tracks.POST("", spotifyHandlers.SaveTracks)
+			tracks.DELETE("", spotifyHandlers.DeleteTracks)
+			tracks.POST("/reset", spotifyHandlers.ResetTracks)
 
 			// Track initialization endpoints
 			tracksInit := tracks.Group("/init")
 			{
-				tracksInit.POST("/favorites", handlers.InitFavoriteTracks)
-				tracksInit.POST("/followed-artists", handlers.InitFollowedArtistsTracks)
+				tracksInit.POST("/favorites", spotifyHandlers.InitFavoriteTracks)
+				tracksInit.POST("/followed-artists", spotifyHandlers.InitFollowedArtistsTracks)
 			}
 		}
 
 		// Artist endpoints
-		spotify.GET("/artists", handlers.GetArtists)
+		spotify.GET("/artists", spotifyHandlers.GetArtists)
 
 		// Playlist endpoints
 		playlists := spotify.Group("/playlists")
 		{
-			playlists.GET("", handlers.GetPlaylists)
-			playlists.POST("", handlers.CreatePlaylist)
-			playlists.DELETE("", handlers.DeletePlaylists)
-			playlists.POST("/guest", handlers.GestCreatePlaylist)
+			playlists.GET("", spotifyHandlers.GetPlaylists)
+			playlists.POST("", spotifyHandlers.CreatePlaylist)
+			playlists.DELETE("", spotifyHandlers.DeletePlaylists)
+			playlists.POST("/guest", spotifyHandlers.GestCreatePlaylist)
 		}
 	}
 }

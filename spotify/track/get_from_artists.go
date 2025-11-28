@@ -6,9 +6,10 @@ import (
 	"log"
 	"time"
 
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/json"
+	"github.com/pp-develop/music-timer-api/spotify/json"
 )
 
 func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId string) ([]model.Track, error) {
@@ -50,7 +51,7 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 			default:
 				tryCount++
 				shuffleTracks := json.ShuffleTracks(followedArtistsTracks)
-				success, tracks = MakeTracks(shuffleTracks, specify_ms)
+				success, tracks  = commontrack.MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
 		c1 <- tracks
@@ -78,8 +79,8 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 
 		if !hasEnoughDuration {
 			log.Printf("[タイムアウト] GetTracksFromArtists: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, アーティスト数=%d",
-				specify_ms/MillisecondsPerMinute,
-				totalAvailableDuration/MillisecondsPerMinute,
+				specify_ms/commontrack.MillisecondsPerMinute,
+				totalAvailableDuration/commontrack.MillisecondsPerMinute,
 				len(followedArtistsTracks),
 				finalTryCount,
 				len(artistIds),
@@ -87,9 +88,9 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 			return nil, model.ErrNotEnoughTracks
 		} else {
 			log.Printf("[タイムアウト] GetTracksFromArtists: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, アーティスト数=%d",
-				specify_ms/MillisecondsPerMinute,
+				specify_ms/commontrack.MillisecondsPerMinute,
 				len(followedArtistsTracks),
-				totalAvailableDuration/MillisecondsPerMinute,
+				totalAvailableDuration/commontrack.MillisecondsPerMinute,
 				finalTryCount,
 				len(artistIds),
 			)

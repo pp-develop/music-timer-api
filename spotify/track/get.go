@@ -7,14 +7,15 @@ import (
 	"sync"
 	"time"
 
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/json"
+	"github.com/pp-develop/music-timer-api/spotify/json"
 )
 
 var (
 	allTracks      []model.Track
 	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
-	timeout        = DefaultTimeoutSeconds
+	timeout        = commontrack.DefaultTimeoutSeconds
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
@@ -72,7 +73,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 			default:
 				tryCount++
 				shuffleTracks := json.ShuffleTracks(tracksToProcess)
-				success, tracks = MakeTracks(shuffleTracks, specify_ms)
+				success, tracks = commontrack.MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
 		c1 <- tracks
@@ -100,8 +101,8 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 
 		if !hasEnoughDuration {
 			log.Printf("[タイムアウト] GetTracks: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, マーケット=%s",
-				specify_ms/MillisecondsPerMinute,
-				totalAvailableDuration/MillisecondsPerMinute,
+				specify_ms/commontrack.MillisecondsPerMinute,
+				totalAvailableDuration/commontrack.MillisecondsPerMinute,
 				len(tracksToProcess),
 				finalTryCount,
 				market,
@@ -109,57 +110,15 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 			return nil, model.ErrNotEnoughTracks
 		} else {
 			log.Printf("[タイムアウト] GetTracks: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, マーケット=%s",
-				specify_ms/MillisecondsPerMinute,
+				specify_ms/commontrack.MillisecondsPerMinute,
 				len(tracksToProcess),
-				totalAvailableDuration/MillisecondsPerMinute,
+				totalAvailableDuration/commontrack.MillisecondsPerMinute,
 				finalTryCount,
 				market,
 			)
 			return nil, model.ErrTimeoutCreatePlaylist
 		}
 	}
-}
-
-// MakeTracksは、指定された総再生時間を超過しないように、与えられた曲リストから曲を選択し、
-// 総再生時間を計算して返します。
-func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Track) {
-	var tracks []model.Track
-	var totalDuration int
-
-	// 全てのトラックを追加し、トラックの合計再生時間が指定された再生時間を超える場合は、ループを停止します。
-	for _, v := range allTracks {
-		tracks = append(tracks, v)
-		totalDuration += v.DurationMs
-		if totalDuration > totalPlayTimeMs {
-			break
-		}
-	}
-
-	// 最後に追加したトラックを削除します。
-	tracks = tracks[:len(tracks)-1]
-
-	// トラックの合計再生時間と指定された再生時間の差分を求めます。
-	totalDuration = 0
-	var remainingTime int
-	for _, v := range tracks {
-		totalDuration += v.DurationMs
-	}
-	remainingTime = totalPlayTimeMs - totalDuration
-
-	// 差分が15秒以内で、指定された再生時間が10分（600秒）以上の場合、
-	// 差分を埋めるためのトラックは必要ないと見なします。
-	if remainingTime == AllowanceMs && totalPlayTimeMs >= MinPlaylistDurationForAllowanceMs {
-		return true, tracks
-	}
-
-	// 差分を埋めるためのトラックを取得します。
-	var isTrackFound bool
-	getTrack := json.GetTrackByMsec(allTracks, remainingTime)
-	if len(getTrack) > 0 {
-		isTrackFound = true
-		tracks = append(tracks, getTrack...)
-	}
-	return isTrackFound, tracks
 }
 
 // 特定のISRCに基づいてトラックをフィルタリングする関数

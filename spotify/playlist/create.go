@@ -4,11 +4,12 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
-	pkgtrack "github.com/pp-develop/music-timer-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/spotify/track"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
@@ -26,7 +27,7 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 	// 1minute = 60000ms
-	specify_ms := json.Minute * pkgtrack.MillisecondsPerMinute
+	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
 
 	// セッションまたはJWTからユーザーIDを取得
 	userId, err := utils.GetUserID(c)
@@ -42,19 +43,19 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteTracks {
-		tracks, err = pkgtrack.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			log.Println(err)
 			return "", err
 		}
 	} else if len(json.ArtistIds) > 0 {
-		tracks, err = pkgtrack.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
 		if err != nil {
 			log.Println(err)
 			return "", err
 		}
 	} else {
-		tracks, err = pkgtrack.GetTracks(dbInstance, specify_ms, json.Market)
+		tracks, err = track.GetTracks(dbInstance, specify_ms, json.Market)
 		if err != nil {
 			log.Println(err)
 			return "", err

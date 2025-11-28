@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pp-develop/music-timer-api/pkg/playlist"
+	"github.com/pp-develop/music-timer-api/spotify/playlist"
 )
 
 // GetPlaylists returns the user's playlists

@@ -8,7 +8,7 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/track"
+	"github.com/pp-develop/music-timer-api/spotify/track"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
