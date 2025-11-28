@@ -32,43 +32,62 @@ func Create() *gin.Engine {
 
 // setupRoutes configures all API routes
 func setupRoutes(router *gin.Engine) {
-	// Health check
+	// Health check (non-Spotify specific)
 	router.GET("/health", handlers.HealthCheck)
 
-	// Web authentication endpoints
-	authWeb := router.Group("/auth/web")
+	// Spotify API endpoints
+	spotify := router.Group("/spotify")
 	{
-		authWeb.GET("/authz-url", handlers.GetAuthzURLWeb)
-		authWeb.GET("/callback", handlers.CallbackWeb)
-		authWeb.GET("/status", handlers.GetAuthStatusWeb)
-		authWeb.DELETE("/session", handlers.DeleteSession)
+		// Authentication endpoints
+		auth := spotify.Group("/auth")
+		{
+			// Web authentication
+			authWeb := auth.Group("/web")
+			{
+				authWeb.GET("/authz-url", handlers.GetAuthzURLWeb)
+				authWeb.GET("/callback", handlers.CallbackWeb)
+				authWeb.GET("/status", handlers.GetAuthStatusWeb)
+				authWeb.DELETE("/session", handlers.DeleteSession)
+			}
+
+			// Native authentication
+			authNative := auth.Group("/native")
+			{
+				authNative.GET("/authz-url", handlers.GetAuthzURLNative)
+				authNative.GET("/callback", handlers.CallbackNative)
+				authNative.GET("/status", handlers.GetAuthStatusNative)
+				authNative.POST("/refresh", handlers.RefreshTokenNative)
+			}
+		}
+
+		// Protected endpoints (require authentication)
+		spotify.Use(middleware.OptionalAuthMiddleware())
+
+		// Track endpoints
+		tracks := spotify.Group("/tracks")
+		{
+			tracks.POST("", handlers.SaveTracks)
+			tracks.DELETE("", handlers.DeleteTracks)
+			tracks.POST("/reset", handlers.ResetTracks)
+
+			// Track initialization endpoints
+			tracksInit := tracks.Group("/init")
+			{
+				tracksInit.POST("/favorites", handlers.InitFavoriteTracks)
+				tracksInit.POST("/followed-artists", handlers.InitFollowedArtistsTracks)
+			}
+		}
+
+		// Artist endpoints
+		spotify.GET("/artists", handlers.GetArtists)
+
+		// Playlist endpoints
+		playlists := spotify.Group("/playlists")
+		{
+			playlists.GET("", handlers.GetPlaylists)
+			playlists.POST("", handlers.CreatePlaylist)
+			playlists.DELETE("", handlers.DeletePlaylists)
+			playlists.POST("/guest", handlers.GestCreatePlaylist)
+		}
 	}
-
-	// Native authentication endpoints
-	authNative := router.Group("/auth/native")
-	{
-		authNative.GET("/authz-url", handlers.GetAuthzURLNative)
-		authNative.GET("/callback", handlers.CallbackNative)
-		authNative.GET("/status", handlers.GetAuthStatusNative)
-		authNative.POST("/refresh", handlers.RefreshTokenNative)
-	}
-
-	// Protected endpoints (support both session and JWT auth)
-	router.Use(middleware.OptionalAuthMiddleware())
-
-	// Track endpoints
-	router.POST("/tracks", handlers.SaveTracks)
-	router.POST("/tracks/init/favorites", handlers.InitFavoriteTracks)
-	router.POST("/tracks/init/followed-artists", handlers.InitFollowedArtistsTracks)
-	router.POST("/reset-tracks", handlers.ResetTracks)
-	router.DELETE("/tracks", handlers.DeleteTracks)
-
-	// Artist endpoints
-	router.GET("/artists", handlers.GetArtists)
-
-	// Playlist endpoints
-	router.GET("/playlist", handlers.GetPlaylists)
-	router.POST("/playlist", handlers.CreatePlaylist)
-	router.DELETE("/playlist", handlers.DeletePlaylists)
-	router.POST("/gest-playlist", handlers.GestCreatePlaylist)
 }
