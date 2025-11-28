@@ -99,8 +99,11 @@ func handleError(c *gin.Context, err error) {
 	}
 
 	// セッション/認証エラー
+	// JWT/セッション認証を問わず、401 Unauthorized で統一
 	if errors.Is(err, model.ErrFailedGetSession) {
-		c.Status(http.StatusSeeOther)
+		c.JSON(http.StatusUnauthorized, model.ErrorResponse{
+			Code: model.CodeTokenExpired,
+		})
 		return
 	}
 

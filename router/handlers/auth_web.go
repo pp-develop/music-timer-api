@@ -46,13 +46,19 @@ func GetAuthStatusWeb(c *gin.Context) {
 	user, err := auth.Auth(c)
 
 	if err == model.ErrFailedGetSession {
-		logger.LogError(err)
-		c.Status(http.StatusSeeOther)
+		// Return unauthenticated status as a successful response
+		c.JSON(http.StatusOK, gin.H{
+			"authenticated": false,
+			"reason":        "session_expired",
+		})
 	} else if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
 	} else {
-		c.JSON(http.StatusOK, gin.H{"country": user.Country})
+		c.JSON(http.StatusOK, gin.H{
+			"authenticated": true,
+			"country":       user.Country,
+		})
 	}
 }
 
