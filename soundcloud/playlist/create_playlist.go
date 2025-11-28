@@ -30,13 +30,15 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
+	log.Printf("[PLAYLIST-CREATE] Creating playlist: duration=%d minutes", json.Minute)
+
 	// Convert minutes to milliseconds
 	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
 
 	// Get authenticated user
 	user, err := auth.GetSoundCloudAuthStatus(c)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Auth failed: %v", err)
+		log.Printf("[PLAYLIST-CREATE] Authentication failed: %v", err)
 		return "", err
 	}
 
@@ -54,18 +56,8 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	}
 
 	if len(tracks) == 0 {
-		log.Println("[PLAYLIST-CREATE] ERROR: No tracks returned!")
+		log.Println("[PLAYLIST-CREATE] No tracks available for playlist creation")
 		return "", model.ErrNotEnoughTracks
-	}
-
-	// Create playlist on SoundCloud
-	client := soundcloud.NewClient()
-	title := fmt.Sprintf("Playlist %d min", json.Minute)
-	description := fmt.Sprintf("Generated playlist for %d minutes", json.Minute)
-
-	playlist, err := client.CreatePlaylist(user.AccessToken, title, description)
-	if err != nil {
-		return "", err
 	}
 
 	// Extract track IDs
@@ -74,10 +66,14 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		trackIDs[i] = track.ID
 	}
 
-	// Add tracks to playlist
-	err = client.AddTracksToPlaylist(user.AccessToken, playlist.ID, trackIDs)
+	// Create playlist on SoundCloud with tracks included
+	client := soundcloud.NewClient()
+	title := fmt.Sprintf("Playlist %d min", json.Minute)
+	description := fmt.Sprintf("Generated playlist for %d minutes", json.Minute)
+
+	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to add tracks: %v", err)
+		log.Printf("[PLAYLIST-CREATE] Failed to create playlist: %v", err)
 		return "", err
 	}
 
@@ -85,15 +81,17 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	playlistID := strconv.Itoa(playlist.ID)
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
+		log.Printf("[PLAYLIST-CREATE] Failed to save playlist to database: %v", err)
 		return "", err
 	}
 
 	// Increment playlist count
 	err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id)
 	if err != nil {
-		log.Printf("Failed to increment playlist count: %v", err)
+		log.Printf("[PLAYLIST-CREATE] Failed to increment playlist count: %v", err)
 	}
 
+	log.Printf("[PLAYLIST-CREATE] Playlist created successfully: id=%s, tracks=%d", playlistID, len(trackIDs))
 	return playlistID, nil
 }
 

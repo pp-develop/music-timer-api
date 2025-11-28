@@ -159,79 +159,149 @@ func (c *Client) GetMe(accessToken string) (*SCUser, error) {
 
 // SoundCloud Track
 type SCTrack struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
-	Duration    int    `json:"duration"` // in milliseconds
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
+	Duration     int    `json:"duration"` // in milliseconds
 	PermalinkURL string `json:"permalink_url"`
-	User        struct {
+	User         struct {
 		ID       int    `json:"id"`
 		Username string `json:"username"`
 	} `json:"user"`
 }
 
-// Get user's favorite tracks
-func (c *Client) GetFavorites(accessToken string, limit int) ([]model.Track, error) {
-	url := fmt.Sprintf("%s/me/favorites?limit=%d", SoundCloudAPIBase, limit)
+// Get user's favorite tracks with pagination support
+// Fetches all favorite tracks from SoundCloud
+func (c *Client) GetFavorites(accessToken string) ([]model.Track, error) {
+	var allTracks []model.Track
+	trackIDSet := make(map[string]bool) // To detect duplicates
+	pageCount := 0
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	// Initial URL with linked_partitioning (limit=50 is SoundCloud recommended)
+	nextURL := fmt.Sprintf("%s/me/likes/tracks?linked_partitioning=true&limit=50",
+		SoundCloudAPIBase)
+
+	log.Printf("[SC-API] Starting to fetch all favorite tracks")
+
+	for nextURL != "" {
+		pageCount++
+		log.Printf("[SC-API] Fetching page %d", pageCount)
+
+		req, err := http.NewRequest("GET", nextURL, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
+
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("get favorites failed: %s", string(body))
+		}
+
+		// Read response body
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse paginated response
+		var paginatedResp struct {
+			Collection []SCTrack `json:"collection"`
+			NextHref   string    `json:"next_href"`
+		}
+
+		if err := json.Unmarshal(body, &paginatedResp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+		}
+
+		// If no tracks returned, we've reached the end
+		if len(paginatedResp.Collection) == 0 {
+			break
+		}
+
+		// Convert to model.Track and append (skip duplicates)
+		prevCount := len(allTracks)
+		for _, scTrack := range paginatedResp.Collection {
+			trackID := fmt.Sprintf("%d", scTrack.ID)
+			if trackIDSet[trackID] {
+				continue
+			}
+			trackIDSet[trackID] = true
+			allTracks = append(allTracks, model.Track{
+				Uri:        scTrack.PermalinkURL,
+				DurationMs: scTrack.Duration,
+				Isrc:       "",
+				ArtistsId:  []string{fmt.Sprintf("%d", scTrack.User.ID)},
+				ID:         trackID,
+			})
+		}
+
+		// Update nextURL for next iteration
+		nextURL = paginatedResp.NextHref
+
+		if nextURL == "" {
+			log.Printf("[SC-API] Reached last page (next_href is empty)")
+		}
+
+		// If no new tracks were added, all were duplicates - stop
+		if len(allTracks) == prevCount {
+			log.Printf("[SC-API] All tracks in batch were duplicates, stopping")
+			break
+		}
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("get favorites failed: %s", string(body))
-	}
-
-	var scTracks []SCTrack
-	if err := json.NewDecoder(resp.Body).Decode(&scTracks); err != nil {
-		return nil, err
-	}
-
-	// Convert to model.Track
-	tracks := make([]model.Track, 0, len(scTracks))
-	for _, scTrack := range scTracks {
-		tracks = append(tracks, model.Track{
-			Uri:        scTrack.PermalinkURL,
-			DurationMs: scTrack.Duration,
-			Isrc:       "",
-			ArtistsId:  []string{fmt.Sprintf("%d", scTrack.User.ID)},
-			ID:         fmt.Sprintf("%d", scTrack.ID),
-		})
-	}
-
-	return tracks, nil
+	log.Printf("[SC-API] Successfully fetched %d favorite tracks in %d pages", len(allTracks), pageCount)
+	return allTracks, nil
 }
 
 // SoundCloud Playlist
 type SCPlaylist struct {
-	ID          int    `json:"id"`
-	Title       string `json:"title"`
+	ID           int    `json:"id"`
+	Title        string `json:"title"`
 	PermalinkURL string `json:"permalink_url"`
 }
 
-// Create playlist
-func (c *Client) CreatePlaylist(accessToken, title, description string) (*SCPlaylist, error) {
-	data := url.Values{}
-	data.Set("playlist[title]", title)
-	data.Set("playlist[description]", description)
-	data.Set("playlist[sharing]", "public")
+// Create playlist with tracks
+func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs []string) (*SCPlaylist, error) {
+	// Convert track IDs to the format required by SoundCloud API
+	tracks := make([]map[string]interface{}, len(trackIDs))
+	for i, trackID := range trackIDs {
+		tracks[i] = map[string]interface{}{
+			"id": trackID,
+		}
+	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/playlists", SoundCloudAPIBase), strings.NewReader(data.Encode()))
+	// Build JSON request body
+	playlistData := map[string]interface{}{
+		"playlist": map[string]interface{}{
+			"title":       title,
+			"description": description,
+			"sharing":     "public",
+			"tracks":      tracks,
+		},
+	}
+
+	jsonData, err := json.Marshal(playlistData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal playlist data: %v", err)
+	}
+
+	log.Printf("[SC-API] Creating playlist with %d tracks, payload: %s", len(trackIDs), string(jsonData))
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/playlists", SoundCloudAPIBase), strings.NewReader(string(jsonData)))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -239,50 +309,19 @@ func (c *Client) CreatePlaylist(accessToken, title, description string) (*SCPlay
 	}
 	defer resp.Body.Close()
 
+	// Read response body for debugging
+	body, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("create playlist failed: %s", string(body))
+		log.Printf("[SC-API] Create playlist failed: status=%d, body=%s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("create playlist failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
 	var playlist SCPlaylist
-	if err := json.NewDecoder(resp.Body).Decode(&playlist); err != nil {
-		return nil, err
+	if err := json.Unmarshal(body, &playlist); err != nil {
+		return nil, fmt.Errorf("failed to decode playlist response: %v", err)
 	}
 
+	log.Printf("[SC-API] Playlist created: id=%d, tracks=%d", playlist.ID, len(trackIDs))
 	return &playlist, nil
-}
-
-// Add tracks to playlist
-func (c *Client) AddTracksToPlaylist(accessToken string, playlistID int, trackIDs []string) error {
-	data := url.Values{}
-	for i, trackID := range trackIDs {
-		// Use track ID instead of permalink URL
-		data.Add(fmt.Sprintf("playlist[tracks][%d][id]", i), trackID)
-	}
-
-	apiURL := fmt.Sprintf("%s/playlists/%d", SoundCloudAPIBase, playlistID)
-
-	req, err := http.NewRequest("PUT", apiURL, strings.NewReader(data.Encode()))
-	if err != nil {
-		log.Printf("[SC-API] Failed to create request: %v", err)
-		return err
-	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		log.Printf("[SC-API] HTTP request failed: %v", err)
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("add tracks failed (status %d): %s", resp.StatusCode, string(body))
-	}
-
-	return nil
 }

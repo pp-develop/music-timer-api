@@ -1,6 +1,8 @@
 package playlist
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/soundcloud"
 	"github.com/pp-develop/music-timer-api/database"
@@ -24,10 +26,12 @@ func SaveFavoriteTracks(c *gin.Context) error {
 
 	// Get favorites from SoundCloud API
 	client := soundcloud.NewClient()
-	tracks, err := client.GetFavorites(user.AccessToken, 200) // Limit to 200 tracks
+	tracks, err := client.GetFavorites(user.AccessToken)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("[SAVE-FAVORITE-TRACKS] Retrieved %d favorite tracks from SoundCloud", len(tracks))
 
 	// Clear existing favorites and save new ones
 	err = database.ClearSoundCloudFavoriteTracks(db, user.Id)
