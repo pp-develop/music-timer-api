@@ -7,8 +7,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/router/handlers"
-	spotifyHandlers "github.com/pp-develop/music-timer-api/spotify/handlers"
 	soundcloudHandlers "github.com/pp-develop/music-timer-api/soundcloud/handlers"
+	spotifyHandlers "github.com/pp-develop/music-timer-api/spotify/handlers"
 )
 
 // Create initializes and configures the Gin router
@@ -121,8 +121,9 @@ func setupRoutes(router *gin.Engine) {
 		playlists := soundcloud.Group("/playlists")
 		{
 			playlists.GET("", soundcloudHandlers.GetPlaylistsSoundCloud)
-			playlists.POST("", soundcloudHandlers.CreatePlaylistSoundCloud)
 			playlists.DELETE("", soundcloudHandlers.DeletePlaylistsSoundCloud)
+			playlists.POST("/from-favorites", soundcloudHandlers.CreatePlaylistFromFavorites)
+			playlists.POST("/from-artists", soundcloudHandlers.CreatePlaylistFromArtists)
 		}
 	}
 }

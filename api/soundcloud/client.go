@@ -261,6 +261,84 @@ func (c *Client) GetFavorites(accessToken string) ([]model.Track, error) {
 	return allTracks, nil
 }
 
+// Get tracks by artist (user) ID with pagination support
+func (c *Client) GetUserTracks(accessToken string, userID string) ([]model.Track, error) {
+	var allTracks []model.Track
+	trackIDSet := make(map[string]bool)
+	pageCount := 0
+
+	nextURL := fmt.Sprintf("%s/users/%s/tracks?linked_partitioning=true&limit=50",
+		SoundCloudAPIBase, userID)
+
+	log.Printf("[SC-API] Starting to fetch tracks for user %s", userID)
+
+	for nextURL != "" {
+		pageCount++
+
+		req, err := http.NewRequest("GET", nextURL, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
+
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("get user tracks failed: %s", string(body))
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		var paginatedResp struct {
+			Collection []SCTrack `json:"collection"`
+			NextHref   string    `json:"next_href"`
+		}
+
+		if err := json.Unmarshal(body, &paginatedResp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+		}
+
+		if len(paginatedResp.Collection) == 0 {
+			break
+		}
+
+		prevCount := len(allTracks)
+		for _, scTrack := range paginatedResp.Collection {
+			trackID := fmt.Sprintf("%d", scTrack.ID)
+			if trackIDSet[trackID] {
+				continue
+			}
+			trackIDSet[trackID] = true
+			allTracks = append(allTracks, model.Track{
+				Uri:        scTrack.PermalinkURL,
+				DurationMs: scTrack.Duration,
+				Isrc:       "",
+				ArtistsId:  []string{fmt.Sprintf("%d", scTrack.User.ID)},
+				ID:         trackID,
+			})
+		}
+
+		nextURL = paginatedResp.NextHref
+
+		if len(allTracks) == prevCount {
+			break
+		}
+	}
+
+	log.Printf("[SC-API] Successfully fetched %d tracks for user %s in %d pages", len(allTracks), userID, pageCount)
+	return allTracks, nil
+}
+
 // SoundCloud Playlist
 type SCPlaylist struct {
 	ID           int    `json:"id"`

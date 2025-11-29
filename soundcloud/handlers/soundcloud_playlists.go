@@ -11,11 +11,23 @@ import (
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
-// CreatePlaylistSoundCloud creates a SoundCloud playlist
-func CreatePlaylistSoundCloud(c *gin.Context) {
-	playlistId, err := playlist.CreatePlaylist(c)
+// CreatePlaylistFromFavorites creates a SoundCloud playlist from user's favorite tracks
+func CreatePlaylistFromFavorites(c *gin.Context) {
+	playlistId, err := playlist.CreatePlaylistFromFavorites(c)
 	if err != nil {
-		log.Printf("[HANDLER] Error creating playlist: %v", err)
+		log.Printf("[HANDLER] Error creating playlist from favorites: %v", err)
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"playlist_id": playlistId})
+}
+
+// CreatePlaylistFromArtists creates a SoundCloud playlist from specified artists
+func CreatePlaylistFromArtists(c *gin.Context) {
+	playlistId, err := playlist.CreatePlaylistFromArtists(c)
+	if err != nil {
+		log.Printf("[HANDLER] Error creating playlist from artists: %v", err)
 		c.Error(err)
 		return
 	}

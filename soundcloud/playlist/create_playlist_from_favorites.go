@@ -10,53 +10,53 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/api/soundcloud"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/soundcloud/auth"
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
-type CreatePlaylistRequest struct {
-	Minute int `json:"minute"`
+type CreatePlaylistFromFavoritesRequest struct {
+	Minute int `json:"minute" binding:"required,min=1"`
 }
 
-// CreatePlaylist creates a SoundCloud playlist with specified duration
-func CreatePlaylist(c *gin.Context) (string, error) {
-	var json CreatePlaylistRequest
+// CreatePlaylistFromFavorites creates a SoundCloud playlist from user's favorite tracks
+func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
+	var json CreatePlaylistFromFavoritesRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to bind JSON: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to bind JSON: %v", err)
 		return "", err
 	}
 
-	log.Printf("[PLAYLIST-CREATE] Creating playlist: duration=%d minutes", json.Minute)
+	log.Printf("[PLAYLIST-FROM-FAVORITES] Creating playlist: duration=%d minutes", json.Minute)
 
 	// Convert minutes to milliseconds
-	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
+	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
 
 	// Get authenticated user
 	user, err := auth.GetSoundCloudAuthStatus(c)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Authentication failed: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Authentication failed: %v", err)
 		return "", err
 	}
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		log.Println("[PLAYLIST-CREATE] Failed to get DB instance")
+		log.Println("[PLAYLIST-FROM-FAVORITES] Failed to get DB instance")
 		return "", model.ErrFailedGetDB
 	}
 
 	// Get favorite tracks from database
-	tracks, err := getSoundCloudTracks(dbInstance, specify_ms, user.Id)
+	tracks, err := getTracksFromFavorites(dbInstance, specifyMs, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to get tracks: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to get tracks: %v", err)
 		return "", err
 	}
 
 	if len(tracks) == 0 {
-		log.Println("[PLAYLIST-CREATE] No tracks available for playlist creation")
+		log.Println("[PLAYLIST-FROM-FAVORITES] No tracks available for playlist creation")
 		return "", model.ErrNotEnoughTracks
 	}
 
@@ -69,11 +69,11 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// Create playlist on SoundCloud with tracks included
 	client := soundcloud.NewClient()
 	title := fmt.Sprintf("Playlist %d min", json.Minute)
-	description := fmt.Sprintf("Generated playlist for %d minutes", json.Minute)
+	description := fmt.Sprintf("Generated playlist for %d minutes from favorites", json.Minute)
 
 	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to create playlist: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to create playlist: %v", err)
 		return "", err
 	}
 
@@ -81,31 +81,31 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	playlistID := strconv.Itoa(playlist.ID)
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to save playlist to database: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to save playlist to database: %v", err)
 		return "", err
 	}
 
 	// Increment playlist count
 	err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-CREATE] Failed to increment playlist count: %v", err)
+		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to increment playlist count: %v", err)
 	}
 
-	log.Printf("[PLAYLIST-CREATE] Playlist created successfully: id=%s, tracks=%d", playlistID, len(trackIDs))
+	log.Printf("[PLAYLIST-FROM-FAVORITES] Playlist created successfully: id=%s, tracks=%d", playlistID, len(trackIDs))
 	return playlistID, nil
 }
 
-// getSoundCloudTracks retrieves and processes tracks using existing MakeTracks logic with retry mechanism
-func getSoundCloudTracks(db *sql.DB, specify_ms int, userId string) ([]model.Track, error) {
+// getTracksFromFavorites retrieves and processes favorite tracks with retry mechanism
+func getTracksFromFavorites(db *sql.DB, specifyMs int, userId string) ([]model.Track, error) {
 	// Get favorite tracks from database
 	saveTracks, err := database.GetSoundCloudFavoriteTracks(db, userId)
 	if err != nil {
-		log.Printf("[GET-SC-TRACKS] Database error: %v", err)
+		log.Printf("[GET-TRACKS-FROM-FAVORITES] Database error: %v", err)
 		return nil, err
 	}
 
 	if len(saveTracks) == 0 {
-		log.Println("[GET-SC-TRACKS] ERROR: No favorite tracks in database!")
+		log.Println("[GET-TRACKS-FROM-FAVORITES] ERROR: No favorite tracks in database!")
 		return nil, model.ErrNoFavoriteTracks
 	}
 
@@ -115,7 +115,7 @@ func getSoundCloudTracks(db *sql.DB, specify_ms int, userId string) ([]model.Tra
 		totalDuration += track.DurationMs
 	}
 
-	// Phase: Retry mechanism with timeout (same as Spotify version)
+	// Retry mechanism with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(commontrack.DefaultTimeoutSeconds)*time.Second)
 	defer cancel()
 
@@ -142,7 +142,7 @@ func getSoundCloudTracks(db *sql.DB, specify_ms int, userId string) ([]model.Tra
 			default:
 				tryCount++
 				shuffled := shuffleTracks(saveTracks)
-				success, tracks = commontrack.MakeTracks(shuffled, specify_ms)
+				success, tracks = commontrack.MakeTracks(shuffled, specifyMs)
 			}
 		}
 		tracksChan <- tracks
@@ -158,19 +158,19 @@ func getSoundCloudTracks(db *sql.DB, specify_ms int, userId string) ([]model.Tra
 	case <-ctx.Done():
 		finalTryCount := <-tryCountChan
 
-		hasEnoughDuration := totalDuration >= specify_ms
+		hasEnoughDuration := totalDuration >= specifyMs
 
 		if !hasEnoughDuration {
-			log.Printf("[タイムアウト] GetSoundCloudTracks: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d",
-				specify_ms/commontrack.MillisecondsPerMinute,
+			log.Printf("[タイムアウト] GetTracksFromFavorites: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d",
+				specifyMs/commontrack.MillisecondsPerMinute,
 				totalDuration/commontrack.MillisecondsPerMinute,
 				len(saveTracks),
 				finalTryCount,
 			)
 			return nil, model.ErrNotEnoughTracks
 		} else {
-			log.Printf("[タイムアウト] GetSoundCloudTracks: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d",
-				specify_ms/commontrack.MillisecondsPerMinute,
+			log.Printf("[タイムアウト] GetTracksFromFavorites: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d",
+				specifyMs/commontrack.MillisecondsPerMinute,
 				len(saveTracks),
 				totalDuration/commontrack.MillisecondsPerMinute,
 				finalTryCount,
@@ -185,7 +185,6 @@ func shuffleTracks(tracks []model.Track) []model.Track {
 	shuffled := make([]model.Track, len(tracks))
 	copy(shuffled, tracks)
 
-	// Use rand package for shuffling
 	for i := len(shuffled) - 1; i > 0; i-- {
 		j := rand.Intn(i + 1)
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
