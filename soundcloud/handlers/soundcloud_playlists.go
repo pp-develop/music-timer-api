@@ -20,7 +20,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"playlist_id": playlistId})
+	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId})
 }
 
 // CreatePlaylistFromArtists creates a SoundCloud playlist from specified artists
@@ -32,7 +32,7 @@ func CreatePlaylistFromArtists(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"playlist_id": playlistId})
+	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId})
 }
 
 // GetPlaylistsSoundCloud retrieves user's SoundCloud playlists

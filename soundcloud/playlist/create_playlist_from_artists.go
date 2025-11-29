@@ -35,7 +35,7 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
 	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
 
 	// Get authenticated user
-	user, err := auth.GetSoundCloudAuthStatus(c)
+	user, err := auth.GetAuth(c)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Authentication failed: %v", err)
 		return "", err

@@ -14,7 +14,7 @@ import (
 // SaveFavoriteTracks saves user's favorite tracks from SoundCloud to database
 func SaveFavoriteTracks(c *gin.Context) error {
 	// Get authenticated user
-	user, err := auth.GetSoundCloudAuthStatus(c)
+	user, err := auth.GetAuth(c)
 	if err != nil {
 		return err
 	}

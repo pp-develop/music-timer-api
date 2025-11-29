@@ -99,10 +99,23 @@ func setupRoutes(router *gin.Engine) {
 		// Authentication endpoints
 		auth := soundcloud.Group("/auth")
 		{
-			auth.GET("/authz-url", soundcloudHandlers.GetAuthzURLSoundCloud)
-			auth.GET("/callback", soundcloudHandlers.CallbackSoundCloud)
-			auth.GET("/status", soundcloudHandlers.GetAuthStatusSoundCloud)
-			auth.DELETE("/session", soundcloudHandlers.DeleteSessionSoundCloud)
+			// Web authentication
+			authWeb := auth.Group("/web")
+			{
+				authWeb.GET("/authz-url", soundcloudHandlers.GetAuthzURLWeb)
+				authWeb.GET("/callback", soundcloudHandlers.CallbackWeb)
+				authWeb.GET("/status", soundcloudHandlers.GetAuthStatusWeb)
+				authWeb.DELETE("/session", soundcloudHandlers.DeleteSessionWeb)
+			}
+
+			// Native authentication
+			authNative := auth.Group("/native")
+			{
+				authNative.GET("/authz-url", soundcloudHandlers.GetAuthzURLNative)
+				authNative.GET("/callback", soundcloudHandlers.CallbackNative)
+				authNative.GET("/status", soundcloudHandlers.GetAuthStatusNative)
+				authNative.POST("/refresh", soundcloudHandlers.RefreshTokenNative)
+			}
 		}
 
 		// Protected endpoints (require authentication)

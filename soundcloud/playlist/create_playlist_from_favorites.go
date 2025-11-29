@@ -36,7 +36,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
 	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
 
 	// Get authenticated user
-	user, err := auth.GetSoundCloudAuthStatus(c)
+	user, err := auth.GetAuth(c)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Authentication failed: %v", err)
 		return "", err
