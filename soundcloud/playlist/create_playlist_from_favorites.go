@@ -23,11 +23,12 @@ type CreatePlaylistFromFavoritesRequest struct {
 }
 
 // CreatePlaylistFromFavorites creates a SoundCloud playlist from user's favorite tracks
-func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
+// Returns playlistID, secretToken, and error
+func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 	var json CreatePlaylistFromFavoritesRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to bind JSON: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	log.Printf("[PLAYLIST-FROM-FAVORITES] Creating playlist: duration=%d minutes", json.Minute)
@@ -39,25 +40,25 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
 	user, err := auth.GetAuth(c)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Authentication failed: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
 		log.Println("[PLAYLIST-FROM-FAVORITES] Failed to get DB instance")
-		return "", model.ErrFailedGetDB
+		return "", "", model.ErrFailedGetDB
 	}
 
 	// Get favorite tracks from database
 	tracks, err := getTracksFromFavorites(dbInstance, specifyMs, user.Id)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to get tracks: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	if len(tracks) == 0 {
 		log.Println("[PLAYLIST-FROM-FAVORITES] No tracks available for playlist creation")
-		return "", model.ErrNotEnoughTracks
+		return "", "", model.ErrNotEnoughTracks
 	}
 
 	// Extract track IDs
@@ -74,7 +75,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
 	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to create playlist: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	// Save playlist to database
@@ -82,7 +83,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to save playlist to database: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	// Increment playlist count
@@ -91,8 +92,8 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, error) {
 		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to increment playlist count: %v", err)
 	}
 
-	log.Printf("[PLAYLIST-FROM-FAVORITES] Playlist created successfully: id=%s, tracks=%d", playlistID, len(trackIDs))
-	return playlistID, nil
+	log.Printf("[PLAYLIST-FROM-FAVORITES] Playlist created successfully: id=%s, secret_token=%s, tracks=%d", playlistID, playlist.SecretToken, len(trackIDs))
+	return playlistID, playlist.SecretToken, nil
 }
 
 // getTracksFromFavorites retrieves and processes favorite tracks with retry mechanism

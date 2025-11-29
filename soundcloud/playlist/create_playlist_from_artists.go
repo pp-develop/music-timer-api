@@ -22,11 +22,12 @@ type CreatePlaylistFromArtistsRequest struct {
 }
 
 // CreatePlaylistFromArtists creates a SoundCloud playlist from specified artists' tracks
-func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
+// Returns playlistID, secretToken, and error
+func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 	var json CreatePlaylistFromArtistsRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to bind JSON: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	log.Printf("[PLAYLIST-FROM-ARTISTS] Creating playlist: duration=%d minutes, artists=%v", json.Minute, json.ArtistIds)
@@ -38,25 +39,25 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
 	user, err := auth.GetAuth(c)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Authentication failed: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
 		log.Println("[PLAYLIST-FROM-ARTISTS] Failed to get DB instance")
-		return "", model.ErrFailedGetDB
+		return "", "", model.ErrFailedGetDB
 	}
 
 	// Get tracks from specified artists
 	tracks, err := getTracksFromArtists(user.AccessToken, specifyMs, json.ArtistIds)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to get tracks: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	if len(tracks) == 0 {
 		log.Println("[PLAYLIST-FROM-ARTISTS] No tracks available for playlist creation")
-		return "", model.ErrNotEnoughTracks
+		return "", "", model.ErrNotEnoughTracks
 	}
 
 	// Extract track IDs
@@ -73,7 +74,7 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
 	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to create playlist: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	// Save playlist to database
@@ -81,7 +82,7 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to save playlist to database: %v", err)
-		return "", err
+		return "", "", err
 	}
 
 	// Increment playlist count
@@ -90,8 +91,8 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
 		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to increment playlist count: %v", err)
 	}
 
-	log.Printf("[PLAYLIST-FROM-ARTISTS] Playlist created successfully: id=%s, tracks=%d", playlistID, len(trackIDs))
-	return playlistID, nil
+	log.Printf("[PLAYLIST-FROM-ARTISTS] Playlist created successfully: id=%s, secret_token=%s, tracks=%d", playlistID, playlist.SecretToken, len(trackIDs))
+	return playlistID, playlist.SecretToken, nil
 }
 
 // getTracksFromArtists fetches tracks from all specified artists and selects tracks to match duration

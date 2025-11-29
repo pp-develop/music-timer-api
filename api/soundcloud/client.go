@@ -344,6 +344,7 @@ type SCPlaylist struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
 	PermalinkURL string `json:"permalink_url"`
+	SecretToken  string `json:"secret_token"`
 }
 
 // Create playlist with tracks

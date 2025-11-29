@@ -13,26 +13,26 @@ import (
 
 // CreatePlaylistFromFavorites creates a SoundCloud playlist from user's favorite tracks
 func CreatePlaylistFromFavorites(c *gin.Context) {
-	playlistId, err := playlist.CreatePlaylistFromFavorites(c)
+	playlistId, secretToken, err := playlist.CreatePlaylistFromFavorites(c)
 	if err != nil {
 		log.Printf("[HANDLER] Error creating playlist from favorites: %v", err)
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId})
+	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId, "secret_token": secretToken})
 }
 
 // CreatePlaylistFromArtists creates a SoundCloud playlist from specified artists
 func CreatePlaylistFromArtists(c *gin.Context) {
-	playlistId, err := playlist.CreatePlaylistFromArtists(c)
+	playlistId, secretToken, err := playlist.CreatePlaylistFromArtists(c)
 	if err != nil {
 		log.Printf("[HANDLER] Error creating playlist from artists: %v", err)
 		c.Error(err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId})
+	c.JSON(http.StatusCreated, gin.H{"playlist_id": playlistId, "secret_token": secretToken})
 }
 
 // GetPlaylistsSoundCloud retrieves user's SoundCloud playlists
