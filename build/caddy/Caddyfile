@@ -1,0 +1,4 @@
+localhost {
+	tls /etc/caddy/certs/localhost.pem /etc/caddy/certs/localhost-key.pem
+	reverse_proxy app:8080
+}
