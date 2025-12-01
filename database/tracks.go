@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"log"
-	"time"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
@@ -90,36 +89,6 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 		pageNumber++
 	}
 	return AllTracks, nil
-}
-
-func DeleteTracks(db *sql.DB) error {
-	const chunkSize = 100000
-	// 180日更新されてないデータを削除
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -180).Format("2006-01-02 15:04:05")
-	totalDeleted := 0
-
-	for {
-		query := `DELETE FROM spotify_tracks WHERE updated_at < $1 LIMIT $2`
-		result, err := db.Exec(query, thirtyDaysAgo, chunkSize)
-		if err != nil {
-			return err
-		}
-
-		// このバッチで削除された行数を取得
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-		totalDeleted += int(rowsAffected)
-
-		// もう削除すべき行がない場合、ループを抜ける
-		if rowsAffected == 0 {
-			break
-		}
-	}
-
-	log.Printf("Total %d rows deleted\n", totalDeleted)
-	return nil
 }
 
 func DeleteOldTracksIfOverLimit(db *sql.DB) error {

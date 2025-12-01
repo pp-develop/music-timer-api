@@ -56,7 +56,7 @@ func ResetTracks(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// DeleteTracks deletes tracks from the database
+// DeleteTracks deletes old tracks if over limit (180-day expiration is handled by CockroachDB Row-Level TTL)
 func DeleteTracks(c *gin.Context) {
 	db, ok := utils.GetDB(c)
 	if !ok {
@@ -64,12 +64,7 @@ func DeleteTracks(c *gin.Context) {
 		return
 	}
 
-	err := database.DeleteTracks(db)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	err = database.DeleteOldTracksIfOverLimit(db)
+	err := database.DeleteOldTracksIfOverLimit(db)
 	if err != nil {
 		c.Error(err)
 		return
