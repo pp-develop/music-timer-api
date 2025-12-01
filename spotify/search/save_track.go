@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/spotify"
@@ -20,6 +21,9 @@ var requestBody struct {
 }
 
 func SaveTracks(c *gin.Context, db *sql.DB) error {
+	start := time.Now()
+	log.Printf("[SaveTracks] Start - market: %s", Market)
+
 	c.BindJSON(&requestBody)
 	if requestBody.Market != "" {
 		Market = strings.ToUpper(requestBody.Market)
@@ -27,48 +31,34 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 
 	tracks, err := spotify.SearchTracks(Market)
 	if err != nil {
+		log.Printf("[SaveTracks] Error fetching from Spotify API: %v", err)
 		return err
 	}
+	log.Printf("[SaveTracks] Fetched %d tracks from Spotify API", len(tracks))
 
-	err = saveTracks(db, tracks, true)
+	savedCount, err := saveTracks(db, tracks, true)
 	if err != nil {
+		log.Printf("[SaveTracks] Error saving to DB: %v", err)
 		return err
 	}
 
-	log.Printf("Total number of tracks: %d\n", len(tracks))
+	log.Printf("[SaveTracks] Complete - fetched: %d, saved: %d, duration: %v", len(tracks), savedCount, time.Since(start))
 	return nil
 }
 
-func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, validate bool) error {
+func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, validate bool) (int, error) {
+	// バリデーション済みトラックをフィルタリング
+	validTracks := make([]spotifylibrary.FullTrack, 0, len(tracks))
 	for _, item := range tracks {
 		if validate && !validateTrack(item) {
 			continue
 		}
-		err := database.SaveTrack(db, item)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func SaveTracksForCLI(db *sql.DB, market string) error {
-	if market != "" {
-		Market = strings.ToUpper(market)
+		validTracks = append(validTracks, item)
 	}
 
-	tracks, err := spotify.SearchTracks(Market)
-	if err != nil {
-		return err
-	}
-
-	err = saveTracks(db, tracks, true)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Total number of tracks: %d\n", len(tracks))
-	return nil
+	// バッチ保存（1回のDB呼び出しで全件保存）
+	err := database.SaveTracksBatch(db, validTracks)
+	return len(validTracks), err
 }
 
 func validateTrack(track spotifylibrary.FullTrack) bool {

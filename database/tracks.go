@@ -2,39 +2,40 @@ package database
 
 import (
 	"database/sql"
-	"log"
-	"time"
+	"fmt"
+	"strings"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
 )
 
-func SaveTrack(db *sql.DB, track spotify.FullTrack) error {
-	_, err := db.Exec(`
-        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET
-            duration_ms = EXCLUDED.duration_ms,
-            isrc = EXCLUDED.isrc,
-            updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs["isrc"])
-	if err != nil {
-		return err
+// SaveTracksBatch saves multiple tracks in a single query (batch insert)
+func SaveTracksBatch(db *sql.DB, tracks []spotify.FullTrack) error {
+	if len(tracks) == 0 {
+		return nil
 	}
-	return nil
-}
 
-func SaveSimpleTrack(db *sql.DB, track *spotify.SimpleTrack) error {
-	_, err := db.Exec(`
-        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET
-            duration_ms = EXCLUDED.duration_ms,
-            isrc = EXCLUDED.isrc,
-            updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs.ISRC)
-	if err != nil {
-		return err
+	valueStrings := make([]string, 0, len(tracks))
+	valueArgs := make([]interface{}, 0, len(tracks)*3)
+
+	for i, track := range tracks {
+		offset := i * 3
+		valueStrings = append(valueStrings,
+			fmt.Sprintf("($%d, $%d, $%d, NOW(), NOW())", offset+1, offset+2, offset+3))
+		valueArgs = append(valueArgs, track.URI, track.Duration, track.ExternalIDs["isrc"])
 	}
-	return nil
+
+	query := fmt.Sprintf(`
+		INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
+		VALUES %s
+		ON CONFLICT (uri) DO UPDATE SET
+			duration_ms = EXCLUDED.duration_ms,
+			isrc = EXCLUDED.isrc,
+			updated_at = NOW()
+	`, strings.Join(valueStrings, ","))
+
+	_, err := db.Exec(query, valueArgs...)
+	return err
 }
 
 // ページ番号とページサイズに基づいてトラックを取得する関数
@@ -92,76 +93,3 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	return AllTracks, nil
 }
 
-func DeleteTracks(db *sql.DB) error {
-	const chunkSize = 100000
-	// 180日更新されてないデータを削除
-	thirtyDaysAgo := time.Now().AddDate(0, 0, -180).Format("2006-01-02 15:04:05")
-	totalDeleted := 0
-
-	for {
-		query := `DELETE FROM spotify_tracks WHERE updated_at < $1 LIMIT $2`
-		result, err := db.Exec(query, thirtyDaysAgo, chunkSize)
-		if err != nil {
-			return err
-		}
-
-		// このバッチで削除された行数を取得
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-		totalDeleted += int(rowsAffected)
-
-		// もう削除すべき行がない場合、ループを抜ける
-		if rowsAffected == 0 {
-			break
-		}
-	}
-
-	log.Printf("Total %d rows deleted\n", totalDeleted)
-	return nil
-}
-
-func DeleteOldTracksIfOverLimit(db *sql.DB) error {
-	const maxRows = 100000    // 10万行の上限
-	const deleteChunk = 10000 // 一度に削除する行数
-
-	// トラック数を取得するクエリ
-	var rowCount int
-	err := db.QueryRow("SELECT COUNT(*) FROM spotify_tracks").Scan(&rowCount)
-	if err != nil {
-		return err
-	}
-
-	// トラック数が10万行を超えているかチェック
-	if rowCount > maxRows {
-		log.Printf("Track count exceeds %d, proceeding with deletion of %d rows.\n", maxRows, deleteChunk)
-
-		// 古いデータから1万行削除
-		query := `
-            DELETE FROM spotify_tracks
-            WHERE ctid IN (
-                SELECT ctid
-                FROM spotify_tracks
-                ORDER BY updated_at ASC
-                LIMIT $1
-            )
-        `
-		result, err := db.Exec(query, deleteChunk)
-		if err != nil {
-			return err
-		}
-
-		// 削除された行数を取得
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-
-		log.Printf("%d rows deleted.\n", rowsAffected)
-	} else {
-		log.Printf("Track count is below the limit of %d rows, no deletion needed.\n", maxRows)
-	}
-
-	return nil
-}
