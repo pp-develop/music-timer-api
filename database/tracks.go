@@ -140,8 +140,8 @@ func DeleteOldTracksIfOverLimit(db *sql.DB) error {
 		// 古いデータから1万行削除
 		query := `
             DELETE FROM spotify_tracks
-            WHERE ctid IN (
-                SELECT ctid
+            WHERE uri IN (
+                SELECT uri
                 FROM spotify_tracks
                 ORDER BY updated_at ASC
                 LIMIT $1
