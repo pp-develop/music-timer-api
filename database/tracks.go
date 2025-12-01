@@ -2,37 +2,40 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
 )
 
-func SaveTrack(db *sql.DB, track spotify.FullTrack) error {
-	_, err := db.Exec(`
-        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET
-            duration_ms = EXCLUDED.duration_ms,
-            isrc = EXCLUDED.isrc,
-            updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs["isrc"])
-	if err != nil {
-		return err
+// SaveTracksBatch saves multiple tracks in a single query (batch insert)
+func SaveTracksBatch(db *sql.DB, tracks []spotify.FullTrack) error {
+	if len(tracks) == 0 {
+		return nil
 	}
-	return nil
-}
 
-func SaveSimpleTrack(db *sql.DB, track *spotify.SimpleTrack) error {
-	_, err := db.Exec(`
-        INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (uri) DO UPDATE SET
-            duration_ms = EXCLUDED.duration_ms,
-            isrc = EXCLUDED.isrc,
-            updated_at = NOW()`, track.URI, track.Duration, track.ExternalIDs.ISRC)
-	if err != nil {
-		return err
+	valueStrings := make([]string, 0, len(tracks))
+	valueArgs := make([]interface{}, 0, len(tracks)*3)
+
+	for i, track := range tracks {
+		offset := i * 3
+		valueStrings = append(valueStrings,
+			fmt.Sprintf("($%d, $%d, $%d, NOW(), NOW())", offset+1, offset+2, offset+3))
+		valueArgs = append(valueArgs, track.URI, track.Duration, track.ExternalIDs["isrc"])
 	}
-	return nil
+
+	query := fmt.Sprintf(`
+		INSERT INTO spotify_tracks (uri, duration_ms, isrc, created_at, updated_at)
+		VALUES %s
+		ON CONFLICT (uri) DO UPDATE SET
+			duration_ms = EXCLUDED.duration_ms,
+			isrc = EXCLUDED.isrc,
+			updated_at = NOW()
+	`, strings.Join(valueStrings, ","))
+
+	_, err := db.Exec(query, valueArgs...)
+	return err
 }
 
 // ページ番号とページサイズに基づいてトラックを取得する関数
