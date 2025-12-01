@@ -81,31 +81,29 @@ func exist() (bool, error) {
 		file, err := os.Open(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
-				// ファイルが存在しない場合
 				log.Printf("File does not exist: %s", filePath)
 				return false, nil
 			}
-			// その他のエラー
 			return false, err
 		}
-		defer file.Close()
 
 		var config struct {
 			Tracks []struct{} `json:"tracks"`
 		}
 
 		decoder := json.NewDecoder(file)
-		if err := decoder.Decode(&config); err != nil {
+		err = decoder.Decode(&config)
+		file.Close() // ループ内なのでdeferではなく即座にクローズ
+
+		if err != nil {
 			return false, err
 		}
 
 		if len(config.Tracks) == 0 {
-			// トラックが空の場合
 			log.Printf("Tracks are empty in file: %s", filePath)
 			return false, nil
 		}
 	}
-	// すべてのファイルが存在し、空でない
 	return true, nil
 }
 
