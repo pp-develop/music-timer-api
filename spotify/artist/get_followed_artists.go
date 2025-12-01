@@ -3,27 +3,16 @@ package artist
 import (
 	"github.com/gin-gonic/gin"
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
-	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/utils"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
 )
 
 // GetFollowedArtists は、Spotifyユーザーがフォローしたアーティストを取得します。
 func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
-	// セッションまたはJWTからユーザーIDを取得
-	userId, err := utils.GetUserID(c)
-	if err != nil {
-		return nil, err
-	}
-
-	dbInstance, ok := utils.GetDB(c)
-	if !ok {
-		return nil, model.ErrFailedGetDB
-	}
-
-	user, err := database.GetUser(dbInstance, userId)
+	// ユーザー情報を取得（Spotifyトークンの期限切れ時は自動リフレッシュ）
+	user, err := auth.GetUserWithValidToken(c)
 	if err != nil {
 		return nil, err
 	}

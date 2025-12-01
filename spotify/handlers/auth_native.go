@@ -54,13 +54,14 @@ func CallbackNative(c *gin.Context) {
 
 // GetAuthStatusNative returns the authentication status for native users
 func GetAuthStatusNative(c *gin.Context) {
-	user, err := auth.Auth(c)
+	// Native認証ではセッション保存不要なのでGetUserWithValidTokenを直接使用
+	user, err := auth.GetUserWithValidToken(c)
 
 	if err == model.ErrFailedGetSession {
-		// Return unauthenticated status as a successful response
+		// JWTが無効または期限切れ
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": false,
-			"reason":        "session_expired",
+			"reason":        "token_expired",
 		})
 	} else if err != nil {
 		logger.LogError(err)

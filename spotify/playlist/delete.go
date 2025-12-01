@@ -5,13 +5,14 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/utils"
 	sotifySdk "github.com/zmb3/spotify/v2"
 )
 
 func DeletePlaylists(c *gin.Context) error {
-	// セッションまたはJWTからユーザーIDを取得
-	userId, err := utils.GetUserID(c)
+	// ユーザー情報を取得（Spotifyトークンの期限切れ時は自動リフレッシュ）
+	user, err := auth.GetUserWithValidToken(c)
 	if err != nil {
 		return err
 	}
@@ -21,16 +22,11 @@ func DeletePlaylists(c *gin.Context) error {
 		return model.ErrFailedGetDB
 	}
 
-	playlists, err := database.GetAllPlaylists(dbInstance, userId)
+	playlists, err := database.GetAllPlaylists(dbInstance, user.Id)
 	if err != nil {
 		return err
 	} else if len(playlists) == 0 {
 		return model.ErrNotFoundPlaylist
-	}
-
-	user, err := database.GetUser(dbInstance, userId)
-	if err != nil {
-		return err
 	}
 
 	for _, item := range playlists {

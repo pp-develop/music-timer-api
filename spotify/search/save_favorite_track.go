@@ -5,6 +5,7 @@ import (
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/utils"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
@@ -12,8 +13,8 @@ import (
 
 // SaveFavoriteTracks は、ユーザーの「お気に入りトラック」をデータベースに保存します。
 func SaveFavoriteTracks(c *gin.Context) error {
-	// セッションまたはJWTからユーザーIDを取得
-	userId, err := utils.GetUserID(c)
+	// ユーザー情報を取得（Spotifyトークンの期限切れ時は自動リフレッシュ）
+	user, err := auth.GetUserWithValidToken(c)
 	if err != nil {
 		return err
 	}
@@ -21,11 +22,6 @@ func SaveFavoriteTracks(c *gin.Context) error {
 	db, ok := utils.GetDB(c)
 	if !ok {
 		return model.ErrFailedGetDB
-	}
-
-	user, err := database.GetUser(db, userId)
-	if err != nil {
-		return err
 	}
 
 	token := &oauth2.Token{
@@ -38,7 +34,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		return err
 	}
 
-	err = database.ClearFavoriteTracks(db, userId)
+	err = database.ClearFavoriteTracks(db, user.Id)
 	if err != nil {
 		return err
 	}
@@ -46,7 +42,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 	// トラック情報を保存
 	for _, item := range savedTracks {
 		track := convertToTrackFromSaved(&item)
-		err := database.AddFavoriteTrack(db, userId, track)
+		err := database.AddFavoriteTrack(db, user.Id, track)
 		if err != nil {
 			return err
 		}

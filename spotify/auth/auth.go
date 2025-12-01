@@ -26,6 +26,26 @@ import (
 //
 // 成功した場合はnilを返し、エラーが発生した場合はそのエラーを返します。
 func Auth(c *gin.Context) (model.User, error) {
+	// GetUserWithValidTokenを使用してユーザー情報を取得
+	user, err := GetUserWithValidToken(c)
+	if err != nil {
+		return user, err
+	}
+
+	// セッションの保存（Web認証用）
+	session := sessions.Default(c)
+	session.Set("userId", user.Id)
+	err = session.Save()
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+// GetUserWithValidToken はユーザー情報を取得し、Spotifyトークンが期限切れなら自動リフレッシュします。
+// Web認証とNative認証の両方で使用できる共通関数です。
+// セッション保存は行わないため、必要な場合は呼び出し側で行ってください。
+func GetUserWithValidToken(c *gin.Context) (model.User, error) {
 	var user model.User
 
 	// セッションまたはJWTからユーザーIDを取得
@@ -57,16 +77,12 @@ func Auth(c *gin.Context) (model.User, error) {
 		if err != nil {
 			return user, err
 		}
+
+		// メモリ上のユーザー情報も更新
+		user.AccessToken = token.AccessToken
+		user.TokenExpiration = int(token.Expiry.Unix())
 	}
 
-	// セッションの保存
-	session := sessions.Default(c)
-	session.Set("userId", user.Id)
-	session.Set("service", "spotify")
-	err = session.Save()
-	if err != nil {
-		return user, err
-	}
 	return user, nil
 }
 
