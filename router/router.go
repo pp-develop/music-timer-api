@@ -68,7 +68,6 @@ func setupRoutes(router *gin.Engine) {
 		tracks := spotify.Group("/tracks")
 		{
 			tracks.POST("", spotifyHandlers.SaveTracks)
-			tracks.DELETE("", spotifyHandlers.DeleteTracks)
 			tracks.POST("/reset", spotifyHandlers.ResetTracks)
 
 			// Track initialization endpoints

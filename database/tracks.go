@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"log"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
@@ -91,46 +90,3 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	return AllTracks, nil
 }
 
-func DeleteOldTracksIfOverLimit(db *sql.DB) error {
-	const maxRows = 100000    // 10万行の上限
-	const deleteChunk = 10000 // 一度に削除する行数
-
-	// トラック数を取得するクエリ
-	var rowCount int
-	err := db.QueryRow("SELECT COUNT(*) FROM spotify_tracks").Scan(&rowCount)
-	if err != nil {
-		return err
-	}
-
-	// トラック数が10万行を超えているかチェック
-	if rowCount > maxRows {
-		log.Printf("Track count exceeds %d, proceeding with deletion of %d rows.\n", maxRows, deleteChunk)
-
-		// 古いデータから1万行削除
-		query := `
-            DELETE FROM spotify_tracks
-            WHERE uri IN (
-                SELECT uri
-                FROM spotify_tracks
-                ORDER BY updated_at ASC
-                LIMIT $1
-            )
-        `
-		result, err := db.Exec(query, deleteChunk)
-		if err != nil {
-			return err
-		}
-
-		// 削除された行数を取得
-		rowsAffected, err := result.RowsAffected()
-		if err != nil {
-			return err
-		}
-
-		log.Printf("%d rows deleted.\n", rowsAffected)
-	} else {
-		log.Printf("Track count is below the limit of %d rows, no deletion needed.\n", maxRows)
-	}
-
-	return nil
-}
