@@ -12,6 +12,7 @@ import (
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/spotify/artist"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/utils"
 	"github.com/zmb3/spotify/v2"
 	"golang.org/x/oauth2"
@@ -25,8 +26,8 @@ const (
 var semaphore = make(chan struct{}, maxConcurrency)
 
 func SaveTracksFromFollowedArtists(c *gin.Context) error {
-	// セッションまたはJWTからユーザーIDを取得
-	userId, err := utils.GetUserID(c)
+	// ユーザー情報を取得（Spotifyトークンの期限切れ時は自動リフレッシュ）
+	user, err := auth.GetUserWithValidToken(c)
 	if err != nil {
 		return err
 	}
@@ -36,10 +37,6 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 		return model.ErrFailedGetDB
 	}
 
-	user, err := database.GetUser(db, userId)
-	if err != nil {
-		return err
-	}
 	token := &oauth2.Token{
 		AccessToken:  user.AccessToken,
 		RefreshToken: user.RefreshToken,

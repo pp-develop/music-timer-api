@@ -9,6 +9,7 @@ import (
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/spotify/track"
 	"github.com/pp-develop/music-timer-api/utils"
 )
@@ -29,8 +30,8 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// 1minute = 60000ms
 	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
 
-	// セッションまたはJWTからユーザーIDを取得
-	userId, err := utils.GetUserID(c)
+	// ユーザー情報を取得（Spotifyトークンの期限切れ時は自動リフレッシュ）
+	user, err := auth.GetUserWithValidToken(c)
 	if err != nil {
 		return "", err
 	}
@@ -43,13 +44,13 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	// DBからトラックを取得
 	var tracks []model.Track
 	if json.IncludeFavoriteTracks {
-		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, user.Id)
 		if err != nil {
 			log.Println(err)
 			return "", err
 		}
 	} else if len(json.ArtistIds) > 0 {
-		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, userId)
+		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, user.Id)
 		if err != nil {
 			log.Println(err)
 			return "", err
@@ -61,15 +62,10 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 			return "", err
 		}
 	}
-	
+
 	// トラックが見つからない場合のエラー
 	if len(tracks) == 0 {
 		return "", model.ErrNotEnoughTracks
-	}
-
-	user, err := database.GetUser(dbInstance, userId)
-	if err != nil {
-		return "", err
 	}
 
 	playlist, err := spotify.CreatePlaylist(user, specify_ms)
@@ -84,12 +80,12 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	err = database.SavePlaylist(dbInstance, playlist, userId)
+	err = database.SavePlaylist(dbInstance, playlist, user.Id)
 	if err != nil {
 		return "", err
 	}
 
-	err = database.IncrementPlaylistCount(dbInstance, userId)
+	err = database.IncrementPlaylistCount(dbInstance, user.Id)
 	if err != nil {
 		// return "", err
 	}
