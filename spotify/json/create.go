@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/database"
@@ -23,7 +24,60 @@ type TrackWithoutArtistsId struct {
 const baseDirectory = "./pkg/json"
 const fileNamePattern = "tracks_part_%d.json"
 
+// ファイル存在キャッシュ（メモリ上に保持）
+var (
+	filesExistCache      bool
+	filesExistCacheMutex sync.RWMutex
+	cacheInitialized     bool
+)
+
+// ClearFilesExistCache はファイル存在キャッシュをクリアする（ReCreate時に呼び出す）
+func ClearFilesExistCache() {
+	filesExistCacheMutex.Lock()
+	defer filesExistCacheMutex.Unlock()
+	cacheInitialized = false
+}
+
+// setFilesExistCache はキャッシュを設定する（createJson成功後に呼び出す）
+func setFilesExistCache(exists bool) {
+	filesExistCacheMutex.Lock()
+	defer filesExistCacheMutex.Unlock()
+	filesExistCache = exists
+	cacheInitialized = true
+}
+
 func exist() (bool, error) {
+	filesExistCacheMutex.RLock()
+	if cacheInitialized {
+		result := filesExistCache
+		filesExistCacheMutex.RUnlock()
+		return result, nil
+	}
+	filesExistCacheMutex.RUnlock()
+
+	// 初回のみ実際にファイルをチェック
+	filesExistCacheMutex.Lock()
+	defer filesExistCacheMutex.Unlock()
+
+	// ダブルチェック（別のgoroutineが先に初期化した可能性）
+	if cacheInitialized {
+		return filesExistCache, nil
+	}
+
+	result, err := checkFilesExist()
+	if err != nil {
+		// エラー時はキャッシュせず、次回再試行
+		return false, err
+	}
+
+	filesExistCache = result
+	cacheInitialized = true
+
+	return result, nil
+}
+
+// checkFilesExist は実際にファイルの存在をチェックする
+func checkFilesExist() (bool, error) {
 	for i := 1; i <= 10; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
 		log.Printf("Checking file: %s", filePath)
@@ -43,7 +97,7 @@ func exist() (bool, error) {
 
 		decoder := json.NewDecoder(file)
 		err = decoder.Decode(&config)
-		file.Close() // ループ内なのでdeferではなく即座にクローズ
+		file.Close()
 
 		if err != nil {
 			return false, err
@@ -171,6 +225,9 @@ func Create(db *sql.DB) error {
 		return err
 	}
 	log.Println("creating JSON")
+
+	// 作成成功後、キャッシュをtrueに設定
+	setFilesExistCache(true)
 
 	return nil
 }

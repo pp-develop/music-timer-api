@@ -14,6 +14,9 @@ func ReCreate(c *gin.Context) error {
 		return model.ErrFailedGetDB
 	}
 
+	// キャッシュをクリアしてから再作成
+	ClearFilesExistCache()
+
 	err := createJson(db)
 	if err != nil {
 		log.Printf("Error creating JSON: %v", err)
