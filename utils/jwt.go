@@ -13,15 +13,17 @@ import (
 var jwtSecret = []byte(getJWTSecret())
 
 type Claims struct {
-	UserID string `json:"user_id"`
-	Type   string `json:"type"` // "access" or "refresh"
+	UserID  string `json:"user_id"`
+	Service string `json:"service"` // "spotify", "soundcloud", etc.
+	Type    string `json:"type"`    // "access" or "refresh"
 	jwt.RegisteredClaims
 }
 
 type RefreshClaims struct {
-	UserID string `json:"user_id"`
-	JTI    string `json:"jti"`  // JWT ID for tracking
-	Type   string `json:"type"` // "refresh"
+	UserID  string `json:"user_id"`
+	Service string `json:"service"` // "spotify", "soundcloud", etc.
+	JTI     string `json:"jti"`     // JWT ID for tracking
+	Type    string `json:"type"`    // "refresh"
 	jwt.RegisteredClaims
 }
 
@@ -49,17 +51,17 @@ func getJWTSecret() string {
 	return secret
 }
 
-// GenerateJWT は後方互換性のために残されています。新規実装では GenerateTokenPair を使用してください。
-func GenerateJWT(userID string) (string, error) {
-	return GenerateAccessToken(userID)
-}
-
 // GenerateAccessToken generates a short-lived access token (1 hour)
-func GenerateAccessToken(userID string) (string, error) {
+func GenerateAccessToken(userID string, service string) (string, error) {
+	if service == "" {
+		return "", errors.New("service is required")
+	}
+
 	expirationTime := time.Now().Add(1 * time.Hour) // 1時間有効
 	claims := &Claims{
-		UserID: userID,
-		Type:   "access",
+		UserID:  userID,
+		Service: service,
+		Type:    "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -76,12 +78,17 @@ func GenerateAccessToken(userID string) (string, error) {
 }
 
 // GenerateRefreshToken generates a long-lived refresh token (30 days)
-func GenerateRefreshToken(userID string, jti string) (string, error) {
+func GenerateRefreshToken(userID string, service string, jti string) (string, error) {
+	if service == "" {
+		return "", errors.New("service is required")
+	}
+
 	expirationTime := time.Now().Add(30 * 24 * time.Hour) // 30日有効
 	claims := &RefreshClaims{
-		UserID: userID,
-		JTI:    jti,
-		Type:   "refresh",
+		UserID:  userID,
+		Service: service,
+		JTI:     jti,
+		Type:    "refresh",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -98,13 +105,13 @@ func GenerateRefreshToken(userID string, jti string) (string, error) {
 }
 
 // GenerateTokenPair generates both access and refresh tokens
-func GenerateTokenPair(userID string, jti string) (*TokenPair, error) {
-	accessToken, err := GenerateAccessToken(userID)
+func GenerateTokenPair(userID string, service string, jti string) (*TokenPair, error) {
+	accessToken, err := GenerateAccessToken(userID, service)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, err := GenerateRefreshToken(userID, jti)
+	refreshToken, err := GenerateRefreshToken(userID, service, jti)
 	if err != nil {
 		return nil, err
 	}
@@ -117,57 +124,14 @@ func GenerateTokenPair(userID string, jti string) (*TokenPair, error) {
 	}, nil
 }
 
-// ValidateJWT validates a JWT token and returns the user ID
-func ValidateJWT(tokenString string) (string, error) {
+// ValidateJWT validates a JWT token and returns the user ID and service
+func ValidateJWT(tokenString string) (string, string, error) {
 	claims := &Claims{}
 
 	// パーサーオプションでクロックスキューを設定（5分の猶予）
 	parser := jwt.NewParser(
 		jwt.WithLeeway(5*time.Minute),
 		jwt.WithValidMethods([]string{"HS256"}), // 許可する署名メソッドを明示的に指定
-	)
-
-	token, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		// 署名メソッドの検証
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		// 具体的にHS256であることを確認
-		if token.Method.Alg() != "HS256" {
-			return nil, errors.New("invalid signing method")
-		}
-		return jwtSecret, nil
-	})
-
-	if err != nil {
-		return "", err
-	}
-
-	if !token.Valid {
-		return "", errors.New("invalid token")
-	}
-
-	// ユーザーIDが空でないことを確認
-	if claims.UserID == "" {
-		return "", errors.New("user ID is empty in token")
-	}
-
-	// アクセストークンであることを確認
-	if claims.Type != "access" {
-		return "", errors.New("invalid token type")
-	}
-
-	return claims.UserID, nil
-}
-
-// ValidateRefreshToken validates a refresh token and returns the user ID and JTI
-func ValidateRefreshToken(tokenString string) (string, string, error) {
-	claims := &RefreshClaims{}
-
-	// パーサーオプションでクロックスキューを設定（5分の猶予）
-	parser := jwt.NewParser(
-		jwt.WithLeeway(5*time.Minute),
-		jwt.WithValidMethods([]string{"HS256"}),
 	)
 
 	token, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -190,18 +154,71 @@ func ValidateRefreshToken(tokenString string) (string, string, error) {
 		return "", "", errors.New("invalid token")
 	}
 
-	// ユーザーIDとJTIが空でないことを確認
+	// ユーザーIDが空でないことを確認
 	if claims.UserID == "" {
 		return "", "", errors.New("user ID is empty in token")
 	}
+
+	// アクセストークンであることを確認
+	if claims.Type != "access" {
+		return "", "", errors.New("invalid token type")
+	}
+
+	// サービスが空でないことを確認
+	if claims.Service == "" {
+		return "", "", errors.New("service is required in token")
+	}
+
+	return claims.UserID, claims.Service, nil
+}
+
+// ValidateRefreshToken validates a refresh token and returns the user ID, service, and JTI
+func ValidateRefreshToken(tokenString string) (string, string, string, error) {
+	claims := &RefreshClaims{}
+
+	// パーサーオプションでクロックスキューを設定（5分の猶予）
+	parser := jwt.NewParser(
+		jwt.WithLeeway(5*time.Minute),
+		jwt.WithValidMethods([]string{"HS256"}),
+	)
+
+	token, err := parser.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// 署名メソッドの検証
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		// 具体的にHS256であることを確認
+		if token.Method.Alg() != "HS256" {
+			return nil, errors.New("invalid signing method")
+		}
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return "", "", "", err
+	}
+
+	if !token.Valid {
+		return "", "", "", errors.New("invalid token")
+	}
+
+	// ユーザーIDとJTIが空でないことを確認
+	if claims.UserID == "" {
+		return "", "", "", errors.New("user ID is empty in token")
+	}
 	if claims.JTI == "" {
-		return "", "", errors.New("JTI is empty in token")
+		return "", "", "", errors.New("JTI is empty in token")
 	}
 
 	// リフレッシュトークンであることを確認
 	if claims.Type != "refresh" {
-		return "", "", errors.New("invalid token type")
+		return "", "", "", errors.New("invalid token type")
 	}
 
-	return claims.UserID, claims.JTI, nil
+	// サービスが空でないことを確認
+	if claims.Service == "" {
+		return "", "", "", errors.New("service is required in token")
+	}
+
+	return claims.UserID, claims.Service, claims.JTI, nil
 }

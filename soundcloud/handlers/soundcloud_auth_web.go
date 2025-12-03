@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/soundcloud/auth"
 )
 
-// GetAuthzURLWeb returns the Spotify authorization URL for web authentication
+// GetAuthzURLWeb returns the SoundCloud authorization URL for web authentication
 func GetAuthzURLWeb(c *gin.Context) {
-	url, err := auth.SpotifyAuthzWeb(c)
+	url, err := auth.AuthzWeb(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Status(http.StatusInternalServerError)
@@ -23,7 +23,7 @@ func GetAuthzURLWeb(c *gin.Context) {
 	}
 }
 
-// CallbackWeb handles the Spotify OAuth callback for web authentication
+// CallbackWeb handles the SoundCloud OAuth callback for web authentication
 func CallbackWeb(c *gin.Context) {
 	err := godotenv.Load()
 	if err != nil {
@@ -32,21 +32,21 @@ func CallbackWeb(c *gin.Context) {
 		return
 	}
 
-	err = auth.SpotifyCallbackWeb(c)
+	err = auth.CallbackWeb(c)
 	if err != nil {
 		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_WEB_ERROR_URL"))
 	} else {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("SOUNDCLOUD_AUTHZ_WEB_SUCCESS_URL"))
 	}
 }
 
 // GetAuthStatusWeb returns the authentication status for web users
 func GetAuthStatusWeb(c *gin.Context) {
-	user, err := auth.Auth(c)
+	// Use CheckAuth for status check (no error log for unauthenticated)
+	user, err := auth.CheckAuth(c)
 
 	if err == model.ErrFailedGetSession {
-		// Return unauthenticated status as a successful response
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": false,
 			"reason":        "session_expired",
@@ -57,13 +57,13 @@ func GetAuthStatusWeb(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": true,
-			"country":       user.Country,
+			"username":      user.Username,
 		})
 	}
 }
 
-// DeleteSession deletes the user's session
-func DeleteSession(c *gin.Context) {
+// DeleteSessionWeb deletes the SoundCloud user's session for web authentication
+func DeleteSessionWeb(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Delete("userId")
 	session.Delete("service")

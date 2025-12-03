@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 }
 
 func handleError(c *gin.Context, err error) {
+	log.Printf("[ERROR-HANDLER] Handling error: %v (Type: %T)", err, err)
 	logger.LogError(err)
 
 	// 認証エラー

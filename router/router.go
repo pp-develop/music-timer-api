@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/middleware"
 	"github.com/pp-develop/music-timer-api/router/handlers"
+	soundcloudHandlers "github.com/pp-develop/music-timer-api/soundcloud/handlers"
 	spotifyHandlers "github.com/pp-develop/music-timer-api/spotify/handlers"
 )
 
@@ -88,6 +89,53 @@ func setupRoutes(router *gin.Engine) {
 			playlists.POST("", spotifyHandlers.CreatePlaylist)
 			playlists.DELETE("", spotifyHandlers.DeletePlaylists)
 			playlists.POST("/guest", spotifyHandlers.GestCreatePlaylist)
+		}
+	}
+
+	// SoundCloud API endpoints
+	soundcloud := router.Group("/soundcloud")
+	{
+		// Authentication endpoints
+		auth := soundcloud.Group("/auth")
+		{
+			// Web authentication
+			authWeb := auth.Group("/web")
+			{
+				authWeb.GET("/authz-url", soundcloudHandlers.GetAuthzURLWeb)
+				authWeb.GET("/callback", soundcloudHandlers.CallbackWeb)
+				authWeb.GET("/status", soundcloudHandlers.GetAuthStatusWeb)
+				authWeb.DELETE("/session", soundcloudHandlers.DeleteSessionWeb)
+			}
+
+			// Native authentication
+			authNative := auth.Group("/native")
+			{
+				authNative.GET("/authz-url", soundcloudHandlers.GetAuthzURLNative)
+				authNative.GET("/callback", soundcloudHandlers.CallbackNative)
+				authNative.GET("/status", soundcloudHandlers.GetAuthStatusNative)
+				authNative.POST("/refresh", soundcloudHandlers.RefreshTokenNative)
+			}
+		}
+
+		// Protected endpoints (require authentication)
+		soundcloud.Use(middleware.OptionalAuthMiddleware())
+
+		// Track endpoints
+		tracks := soundcloud.Group("/tracks")
+		{
+			tracksInit := tracks.Group("/init")
+			{
+				tracksInit.POST("/favorites", soundcloudHandlers.InitFavoriteTracksSoundCloud)
+			}
+		}
+
+		// Playlist endpoints
+		playlists := soundcloud.Group("/playlists")
+		{
+			playlists.GET("", soundcloudHandlers.GetPlaylistsSoundCloud)
+			playlists.DELETE("", soundcloudHandlers.DeletePlaylistsSoundCloud)
+			playlists.POST("/from-favorites", soundcloudHandlers.CreatePlaylistFromFavorites)
+			playlists.POST("/from-artists", soundcloudHandlers.CreatePlaylistFromArtists)
 		}
 	}
 }

@@ -47,7 +47,6 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	}
 
 	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
-	var tracks []model.Track
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
@@ -64,6 +63,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 			close(tryCountChan)
 		}()
 
+		var tracks []model.Track
 		success := false
 		for !success {
 			select {

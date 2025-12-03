@@ -73,3 +73,38 @@ CREATE TABLE jwt_refresh_tokens (
     INDEX idx_expires_at (expires_at),
     CONSTRAINT fk_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES spotify_users(id) ON DELETE CASCADE
 );
+
+
+-- SoundCloud Tables
+
+DROP TABLE IF EXISTS soundcloud_users CASCADE;
+
+CREATE TABLE soundcloud_users (
+    "id" VARCHAR(255) PRIMARY KEY,
+    "username" VARCHAR(255),
+    "access_token" TEXT,
+    "refresh_token" TEXT,
+    "token_expiration" INT,
+    "session" VARCHAR(255),
+    "created_at" TIMESTAMP,
+    "updated_at" TIMESTAMP,
+    "playlist_count" INTEGER DEFAULT 0
+);
+
+DROP TABLE IF EXISTS soundcloud_favorite_tracks CASCADE;
+
+CREATE TABLE soundcloud_favorite_tracks (
+    "user_id" VARCHAR(255) PRIMARY KEY,
+    "tracks" JSONB,
+    "updated_at" TIMESTAMP,
+    CONSTRAINT fk_soundcloud_favorite_tracks_user FOREIGN KEY (user_id) REFERENCES soundcloud_users(id)
+);
+
+DROP TABLE IF EXISTS soundcloud_playlists CASCADE;
+
+CREATE TABLE soundcloud_playlists (
+    "id" VARCHAR(255) PRIMARY KEY,
+    INDEX id_index (id),
+    "user_id" VARCHAR(255),
+    CONSTRAINT fk_soundcloud_playlist_user FOREIGN KEY (user_id) REFERENCES soundcloud_users(id)
+);
