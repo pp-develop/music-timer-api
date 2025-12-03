@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sync"
+	"runtime"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/database"
+	"github.com/pp-develop/music-timer-api/model"
 )
 
 type TrackWithoutArtistsId struct {
@@ -19,59 +20,8 @@ type TrackWithoutArtistsId struct {
 	Isrc       string `json:"isrc"`
 }
 
-type Json struct {
-	Tracks []TrackWithoutArtistsId `json:"tracks"`
-}
-
-type ConfigManager struct {
-	configFilePath string
-	config         Json
-	mutex          sync.Mutex
-}
-
 const baseDirectory = "./pkg/json"
 const fileNamePattern = "tracks_part_%d.json"
-
-func NewConfigManager(configFilePath string) (*ConfigManager, error) {
-	cm := &ConfigManager{configFilePath: configFilePath}
-	if err := cm.load(); err != nil {
-		return nil, err
-	}
-	return cm, nil
-}
-
-func (cm *ConfigManager) load() error {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
-
-	// リトライを追加
-	err := retry(3, 1*time.Second, func() error {
-		file, err := os.Open(cm.configFilePath)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		// ファイルサイズをチェックし、空でないことを確認
-		stat, err := file.Stat()
-		if err != nil {
-			return err
-		}
-		if stat.Size() == 0 {
-			return fmt.Errorf("file is empty: %s", cm.configFilePath)
-		}
-
-		decoder := json.NewDecoder(file)
-		if err := decoder.Decode(&cm.config); err != nil {
-			return fmt.Errorf("error decoding JSON from file %s: %w", cm.configFilePath, err)
-		}
-
-		cm.config.Tracks = []TrackWithoutArtistsId{}
-		return nil
-	})
-
-	return err
-}
 
 func exist() (bool, error) {
 	for i := 1; i <= 10; i++ {
@@ -135,30 +85,62 @@ func createJson(db *sql.DB) error {
 		log.Printf("Creating file: %s", filePath)
 
 		err := retry(3, 1*time.Second, func() error {
-			// ArtistsIdを含まないトラックのスライスを作成
-			tracksWithoutArtistsId := make([]TrackWithoutArtistsId, len(allTracks[start:end]))
-			for j, track := range allTracks[start:end] {
-				tracksWithoutArtistsId[j] = TrackWithoutArtistsId{
-					Uri:        track.Uri,
-					DurationMs: track.DurationMs,
-					Isrc:       track.Isrc,
-				}
-			}
-
-			configManager, err := NewConfigManager(filePath)
-			if err != nil {
-				return err
-			}
-
-			log.Printf("Saving tracks to file: %s", filePath)
-			return configManager.saveToFile(filePath, tracksWithoutArtistsId)
+			return writeTracksToFileStreaming(filePath, allTracks[start:end])
 		})
 		if err != nil {
 			return err
 		}
+
+		// 各ファイル書き込み後にGCを実行してメモリを解放
+		runtime.GC()
 	}
 
 	return nil
+}
+
+// writeTracksToFileStreaming はストリーミング方式でJSONを書き込む（メモリ効率改善）
+func writeTracksToFileStreaming(filePath string, tracks []model.Track) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+
+	// JSONの開始
+	if _, err := writer.WriteString(`{"tracks":[`); err != nil {
+		return err
+	}
+
+	// 1件ずつJSONエンコードして書き込み（MarshalIndentを使わない）
+	for i, track := range tracks {
+		if i > 0 {
+			if _, err := writer.WriteString(","); err != nil {
+				return err
+			}
+		}
+		trackData := TrackWithoutArtistsId{
+			Uri:        track.Uri,
+			DurationMs: track.DurationMs,
+			Isrc:       track.Isrc,
+		}
+		data, err := json.Marshal(trackData)
+		if err != nil {
+			return err
+		}
+		if _, err := writer.Write(data); err != nil {
+			return err
+		}
+	}
+
+	// JSONの終了
+	if _, err := writer.WriteString("]}"); err != nil {
+		return err
+	}
+
+	log.Printf("Saved %d tracks to file: %s", len(tracks), filePath)
+	return writer.Flush()
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
@@ -170,35 +152,6 @@ func retry(attempts int, sleep time.Duration, fn func() error) error {
 		time.Sleep(sleep)
 	}
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
-}
-
-func (cm *ConfigManager) saveToFile(filePath string, tracks []TrackWithoutArtistsId) error {
-	cm.mutex.Lock()
-	defer cm.mutex.Unlock()
-
-	config := Json{Tracks: tracks}
-	bytes, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
-	_, err = writer.Write(bytes)
-	if err != nil {
-		return err
-	}
-
-	err = writer.Flush()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func Create(db *sql.DB) error {
