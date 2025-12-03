@@ -3,6 +3,7 @@ package search
 import (
 	"database/sql"
 	"log"
+	"runtime"
 	"strings"
 	"time"
 
@@ -43,6 +44,10 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 	}
 
 	log.Printf("[SaveTracks] Complete - fetched: %d, saved: %d, duration: %v", len(tracks), savedCount, time.Since(start))
+
+	// 大量データ処理後にGCを実行してメモリを解放
+	runtime.GC()
+
 	return nil
 }
 

@@ -1,6 +1,8 @@
 package search
 
 import (
+	"runtime"
+
 	"github.com/gin-gonic/gin"
 	spotifyApi "github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
@@ -47,6 +49,9 @@ func SaveFavoriteTracks(c *gin.Context) error {
 			return err
 		}
 	}
+
+	// 大量データ処理後にGCを実行してメモリを解放
+	runtime.GC()
 
 	return nil
 }

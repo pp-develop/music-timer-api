@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -130,6 +131,9 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 			return err
 		}
 	}
+
+	// 並行処理完了後にGCを実行してメモリを解放
+	runtime.GC()
 
 	return nil
 }
