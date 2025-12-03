@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/spotify/json"
 )
 
@@ -33,7 +33,7 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 
 	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
 	var tracks []model.Track
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(commontrack.DefaultTimeoutSeconds)*time.Second)
 	defer cancel()
 
 	c1 := make(chan []model.Track, 1)
@@ -58,7 +58,7 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 			default:
 				tryCount++
 				shuffleTracks := json.ShuffleTracks(saveTracks)
-				success, tracks  = commontrack.MakeTracks(shuffleTracks, specify_ms)
+				success, tracks = commontrack.MakeTracks(shuffleTracks, specify_ms)
 			}
 		}
 		c1 <- tracks

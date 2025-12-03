@@ -4,27 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"sync"
 	"time"
 
-	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/model"
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/spotify/json"
-)
-
-var (
-	allTracks      []model.Track
-	allTracksMutex sync.Mutex // 共有リソースへのアクセスを制御
-	timeout        = commontrack.DefaultTimeoutSeconds
 )
 
 // GetTracks関数は、指定された総再生時間に基づいてトラックを取得します。
 func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error) {
 	// Phase 1: データ取得と検証（即座にエラー判定）
-	allTracksMutex.Lock()
-	localTracks := allTracks // ローカルコピーを作成
-	allTracksMutex.Unlock()
-
 	localTracks, err := json.GetAllTracks(db)
 	if err != nil {
 		return nil, err
@@ -47,7 +36,7 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	}
 
 	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(commontrack.DefaultTimeoutSeconds)*time.Second)
 	defer cancel()
 
 	c1 := make(chan []model.Track, 1)

@@ -13,31 +13,25 @@ import (
 	spotifylibrary "github.com/zmb3/spotify/v2"
 )
 
-var (
-	Market string
-)
-
-var requestBody struct {
-	Market string `json:"market"`
-}
-
 func SaveTracks(c *gin.Context, db *sql.DB) error {
 	start := time.Now()
-	log.Printf("[SaveTracks] Start - market: %s", Market)
 
-	c.BindJSON(&requestBody)
-	if requestBody.Market != "" {
-		Market = strings.ToUpper(requestBody.Market)
+	var requestBody struct {
+		Market string `json:"market"`
 	}
+	c.BindJSON(&requestBody)
 
-	tracks, err := spotify.SearchTracks(Market)
+	market := strings.ToUpper(requestBody.Market)
+	log.Printf("[SaveTracks] Start - market: %s", market)
+
+	tracks, err := spotify.SearchTracks(market)
 	if err != nil {
 		log.Printf("[SaveTracks] Error fetching from Spotify API: %v", err)
 		return err
 	}
 	log.Printf("[SaveTracks] Fetched %d tracks from Spotify API", len(tracks))
 
-	savedCount, err := saveTracks(db, tracks, true)
+	savedCount, err := saveTracks(db, tracks, market, true)
 	if err != nil {
 		log.Printf("[SaveTracks] Error saving to DB: %v", err)
 		return err
@@ -51,11 +45,11 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 	return nil
 }
 
-func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, validate bool) (int, error) {
+func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, market string, validate bool) (int, error) {
 	// バリデーション済みトラックをフィルタリング
 	validTracks := make([]spotifylibrary.FullTrack, 0, len(tracks))
 	for _, item := range tracks {
-		if validate && !validateTrack(item) {
+		if validate && !validateTrack(item, market) {
 			continue
 		}
 		validTracks = append(validTracks, item)
@@ -66,13 +60,13 @@ func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, validate bool) (i
 	return len(validTracks), err
 }
 
-func validateTrack(track spotifylibrary.FullTrack) bool {
-	return isIsrcForMarket(track.ExternalIDs["isrc"])
+func validateTrack(track spotifylibrary.FullTrack, market string) bool {
+	return isIsrcForMarket(track.ExternalIDs["isrc"], market)
 }
 
-func isIsrcForMarket(isrc string) bool {
-	if Market == "" {
+func isIsrcForMarket(isrc string, market string) bool {
+	if market == "" {
 		return true
 	}
-	return strings.Contains(isrc, Market)
+	return strings.Contains(isrc, market)
 }
