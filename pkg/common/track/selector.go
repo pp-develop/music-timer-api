@@ -32,6 +32,11 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 	}
 	remainingTime = totalPlayTimeMs - totalDuration
 
+	// 残り時間が0なら完璧にマッチしているので成功
+	if remainingTime == 0 {
+		return true, tracks
+	}
+
 	// 残り時間が許容誤差（15秒）内かつプレイリストが十分長い（10分以上）場合、
 	// ギャップを埋める必要なし。短いプレイリストでは誤差の影響が大きいため許容しない。
 	// 例: 30分のプレイリストで残り10秒 → 成功（追加曲不要）
