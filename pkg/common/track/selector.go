@@ -41,8 +41,9 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 	}
 
 	// ギャップを埋めるトラックを探す
+	// 10分以上のプレイリストでは許容誤差あり、10分未満では完全一致のみ
 	var isTrackFound bool
-	getTrack := GetTrackByDuration(allTracks, remainingTime)
+	getTrack := GetTrackByDuration(allTracks, remainingTime, totalPlayTimeMs)
 	if len(getTrack) > 0 {
 		isTrackFound = true
 		tracks = append(tracks, getTrack...)
@@ -51,17 +52,23 @@ func MakeTracks(allTracks []model.Track, totalPlayTimeMs int) (bool, []model.Tra
 	return isTrackFound, tracks
 }
 
-// GetTrackByDuration は指定された再生時間に最も近い曲を許容誤差内で探す。
-// durationMs ± AllowanceMs（15秒）の範囲内で、目標時間との差が最小の曲を返す。
-// 例: durationMs が 20000ms の場合、5000ms〜35000ms の範囲で探索する。
-func GetTrackByDuration(allTracks []model.Track, durationMs int) []model.Track {
+// GetTrackByDuration は指定された再生時間に最も近い曲を探す。
+// totalPlayTimeMs が10分以上の場合: durationMs ± AllowanceMs（15秒）の範囲で探索
+// totalPlayTimeMs が10分未満の場合: 完全一致のみ（許容誤差なし）
+func GetTrackByDuration(allTracks []model.Track, durationMs int, totalPlayTimeMs int) []model.Track {
+	// 10分以上なら許容誤差あり、10分未満なら完全一致のみ
+	allowance := 0
+	if totalPlayTimeMs >= MinPlaylistDurationForAllowanceMs {
+		allowance = AllowanceMs
+	}
+
 	var bestTrack *model.Track
-	bestDiff := AllowanceMs + 1 // 許容誤差を超える初期値
+	bestDiff := allowance + 1 // 許容誤差を超える初期値
 
 	for i := range allTracks {
 		diff := abs(allTracks[i].DurationMs - durationMs)
 		// 許容誤差内かつ、これまでで最も近い曲を選択
-		if diff <= AllowanceMs && diff < bestDiff {
+		if diff <= allowance && diff < bestDiff {
 			bestTrack = &allTracks[i]
 			bestDiff = diff
 			if diff == 0 {
