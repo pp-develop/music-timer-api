@@ -58,34 +58,12 @@ func GetPlaylistsSoundCloud(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"playlists": playlists})
 }
 
-// DeletePlaylistsSoundCloud deletes a SoundCloud playlist
+// DeletePlaylistsSoundCloud deletes all SoundCloud playlists for the user
 func DeletePlaylistsSoundCloud(c *gin.Context) {
-	var json struct {
-		PlaylistId string `json:"playlist_id"`
-	}
-
-	if err := c.ShouldBindJSON(&json); err != nil {
-		c.Error(err)
-		return
-	}
-
-	userId, err := utils.GetUserID(c)
+	err := playlist.DeletePlaylists(c)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-
-	dbInstance, ok := utils.GetDB(c)
-	if !ok {
-		c.Error(model.ErrFailedGetDB)
-		return
-	}
-
-	err = database.DeleteSoundCloudPlaylists(dbInstance, json.PlaylistId, userId)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
 	c.Status(http.StatusOK)
 }

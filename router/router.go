@@ -129,6 +129,9 @@ func setupRoutes(router *gin.Engine) {
 			}
 		}
 
+		// Artist endpoints
+		soundcloud.GET("/artists", soundcloudHandlers.GetArtistsSoundCloud)
+
 		// Playlist endpoints
 		playlists := soundcloud.Group("/playlists")
 		{

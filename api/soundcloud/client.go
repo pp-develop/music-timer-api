@@ -125,8 +125,9 @@ func (c *Client) RefreshToken(refreshToken string) (*TokenResponse, error) {
 
 // SoundCloud User Info
 type SCUser struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
+	ID        int    `json:"id"`
+	Username  string `json:"username"`
+	AvatarURL string `json:"avatar_url"`
 }
 
 // Get current user info
@@ -347,6 +348,37 @@ type SCPlaylist struct {
 	SecretToken  string `json:"secret_token"`
 }
 
+// Delete playlist by ID
+func (c *Client) DeletePlaylist(accessToken string, playlistID string) error {
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/playlists/%s", SoundCloudAPIBase, playlistID), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// SoundCloud returns 200 OK on successful deletion
+	// 404 means playlist already deleted on SoundCloud - treat as success
+	if resp.StatusCode == http.StatusNotFound {
+		log.Printf("[SC-API] Playlist %s already deleted on SoundCloud, skipping", playlistID)
+		return nil
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("delete playlist failed (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	log.Printf("[SC-API] Playlist %s deleted successfully", playlistID)
+	return nil
+}
+
 // Create playlist with tracks
 func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs []string) (*SCPlaylist, error) {
 	// Convert track IDs to the format required by SoundCloud API
@@ -403,4 +435,75 @@ func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs
 
 	log.Printf("[SC-API] Playlist created: id=%d, tracks=%d", playlist.ID, len(trackIDs))
 	return &playlist, nil
+}
+
+// Get users that the current user is following (artists)
+func (c *Client) GetFollowings(accessToken string) ([]SCUser, error) {
+	var allUsers []SCUser
+	userIDSet := make(map[int]bool)
+	pageCount := 0
+
+	nextURL := fmt.Sprintf("%s/me/followings?linked_partitioning=true&limit=50", SoundCloudAPIBase)
+
+	log.Printf("[SC-API] Starting to fetch followed users")
+
+	for nextURL != "" {
+		pageCount++
+		log.Printf("[SC-API] Fetching followings page %d", pageCount)
+
+		req, err := http.NewRequest("GET", nextURL, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Authorization", fmt.Sprintf("OAuth %s", accessToken))
+
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("get followings failed: %s", string(body))
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		var paginatedResp struct {
+			Collection []SCUser `json:"collection"`
+			NextHref   string   `json:"next_href"`
+		}
+
+		if err := json.Unmarshal(body, &paginatedResp); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response: %v", err)
+		}
+
+		if len(paginatedResp.Collection) == 0 {
+			break
+		}
+
+		prevCount := len(allUsers)
+		for _, user := range paginatedResp.Collection {
+			if userIDSet[user.ID] {
+				continue
+			}
+			userIDSet[user.ID] = true
+			allUsers = append(allUsers, user)
+		}
+
+		nextURL = paginatedResp.NextHref
+
+		if len(allUsers) == prevCount {
+			break
+		}
+	}
+
+	log.Printf("[SC-API] Successfully fetched %d followed users in %d pages", len(allUsers), pageCount)
+	return allUsers, nil
 }
