@@ -2,6 +2,7 @@ package spotify
 
 import (
 	"context"
+	"log"
 	"math/rand"
 	"os"
 	"time"
@@ -13,9 +14,15 @@ import (
 )
 
 func SearchTracks(market string) ([]spotify.FullTrack, error) {
+	start := time.Now()
+	query := getRandomQuery()
+
+	log.Printf("[SearchTracks] Start - query: %q, market: %q", query, market)
+
 	// 環境変数をロード
 	err := godotenv.Load()
 	if err != nil {
+		log.Printf("[SearchTracks] Failed to load env - error: %v", err)
 		return nil, err
 	}
 
@@ -28,6 +35,7 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	}
 	token, err := config.Token(ctx)
 	if err != nil {
+		log.Printf("[SearchTracks] Token acquisition failed - duration: %v, error: %v", time.Since(start), err)
 		return nil, err
 	}
 
@@ -43,24 +51,39 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 
 	// トラック検索の開始
 	var fullTracks []spotify.FullTrack
-	query := getRandomQuery()
 
 	// 検索とページング処理
 	results, err := client.Search(ctx, query, spotify.SearchTypeTrack, options...)
 	if err != nil {
+		log.Printf("[SearchTracks] Initial search failed - query: %q, market: %q, duration: %v, error: %v",
+			query, market, time.Since(start), err)
 		return nil, err
 	}
 	fullTracks = append(fullTracks, results.Tracks.Tracks...)
+	pageCount := 1
 
 	// ページング処理
 	for results.Tracks.Next != "" {
+		pageCount++
+
 		// 次のページを取得
 		err = client.NextTrackResults(ctx, results)
 		if err != nil {
+			log.Printf("[SearchTracks] Paging failed - query: %q, market: %q, page: %d, fetched: %d, duration: %v, error: %v",
+				query, market, pageCount, len(fullTracks), time.Since(start), err)
 			return nil, err
 		}
 		fullTracks = append(fullTracks, results.Tracks.Tracks...)
+
+		// 進捗ログ（20ページごと = 約1000件ごと）
+		if pageCount%20 == 0 {
+			log.Printf("[SearchTracks] Progress - query: %q, page: %d, fetched: %d, duration: %v",
+				query, pageCount, len(fullTracks), time.Since(start))
+		}
 	}
+
+	log.Printf("[SearchTracks] Complete - query: %q, market: %q, pages: %d, tracks: %d, duration: %v",
+		query, market, pageCount, len(fullTracks), time.Since(start))
 
 	return fullTracks, nil
 }
