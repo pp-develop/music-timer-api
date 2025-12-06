@@ -46,9 +46,20 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 }
 
 func saveTracks(db *sql.DB, tracks []spotifylibrary.FullTrack, market string, validate bool) (int, error) {
-	// バリデーション済みトラックをフィルタリング
+	// URIをキーにして重複を除去 + バリデーション
+	seen := make(map[string]bool)
 	validTracks := make([]spotifylibrary.FullTrack, 0, len(tracks))
+
 	for _, item := range tracks {
+		uri := string(item.URI)
+
+		// 重複チェック
+		if seen[uri] {
+			continue
+		}
+		seen[uri] = true
+
+		// バリデーション
 		if validate && !validateTrack(item, market) {
 			continue
 		}

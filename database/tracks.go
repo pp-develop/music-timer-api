@@ -15,21 +15,10 @@ func SaveTracksBatch(db *sql.DB, tracks []spotify.FullTrack) error {
 		return nil
 	}
 
-	// URIをキーにして重複を除去（同一バッチ内の重複でDBエラーを防ぐ）
-	seen := make(map[string]bool)
-	uniqueTracks := make([]spotify.FullTrack, 0, len(tracks))
-	for _, track := range tracks {
-		uri := string(track.URI)
-		if !seen[uri] {
-			seen[uri] = true
-			uniqueTracks = append(uniqueTracks, track)
-		}
-	}
+	valueStrings := make([]string, 0, len(tracks))
+	valueArgs := make([]interface{}, 0, len(tracks)*3)
 
-	valueStrings := make([]string, 0, len(uniqueTracks))
-	valueArgs := make([]interface{}, 0, len(uniqueTracks)*3)
-
-	for i, track := range uniqueTracks {
+	for i, track := range tracks {
 		offset := i * 3
 		valueStrings = append(valueStrings,
 			fmt.Sprintf("($%d, $%d, $%d, NOW(), NOW())", offset+1, offset+2, offset+3))
@@ -103,4 +92,3 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	}
 	return AllTracks, nil
 }
-
