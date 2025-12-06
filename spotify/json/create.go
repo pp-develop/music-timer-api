@@ -21,7 +21,7 @@ type TrackWithoutArtistsId struct {
 	Isrc       string `json:"isrc"`
 }
 
-const baseDirectory = "./pkg/json"
+const baseDirectory = "./data/spotify"
 const fileNamePattern = "tracks_part_%d.json"
 
 // ファイル存在キャッシュ（メモリ上に保持）
