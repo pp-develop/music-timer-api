@@ -2,9 +2,11 @@ package spotify
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -12,6 +14,16 @@ import (
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2/clientcredentials"
 )
+
+// getMemStats はメモリ統計を文字列で返す
+func getMemStats() string {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return fmt.Sprintf("Alloc=%dMB, Sys=%dMB, NumGC=%d",
+		m.Alloc/1024/1024,
+		m.Sys/1024/1024,
+		m.NumGC)
+}
 
 func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	start := time.Now()
@@ -63,7 +75,10 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	pageCount := 1
 
 	// ページング処理
-	for results.Tracks.Next != "" {
+	// メモリ効率のため200ページ（10,000件）を上限とする
+	const maxPages = 200
+
+	for results.Tracks.Next != "" && pageCount < maxPages {
 		pageCount++
 
 		// 次のページを取得
@@ -77,9 +92,14 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 
 		// 進捗ログ（20ページごと = 約1000件ごと）
 		if pageCount%20 == 0 {
-			log.Printf("[SearchTracks] Progress - query: %q, page: %d, fetched: %d, duration: %v",
-				query, pageCount, len(fullTracks), time.Since(start))
+			log.Printf("[SearchTracks] Progress - query: %q, page: %d, fetched: %d, duration: %v, %s",
+				query, pageCount, len(fullTracks), time.Since(start), getMemStats())
 		}
+	}
+
+	// 上限に達した場合はログ出力
+	if pageCount >= maxPages {
+		log.Printf("[SearchTracks] Reached max pages limit - query: %q, maxPages: %d", query, maxPages)
 	}
 
 	log.Printf("[SearchTracks] Complete - query: %q, market: %q, pages: %d, tracks: %d, duration: %v",
