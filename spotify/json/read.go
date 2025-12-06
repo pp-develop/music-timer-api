@@ -24,11 +24,16 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 		return nil, err
 	}
 
-	// ランダムにファイルを選択するための設定
+	// 存在するファイル数をカウント
+	fileCount := countExistingFiles()
+	if fileCount == 0 {
+		return nil, fmt.Errorf("no track files found")
+	}
+
+	// ランダムにファイルを選択
 	src := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(src)
-	// ランダムな数（1から10）を生成
-	partNumber := r.Intn(10) + 1
+	partNumber := r.Intn(fileCount) + 1
 	randomFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, partNumber))
 
 	// ファイルを読み込む
@@ -38,6 +43,19 @@ func GetAllTracks(db *sql.DB) ([]model.Track, error) {
 	}
 
 	return data.Tracks, nil
+}
+
+// countExistingFiles は存在するトラックファイルの数を返す
+func countExistingFiles() int {
+	count := 0
+	for i := 1; ; i++ {
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			break
+		}
+		count++
+	}
+	return count
 }
 
 func readJSONFileWithRetry(filePath string, retries int) (*TracksJSON, error) {

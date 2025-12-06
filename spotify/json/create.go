@@ -38,6 +38,21 @@ func ClearFilesExistCache() {
 	cacheInitialized = false
 }
 
+// deleteAllTrackFiles は既存のトラックファイルを全て削除する（ReCreate時に呼び出す）
+func deleteAllTrackFiles() error {
+	for i := 1; ; i++ {
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			break // ファイルが存在しない = 全て削除完了
+		}
+		if err := os.Remove(filePath); err != nil {
+			return fmt.Errorf("failed to delete %s: %w", filePath, err)
+		}
+		log.Printf("Deleted file: %s", filePath)
+	}
+	return nil
+}
+
 // setFilesExistCache はキャッシュを設定する（createJson成功後に呼び出す）
 func setFilesExistCache(exists bool) {
 	filesExistCacheMutex.Lock()
@@ -76,17 +91,27 @@ func exist() (bool, error) {
 	return result, nil
 }
 
-// checkFilesExist は実際にファイルの存在をチェックする
+// checkFilesExist は実際にファイルの存在をチェックする（動的ファイル数対応）
 func checkFilesExist() (bool, error) {
-	for i := 1; i <= 10; i++ {
+	// 最低1ファイルは必要
+	firstFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, 1))
+	if _, err := os.Stat(firstFilePath); os.IsNotExist(err) {
+		log.Printf("First file does not exist: %s", firstFilePath)
+		return false, nil
+	}
+
+	// 存在するファイルをすべてチェック
+	for i := 1; ; i++ {
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i))
-		log.Printf("Checking file: %s", filePath)
 
 		file, err := os.Open(filePath)
 		if err != nil {
 			if os.IsNotExist(err) {
-				log.Printf("File does not exist: %s", filePath)
-				return false, nil
+				// ファイルが存在しない = 全ファイルチェック完了
+				if i == 1 {
+					return false, nil // 1つもない
+				}
+				break // i-1個のファイルが存在
 			}
 			return false, err
 		}
@@ -100,6 +125,7 @@ func checkFilesExist() (bool, error) {
 		file.Close()
 
 		if err != nil {
+			log.Printf("Error decoding file %s: %v", filePath, err)
 			return false, err
 		}
 
@@ -112,14 +138,9 @@ func checkFilesExist() (bool, error) {
 }
 
 func createJson(db *sql.DB) error {
-	allTracks, err := database.GetAllTracks(db)
-	if err != nil {
-		return err
-	}
-
-	// トラックを10個のファイルに分割
-	numFiles := 10
-	numTracksPerFile := (len(allTracks) + numFiles - 1) / numFiles
+	// 1ファイルあたりのトラック数
+	// メモリ効率のため5万件（約5MB）を上限として分割
+	const tracksPerFile = 50000
 
 	// ディレクトリの存在確認
 	if _, err := os.Stat(baseDirectory); os.IsNotExist(err) {
@@ -128,25 +149,35 @@ func createJson(db *sql.DB) error {
 		}
 	}
 
-	for i := 0; i < numFiles; i++ {
-		start := i * numTracksPerFile
-		end := start + numTracksPerFile
-		if end > len(allTracks) {
-			end = len(allTracks)
+	pageNumber := 1
+
+	for {
+		// 1ページ分のみ取得（メモリ効率化）
+		tracks, err := database.GetTracks(db, pageNumber, tracksPerFile)
+		if err != nil {
+			return err
+		}
+		if len(tracks) == 0 {
+			break // データ終了
 		}
 
-		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, i+1))
+		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, pageNumber))
 		log.Printf("Creating file: %s", filePath)
 
-		err := retry(3, 1*time.Second, func() error {
-			return writeTracksToFileStreaming(filePath, allTracks[start:end])
+		err = retry(3, 1*time.Second, func() error {
+			return writeTracksToFileStreaming(filePath, tracks)
 		})
 		if err != nil {
 			return err
 		}
 
-		// 各ファイル書き込み後にGCを実行してメモリを解放
+		log.Printf("Saved %d tracks to file: %s", len(tracks), filePath)
+
+		// メモリ解放
+		tracks = nil
 		runtime.GC()
+
+		pageNumber++
 	}
 
 	return nil

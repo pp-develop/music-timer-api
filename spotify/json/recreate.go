@@ -14,9 +14,16 @@ func ReCreate(c *gin.Context) error {
 		return model.ErrFailedGetDB
 	}
 
-	// キャッシュをクリアしてから再作成
+	// キャッシュをクリア
 	ClearFilesExistCache()
 
+	// 既存ファイルを削除（ファイル数が減った場合に古いファイルが残るのを防ぐ）
+	if err := deleteAllTrackFiles(); err != nil {
+		log.Printf("Error deleting old files: %v", err)
+		return err
+	}
+
+	// 新規作成
 	err := createJson(db)
 	if err != nil {
 		log.Printf("Error creating JSON: %v", err)
