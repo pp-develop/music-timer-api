@@ -1,6 +1,6 @@
 /build/mysql
 .env
-tracks_part*
+/data/
 
 # TLS certificates (秘密鍵は絶対にコミットしない)
 build/certs/*.pem

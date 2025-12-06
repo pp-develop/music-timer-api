@@ -24,6 +24,34 @@ type TrackWithoutArtistsId struct {
 const baseDirectory = "./data/spotify"
 const fileNamePattern = "tracks_part_%d.json"
 
+// getMemStats はメモリ統計を文字列で返す
+//
+// メトリクスの意味:
+//
+//	Alloc（Allocated）- 現在ヒープに割り当てられているメモリ量
+//	  - アプリケーションが今使っているメモリ
+//	  - GC後に減少する
+//	  - これが増え続ける → メモリリークの可能性
+//
+//	Sys（System）- OSから取得したメモリの総量
+//	  - Goランタイムがシステムから確保した全メモリ
+//	  - ヒープ + スタック + 内部構造体など
+//	  - 一度確保すると簡単には返さない（再利用のため）
+//	  - Renderの512MB制限はこれに近い値で判定される可能性
+//
+//	NumGC - GC（ガベージコレクション）の実行回数
+//	  - プログラム開始からの累計
+//	  - 増えていればGCが動作している証拠
+//	  - 各ファイル処理後に増加していれば、メモリ解放が機能している
+func getMemStats() string {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return fmt.Sprintf("Alloc=%dMB, Sys=%dMB, NumGC=%d",
+		m.Alloc/1024/1024,
+		m.Sys/1024/1024,
+		m.NumGC)
+}
+
 // ファイル存在キャッシュ（メモリ上に保持）
 var (
 	filesExistCache      bool
@@ -138,6 +166,9 @@ func checkFilesExist() (bool, error) {
 }
 
 func createJson(db *sql.DB) error {
+	start := time.Now()
+	log.Printf("[createJson] Start - %s", getMemStats())
+
 	// 1ファイルあたりのトラック数
 	// メモリ効率のため5万件（約5MB）を上限として分割
 	const tracksPerFile = 50000
@@ -150,6 +181,7 @@ func createJson(db *sql.DB) error {
 	}
 
 	pageNumber := 1
+	totalTracks := 0
 
 	for {
 		// 1ページ分のみ取得（メモリ効率化）
@@ -162,7 +194,6 @@ func createJson(db *sql.DB) error {
 		}
 
 		filePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, pageNumber))
-		log.Printf("Creating file: %s", filePath)
 
 		err = retry(3, 1*time.Second, func() error {
 			return writeTracksToFileStreaming(filePath, tracks)
@@ -171,7 +202,8 @@ func createJson(db *sql.DB) error {
 			return err
 		}
 
-		log.Printf("Saved %d tracks to file: %s", len(tracks), filePath)
+		totalTracks += len(tracks)
+		log.Printf("[createJson] File %d saved (%d tracks) - %s", pageNumber, len(tracks), getMemStats())
 
 		// メモリ解放
 		tracks = nil
@@ -179,6 +211,9 @@ func createJson(db *sql.DB) error {
 
 		pageNumber++
 	}
+
+	log.Printf("[createJson] Complete - files=%d, total_tracks=%d, duration=%v, %s",
+		pageNumber-1, totalTracks, time.Since(start), getMemStats())
 
 	return nil
 }
