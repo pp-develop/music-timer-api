@@ -36,11 +36,14 @@ func Create() *gin.Engine {
 
 // setupRoutes configures all API routes
 func setupRoutes(router *gin.Engine) {
-	// Health check (non-Spotify specific)
-	router.GET("/health", handlers.HealthCheck)
+	// API group
+	api := router.Group("/api")
+
+	// Health check
+	api.GET("/health", handlers.HealthCheck)
 
 	// Spotify API endpoints
-	spotify := router.Group("/spotify")
+	spotify := api.Group("/spotify")
 	{
 		// Authentication endpoints
 		auth := spotify.Group("/auth")
@@ -97,7 +100,7 @@ func setupRoutes(router *gin.Engine) {
 	}
 
 	// SoundCloud API endpoints
-	soundcloud := router.Group("/soundcloud")
+	soundcloud := api.Group("/soundcloud")
 	{
 		// Authentication endpoints
 		auth := soundcloud.Group("/auth")
@@ -129,6 +132,7 @@ func setupRoutes(router *gin.Engine) {
 		{
 			tracksInit := tracks.Group("/init")
 			{
+				tracksInit.POST("/followed-artists", soundcloudHandlers.InitFollowedArtistsTracksSoundCloud)
 				tracksInit.POST("/favorites", soundcloudHandlers.InitFavoriteTracksSoundCloud)
 			}
 		}

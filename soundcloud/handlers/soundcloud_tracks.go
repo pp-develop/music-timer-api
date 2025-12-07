@@ -16,3 +16,13 @@ func InitFavoriteTracksSoundCloud(c *gin.Context) {
 	}
 	c.Status(http.StatusOK)
 }
+
+// InitFollowedArtistsTracksSoundCloud initializes tracks from followed artists
+func InitFollowedArtistsTracksSoundCloud(c *gin.Context) {
+	err := playlist.SaveTracksFromFollowedArtists(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.Status(http.StatusOK)
+}

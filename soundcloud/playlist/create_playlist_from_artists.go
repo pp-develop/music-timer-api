@@ -2,6 +2,7 @@ package playlist
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -48,8 +49,8 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 		return "", "", model.ErrFailedGetDB
 	}
 
-	// Get tracks from specified artists
-	tracks, err := getTracksFromArtists(user.AccessToken, specifyMs, json.ArtistIds)
+	// Get tracks from specified artists (DB first, then API fallback)
+	tracks, err := getTracksFromArtists(dbInstance, user.AccessToken, specifyMs, json.ArtistIds)
 	if err != nil {
 		slog.Error("failed to get tracks", slog.Any("error", err))
 		return "", "", err
@@ -95,26 +96,38 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 	return playlistID, playlist.SecretToken, nil
 }
 
-// getTracksFromArtists fetches tracks from all specified artists and selects tracks to match duration
-func getTracksFromArtists(accessToken string, specifyMs int, artistIds []string) ([]model.Track, error) {
-	client := soundcloud.NewClient()
-
-	// Collect all tracks from all artists
+// getTracksFromArtists fetches tracks from DB cache first, then API fallback
+func getTracksFromArtists(db *sql.DB, accessToken string, specifyMs int, artistIds []string) ([]model.Track, error) {
 	var allTracks []model.Track
 	trackIDSet := make(map[string]bool)
 
-	for _, artistID := range artistIds {
-		tracks, err := client.GetUserTracks(accessToken, artistID)
-		if err != nil {
-			slog.Warn("failed to get tracks for artist", slog.String("artist_id", artistID), slog.Any("error", err))
-			continue // Skip this artist and continue with others
-		}
-
-		// Add tracks, avoiding duplicates
-		for _, track := range tracks {
+	// Try to get tracks from database first
+	dbTracks, err := database.GetSoundCloudTracksByArtistIds(db, artistIds)
+	if err == nil && len(dbTracks) > 0 {
+		slog.Info("using cached tracks from database", slog.Int("track_count", len(dbTracks)))
+		for _, track := range dbTracks {
 			if !trackIDSet[track.ID] {
 				trackIDSet[track.ID] = true
 				allTracks = append(allTracks, track)
+			}
+		}
+	} else {
+		// Fallback to API if DB cache is empty
+		slog.Info("no cached tracks found, fetching from API")
+		client := soundcloud.NewClient()
+
+		for _, artistID := range artistIds {
+			tracks, err := client.GetUserTracks(accessToken, artistID)
+			if err != nil {
+				slog.Warn("failed to get tracks for artist", slog.String("artist_id", artistID), slog.Any("error", err))
+				continue
+			}
+
+			for _, track := range tracks {
+				if !trackIDSet[track.ID] {
+					trackIDSet[track.ID] = true
+					allTracks = append(allTracks, track)
+				}
 			}
 		}
 	}

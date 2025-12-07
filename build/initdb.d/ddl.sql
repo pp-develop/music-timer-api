@@ -108,3 +108,12 @@ CREATE TABLE soundcloud_playlists (
     "user_id" VARCHAR(255),
     CONSTRAINT fk_soundcloud_playlist_user FOREIGN KEY (user_id) REFERENCES soundcloud_users(id)
 );
+
+DROP TABLE IF EXISTS soundcloud_artists CASCADE;
+
+CREATE TABLE soundcloud_artists (
+    "id" VARCHAR(255) PRIMARY KEY,
+    INDEX id_index (id),
+    "tracks" JSONB,
+    "updated_at" TIMESTAMP
+);
