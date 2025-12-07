@@ -22,7 +22,8 @@ func GetTracksUpdatedAt(db *sql.DB, userId string) (time.Time, error) {
 }
 
 func SaveFavoriteTrack(db *sql.DB, userId string, track model.Track) error {
-	favoriteTrackJSON, err := json.Marshal(track)
+	// 配列として保存（GetFavoriteTracksが[]model.Trackを期待するため）
+	favoriteTrackJSON, err := json.Marshal([]model.Track{track})
 	if err != nil {
 		return err
 	}

@@ -31,6 +31,20 @@ func GetFavoriteTracks(db *sql.DB, specify_ms int, artistIds []string, userId st
 		}
 	}
 
+	// Phase 2.5: 総再生時間の事前チェック（早期リターン）
+	totalAvailableDuration := 0
+	for _, track := range saveTracks {
+		totalAvailableDuration += track.DurationMs
+	}
+	if totalAvailableDuration < specify_ms {
+		slog.Warn("not enough favorite tracks (early return)",
+			slog.Int("required_min", specify_ms/commontrack.MillisecondsPerMinute),
+			slog.Int("available_min", totalAvailableDuration/commontrack.MillisecondsPerMinute),
+			slog.Int("track_count", len(saveTracks)),
+			slog.Int("artist_count", len(artistIds)))
+		return nil, model.ErrNotEnoughTracks
+	}
+
 	// Phase 3: 組み合わせ計算（時間がかかる可能性がある処理）
 	var tracks []model.Track
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(commontrack.DefaultTimeoutSeconds)*time.Second)
