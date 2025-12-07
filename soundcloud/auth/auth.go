@@ -3,7 +3,7 @@ package auth
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ import (
 func CheckAuth(c *gin.Context) (*model.SoundCloudUser, error) {
 	db, ok := utils.GetDB(c)
 	if !ok {
-		log.Println("[SC-AUTH] ERROR: Failed to get DB instance")
+		slog.Error("failed to get DB instance")
 		return nil, model.ErrFailedGetDB
 	}
 
@@ -36,13 +36,13 @@ func CheckAuth(c *gin.Context) (*model.SoundCloudUser, error) {
 func GetAuth(c *gin.Context) (*model.SoundCloudUser, error) {
 	db, ok := utils.GetDB(c)
 	if !ok {
-		log.Println("[SC-AUTH] ERROR: Failed to get DB instance")
+		slog.Error("failed to get DB instance")
 		return nil, model.ErrFailedGetDB
 	}
 
 	userId, err := utils.GetUserID(c)
 	if err != nil {
-		log.Printf("[SC-AUTH] ERROR: Failed to get user ID: %v", err)
+		slog.Error("failed to get user ID", slog.Any("error", err))
 		return nil, model.ErrFailedGetSession
 	}
 
@@ -53,7 +53,7 @@ func GetAuth(c *gin.Context) (*model.SoundCloudUser, error) {
 func getUserWithTokenRefresh(db *sql.DB, userId string) (*model.SoundCloudUser, error) {
 	user, err := database.GetSoundCloudUser(db, userId)
 	if err != nil {
-		log.Printf("[SC-AUTH] ERROR: Failed to get user from database: %v", err)
+		slog.Error("failed to get user from database", slog.Any("error", err))
 		return nil, err
 	}
 
@@ -63,7 +63,7 @@ func getUserWithTokenRefresh(db *sql.DB, userId string) (*model.SoundCloudUser, 
 		client := soundcloud.NewClient()
 		tokenResp, err := client.RefreshToken(user.RefreshToken)
 		if err != nil {
-			log.Printf("[SC-AUTH] ERROR: Failed to refresh token: %v", err)
+			slog.Error("failed to refresh token", slog.Any("error", err))
 			return nil, fmt.Errorf("failed to refresh token: %w", err)
 		}
 

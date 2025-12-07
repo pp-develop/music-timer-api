@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/gin-contrib/sessions"
@@ -34,7 +34,7 @@ func SpotifyAuthzWeb(c *gin.Context) (string, error) {
 	session := sessions.Default(c)
 	session.Set("state", state.String())
 	if err := session.Save(); err != nil {
-		log.Printf("[ERROR] Failed to save session: %v", err)
+		slog.Error("failed to save session", slog.Any("error", err))
 		return "", err
 	}
 
@@ -55,13 +55,13 @@ func SpotifyCallbackWeb(c *gin.Context) error {
 	session := sessions.Default(c)
 	v := session.Get("state")
 	if v == nil {
-		log.Printf("[ERROR] Callback - Session state is nil, query state: %s", qState)
+		slog.Error("session state is nil", slog.String("query_state", qState))
 		return model.ErrFailedGetSession
 	}
 
 	state := v.(string)
 	if state != qState {
-		log.Printf("[ERROR] Callback - State mismatch. Expected: %s, Got: %s", state, qState)
+		slog.Error("state mismatch", slog.String("expected", state), slog.String("got", qState))
 		return model.ErrInvalidState
 	}
 

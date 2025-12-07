@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"runtime"
 	"sync"
@@ -76,7 +76,7 @@ func deleteAllTrackFiles() error {
 		if err := os.Remove(filePath); err != nil {
 			return fmt.Errorf("failed to delete %s: %w", filePath, err)
 		}
-		log.Printf("Deleted file: %s", filePath)
+		slog.Info("deleted file", slog.String("path", filePath))
 	}
 	return nil
 }
@@ -124,7 +124,7 @@ func checkFilesExist() (bool, error) {
 	// 最低1ファイルは必要
 	firstFilePath := fmt.Sprintf("%s/%s", baseDirectory, fmt.Sprintf(fileNamePattern, 1))
 	if _, err := os.Stat(firstFilePath); os.IsNotExist(err) {
-		log.Printf("First file does not exist: %s", firstFilePath)
+		slog.Debug("first file does not exist", slog.String("path", firstFilePath))
 		return false, nil
 	}
 
@@ -153,12 +153,12 @@ func checkFilesExist() (bool, error) {
 		file.Close()
 
 		if err != nil {
-			log.Printf("Error decoding file %s: %v", filePath, err)
+			slog.Error("error decoding file", slog.String("path", filePath), slog.Any("error", err))
 			return false, err
 		}
 
 		if len(config.Tracks) == 0 {
-			log.Printf("Tracks are empty in file: %s", filePath)
+			slog.Warn("tracks are empty in file", slog.String("path", filePath))
 			return false, nil
 		}
 	}
@@ -167,7 +167,7 @@ func checkFilesExist() (bool, error) {
 
 func createJson(db *sql.DB) error {
 	start := time.Now()
-	log.Printf("[createJson] Start - %s", getMemStats())
+	slog.Info("create json started", slog.String("memory", getMemStats()))
 
 	// 1ファイルあたりのトラック数
 	// メモリ効率のため5万件（約5MB）を上限として分割
@@ -203,7 +203,7 @@ func createJson(db *sql.DB) error {
 		}
 
 		totalTracks += len(tracks)
-		log.Printf("[createJson] File %d saved (%d tracks) - %s", pageNumber, len(tracks), getMemStats())
+		slog.Info("json file saved", slog.Int("file_number", pageNumber), slog.Int("tracks", len(tracks)), slog.String("memory", getMemStats()))
 
 		// メモリ解放
 		tracks = nil
@@ -212,8 +212,11 @@ func createJson(db *sql.DB) error {
 		pageNumber++
 	}
 
-	log.Printf("[createJson] Complete - files=%d, total_tracks=%d, duration=%v, %s",
-		pageNumber-1, totalTracks, time.Since(start), getMemStats())
+	slog.Info("create json completed",
+		slog.Int("files", pageNumber-1),
+		slog.Int("total_tracks", totalTracks),
+		slog.Duration("duration", time.Since(start)),
+		slog.String("memory", getMemStats()))
 
 	return nil
 }
@@ -259,7 +262,7 @@ func writeTracksToFileStreaming(filePath string, tracks []model.Track) error {
 		return err
 	}
 
-	log.Printf("Saved %d tracks to file: %s", len(tracks), filePath)
+	slog.Debug("saved tracks to file", slog.Int("tracks", len(tracks)), slog.String("path", filePath))
 	return writer.Flush()
 }
 
@@ -278,7 +281,7 @@ func Create(db *sql.DB) error {
 	// jsonがあれば何もしない
 	exists, err := exist()
 	if err != nil {
-		log.Printf("Error checking existence: %v", err)
+		slog.Error("error checking existence", slog.Any("error", err))
 		return err
 	}
 	if exists {
@@ -287,10 +290,10 @@ func Create(db *sql.DB) error {
 
 	err = createJson(db)
 	if err != nil {
-		log.Printf("Error creating JSON: %v", err)
+		slog.Error("error creating json", slog.Any("error", err))
 		return err
 	}
-	log.Println("creating JSON")
+	slog.Info("json created successfully")
 
 	// 作成成功後、キャッシュをtrueに設定
 	setFilesExistCache(true)

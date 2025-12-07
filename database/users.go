@@ -2,7 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/utils"
@@ -14,13 +14,13 @@ func SaveAccessToken(db *sql.DB, token *oauth2.Token, user *spotify.PrivateUser)
 	// トークンを暗号化
 	encryptedAccessToken, err := utils.EncryptToken(token.AccessToken)
 	if err != nil {
-		log.Printf("Failed to encrypt access token: %v", err)
+		slog.Error("failed to encrypt access token", slog.Any("error", err))
 		return err
 	}
 
 	encryptedRefreshToken, err := utils.EncryptToken(token.RefreshToken)
 	if err != nil {
-		log.Printf("Failed to encrypt refresh token: %v", err)
+		slog.Error("failed to encrypt refresh token", slog.Any("error", err))
 		return err
 	}
 
@@ -44,7 +44,7 @@ func UpdateAccessToken(db *sql.DB, token *oauth2.Token, id string) error {
 	// アクセストークンを暗号化
 	encryptedAccessToken, err := utils.EncryptToken(token.AccessToken)
 	if err != nil {
-		log.Printf("Failed to encrypt access token: %v", err)
+		slog.Error("failed to encrypt access token", slog.Any("error", err))
 		return err
 	}
 
@@ -72,13 +72,13 @@ func GetUser(db *sql.DB, id string) (model.User, error) {
 	// トークンを復号化
 	user.AccessToken, err = utils.DecryptToken(encryptedAccessToken)
 	if err != nil {
-		log.Printf("Failed to decrypt access token: %v", err)
+		slog.Error("failed to decrypt access token", slog.Any("error", err))
 		return user, err
 	}
 
 	user.RefreshToken, err = utils.DecryptToken(encryptedRefreshToken)
 	if err != nil {
-		log.Printf("Failed to decrypt refresh token: %v", err)
+		slog.Error("failed to decrypt refresh token", slog.Any("error", err))
 		return user, err
 	}
 

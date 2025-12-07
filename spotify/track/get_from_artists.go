@@ -3,7 +3,7 @@ package track
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/database"
@@ -60,11 +60,11 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 	select {
 	case tracks := <-c1:
 		finalTryCount := <-tryCountChan
-		log.Printf("試行回数: %d\n", finalTryCount)
+		slog.Debug("track selection complete", slog.Int("try_count", finalTryCount))
 		return tracks, nil
 	case err := <-errChan:
 		finalTryCount := <-tryCountChan
-		log.Printf("タイムアウト: 試行回数: %d\n", finalTryCount)
+		slog.Debug("track selection error", slog.Int("try_count", finalTryCount))
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
 		finalTryCount := <-tryCountChan
@@ -78,21 +78,21 @@ func GetTracksFromArtists(db *sql.DB, specify_ms int, artistIds []string, userId
 		hasEnoughDuration := totalAvailableDuration >= specify_ms
 
 		if !hasEnoughDuration {
-			log.Printf("[タイムアウト] GetTracksFromArtists: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, アーティスト数=%d",
-				specify_ms/commontrack.MillisecondsPerMinute,
-				totalAvailableDuration/commontrack.MillisecondsPerMinute,
-				len(followedArtistsTracks),
-				finalTryCount,
-				len(artistIds),
+			slog.Warn("timeout: not enough tracks",
+				slog.Int("required_minutes", specify_ms/commontrack.MillisecondsPerMinute),
+				slog.Int("available_minutes", totalAvailableDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(followedArtistsTracks)),
+				slog.Int("try_count", finalTryCount),
+				slog.Int("artist_count", len(artistIds)),
 			)
 			return nil, model.ErrNotEnoughTracks
 		} else {
-			log.Printf("[タイムアウト] GetTracksFromArtists: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, アーティスト数=%d",
-				specify_ms/commontrack.MillisecondsPerMinute,
-				len(followedArtistsTracks),
-				totalAvailableDuration/commontrack.MillisecondsPerMinute,
-				finalTryCount,
-				len(artistIds),
+			slog.Warn("timeout: combination not found",
+				slog.Int("duration_minutes", specify_ms/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(followedArtistsTracks)),
+				slog.Int("total_duration_minutes", totalAvailableDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("try_count", finalTryCount),
+				slog.Int("artist_count", len(artistIds)),
 			)
 			return nil, model.ErrTimeoutCreatePlaylist
 		}

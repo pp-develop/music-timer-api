@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -25,7 +25,7 @@ var (
 func getEncryptionKey() ([]byte, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Warning: .env file not found, using system environment variables")
+		slog.Debug(".env file not found, using system environment variables")
 	}
 
 	keyString := os.Getenv("ENCRYPTION_KEY")

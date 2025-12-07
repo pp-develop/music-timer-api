@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"errors"
-	"log"
+	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 )
 
 // ErrorHandlerMiddleware は全てのエンドポイントで共通のエラー処理を行うミドルウェア
@@ -30,8 +30,7 @@ func ErrorHandlerMiddleware() gin.HandlerFunc {
 }
 
 func handleError(c *gin.Context, err error) {
-	log.Printf("[ERROR-HANDLER] Handling error: %v (Type: %T)", err, err)
-	logger.LogError(err)
+	slog.Error("handling error", slog.Any("error", err), slog.String("type", fmt.Sprintf("%T", err)))
 
 	// 認証エラー
 	if errors.Is(err, model.ErrAccessTokenExpired) {

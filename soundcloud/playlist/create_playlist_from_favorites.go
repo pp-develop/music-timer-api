@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"strconv"
 	"time"
@@ -27,11 +27,11 @@ type CreatePlaylistFromFavoritesRequest struct {
 func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 	var json CreatePlaylistFromFavoritesRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to bind JSON: %v", err)
+		slog.Error("failed to bind JSON", slog.Any("error", err))
 		return "", "", err
 	}
 
-	log.Printf("[PLAYLIST-FROM-FAVORITES] Creating playlist: duration=%d minutes", json.Minute)
+	slog.Info("creating playlist from favorites", slog.Int("duration_minutes", json.Minute))
 
 	// Convert minutes to milliseconds
 	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
@@ -39,25 +39,25 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 	// Get authenticated user
 	user, err := auth.GetAuth(c)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Authentication failed: %v", err)
+		slog.Error("authentication failed", slog.Any("error", err))
 		return "", "", err
 	}
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		log.Println("[PLAYLIST-FROM-FAVORITES] Failed to get DB instance")
+		slog.Error("failed to get DB instance")
 		return "", "", model.ErrFailedGetDB
 	}
 
 	// Get favorite tracks from database
 	tracks, err := getTracksFromFavorites(dbInstance, specifyMs, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to get tracks: %v", err)
+		slog.Error("failed to get tracks", slog.Any("error", err))
 		return "", "", err
 	}
 
 	if len(tracks) == 0 {
-		log.Println("[PLAYLIST-FROM-FAVORITES] No tracks available for playlist creation")
+		slog.Error("no tracks available for playlist creation")
 		return "", "", model.ErrNotEnoughTracks
 	}
 
@@ -74,7 +74,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 
 	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to create playlist: %v", err)
+		slog.Error("failed to create playlist", slog.Any("error", err))
 		return "", "", err
 	}
 
@@ -82,16 +82,16 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 	playlistID := strconv.Itoa(playlist.ID)
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to save playlist to database: %v", err)
+		slog.Error("failed to save playlist to database", slog.Any("error", err))
 		return "", "", err
 	}
 
 	// Increment playlist count (non-fatal)
 	if err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id); err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES][WARN] Failed to increment playlist count: %v", err)
+		slog.Warn("failed to increment playlist count", slog.Any("error", err))
 	}
 
-	log.Printf("[PLAYLIST-FROM-FAVORITES] Playlist created successfully: id=%s, secret_token=%s, tracks=%d", playlistID, playlist.SecretToken, len(trackIDs))
+	slog.Info("playlist created successfully", slog.String("playlist_id", playlistID), slog.String("secret_token", playlist.SecretToken), slog.Int("tracks", len(trackIDs)))
 	return playlistID, playlist.SecretToken, nil
 }
 
@@ -100,12 +100,12 @@ func getTracksFromFavorites(db *sql.DB, specifyMs int, userId string) ([]model.T
 	// Get favorite tracks from database
 	saveTracks, err := database.GetSoundCloudFavoriteTracks(db, userId)
 	if err != nil {
-		log.Printf("[GET-TRACKS-FROM-FAVORITES] Database error: %v", err)
+		slog.Error("database error", slog.Any("error", err))
 		return nil, err
 	}
 
 	if len(saveTracks) == 0 {
-		log.Println("[GET-TRACKS-FROM-FAVORITES] ERROR: No favorite tracks in database!")
+		slog.Error("no favorite tracks in database")
 		return nil, model.ErrNoFavoriteTracks
 	}
 
@@ -161,19 +161,19 @@ func getTracksFromFavorites(db *sql.DB, specifyMs int, userId string) ([]model.T
 		hasEnoughDuration := totalDuration >= specifyMs
 
 		if !hasEnoughDuration {
-			log.Printf("[タイムアウト] GetTracksFromFavorites: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d",
-				specifyMs/commontrack.MillisecondsPerMinute,
-				totalDuration/commontrack.MillisecondsPerMinute,
-				len(saveTracks),
-				finalTryCount,
+			slog.Warn("timeout: not enough tracks",
+				slog.Int("required_minutes", specifyMs/commontrack.MillisecondsPerMinute),
+				slog.Int("available_minutes", totalDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(saveTracks)),
+				slog.Int("try_count", finalTryCount),
 			)
 			return nil, model.ErrNotEnoughTracks
 		} else {
-			log.Printf("[タイムアウト] GetTracksFromFavorites: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d",
-				specifyMs/commontrack.MillisecondsPerMinute,
-				len(saveTracks),
-				totalDuration/commontrack.MillisecondsPerMinute,
-				finalTryCount,
+			slog.Warn("timeout: combination not found",
+				slog.Int("duration_minutes", specifyMs/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(saveTracks)),
+				slog.Int("total_duration_minutes", totalDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("try_count", finalTryCount),
 			)
 			return nil, model.ErrTimeoutCreatePlaylist
 		}

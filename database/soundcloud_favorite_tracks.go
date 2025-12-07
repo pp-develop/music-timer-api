@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/model"
@@ -38,13 +38,13 @@ func GetSoundCloudFavoriteTracks(db *sql.DB, userId string) ([]model.Track, erro
 		if err == sql.ErrNoRows {
 			return []model.Track{}, nil
 		}
-		log.Printf("[DB] Database query error: %v", err)
+		slog.Error("database query error", slog.Any("error", err))
 		return nil, err
 	}
 
 	err = json.Unmarshal([]byte(tracksJSON), &tracks)
 	if err != nil {
-		log.Printf("[DB] JSON unmarshal error: %v", err)
+		slog.Error("JSON unmarshal error", slog.Any("error", err))
 		return nil, err
 	}
 

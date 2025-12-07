@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"os"
 	"time"
@@ -64,7 +64,7 @@ func readJSONFileWithRetry(filePath string, retries int) (*TracksJSON, error) {
 	for i := 0; i < retries; i++ {
 		file, openErr := os.Open(filePath)
 		if openErr != nil {
-			log.Printf("Error opening file %s: %v", filePath, openErr)
+			slog.Error("error opening file", slog.String("file_path", filePath), slog.Any("error", openErr))
 			return nil, openErr
 		}
 
@@ -78,7 +78,7 @@ func readJSONFileWithRetry(filePath string, retries int) (*TracksJSON, error) {
 		}
 
 		lastErr = err
-		log.Printf("Error decoding JSON from file %s (attempt %d/%d): %v", filePath, i+1, retries, err)
+		slog.Warn("error decoding JSON from file", slog.String("file_path", filePath), slog.Int("attempt", i+1), slog.Int("retries", retries), slog.Any("error", err))
 		time.Sleep(1 * time.Second)
 	}
 	return nil, fmt.Errorf("failed to read and decode JSON from file %s after %d attempts: %w", filePath, retries, lastErr)

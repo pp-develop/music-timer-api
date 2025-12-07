@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -181,11 +181,11 @@ func (c *Client) GetFavorites(accessToken string) ([]model.Track, error) {
 	nextURL := fmt.Sprintf("%s/me/likes/tracks?linked_partitioning=true&limit=50",
 		SoundCloudAPIBase)
 
-	log.Printf("[SC-API] Starting to fetch all favorite tracks")
+	slog.Info("starting to fetch all favorite tracks")
 
 	for nextURL != "" {
 		pageCount++
-		log.Printf("[SC-API] Fetching page %d", pageCount)
+		slog.Debug("fetching page", slog.Int("page", pageCount))
 
 		req, err := http.NewRequest("GET", nextURL, nil)
 		if err != nil {
@@ -248,17 +248,17 @@ func (c *Client) GetFavorites(accessToken string) ([]model.Track, error) {
 		nextURL = paginatedResp.NextHref
 
 		if nextURL == "" {
-			log.Printf("[SC-API] Reached last page (next_href is empty)")
+			slog.Debug("reached last page")
 		}
 
 		// If no new tracks were added, all were duplicates - stop
 		if len(allTracks) == prevCount {
-			log.Printf("[SC-API] All tracks in batch were duplicates, stopping")
+			slog.Debug("all tracks in batch were duplicates, stopping")
 			break
 		}
 	}
 
-	log.Printf("[SC-API] Successfully fetched %d favorite tracks in %d pages", len(allTracks), pageCount)
+	slog.Info("successfully fetched favorite tracks", slog.Int("track_count", len(allTracks)), slog.Int("page_count", pageCount))
 	return allTracks, nil
 }
 
@@ -271,7 +271,7 @@ func (c *Client) GetUserTracks(accessToken string, userID string) ([]model.Track
 	nextURL := fmt.Sprintf("%s/users/%s/tracks?linked_partitioning=true&limit=50",
 		SoundCloudAPIBase, userID)
 
-	log.Printf("[SC-API] Starting to fetch tracks for user %s", userID)
+	slog.Debug("starting to fetch tracks for user", slog.String("user_id", userID))
 
 	for nextURL != "" {
 		pageCount++
@@ -336,7 +336,7 @@ func (c *Client) GetUserTracks(accessToken string, userID string) ([]model.Track
 		}
 	}
 
-	log.Printf("[SC-API] Successfully fetched %d tracks for user %s in %d pages", len(allTracks), userID, pageCount)
+	slog.Debug("successfully fetched tracks for user", slog.Int("track_count", len(allTracks)), slog.String("user_id", userID), slog.Int("page_count", pageCount))
 	return allTracks, nil
 }
 
@@ -366,7 +366,7 @@ func (c *Client) DeletePlaylist(accessToken string, playlistID string) error {
 	// SoundCloud returns 200 OK on successful deletion
 	// 404 means playlist already deleted on SoundCloud - treat as success
 	if resp.StatusCode == http.StatusNotFound {
-		log.Printf("[SC-API] Playlist %s already deleted on SoundCloud, skipping", playlistID)
+		slog.Debug("playlist already deleted on SoundCloud, skipping", slog.String("playlist_id", playlistID))
 		return nil
 	}
 
@@ -375,7 +375,7 @@ func (c *Client) DeletePlaylist(accessToken string, playlistID string) error {
 		return fmt.Errorf("delete playlist failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
-	log.Printf("[SC-API] Playlist %s deleted successfully", playlistID)
+	slog.Info("playlist deleted successfully", slog.String("playlist_id", playlistID))
 	return nil
 }
 
@@ -404,7 +404,7 @@ func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs
 		return nil, fmt.Errorf("failed to marshal playlist data: %v", err)
 	}
 
-	log.Printf("[SC-API] Creating playlist with %d tracks, payload: %s", len(trackIDs), string(jsonData))
+	slog.Debug("creating playlist", slog.Int("track_count", len(trackIDs)))
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/playlists", SoundCloudAPIBase), strings.NewReader(string(jsonData)))
 	if err != nil {
@@ -424,7 +424,7 @@ func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		log.Printf("[SC-API] Create playlist failed: status=%d, body=%s", resp.StatusCode, string(body))
+		slog.Error("create playlist failed", slog.Int("status", resp.StatusCode), slog.String("body", string(body)))
 		return nil, fmt.Errorf("create playlist failed (status %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -433,7 +433,7 @@ func (c *Client) CreatePlaylist(accessToken, title, description string, trackIDs
 		return nil, fmt.Errorf("failed to decode playlist response: %v", err)
 	}
 
-	log.Printf("[SC-API] Playlist created: id=%d, tracks=%d", playlist.ID, len(trackIDs))
+	slog.Info("playlist created", slog.Int("playlist_id", playlist.ID), slog.Int("track_count", len(trackIDs)))
 	return &playlist, nil
 }
 
@@ -445,11 +445,11 @@ func (c *Client) GetFollowings(accessToken string) ([]SCUser, error) {
 
 	nextURL := fmt.Sprintf("%s/me/followings?linked_partitioning=true&limit=50", SoundCloudAPIBase)
 
-	log.Printf("[SC-API] Starting to fetch followed users")
+	slog.Debug("starting to fetch followed users")
 
 	for nextURL != "" {
 		pageCount++
-		log.Printf("[SC-API] Fetching followings page %d", pageCount)
+		slog.Debug("fetching followings page", slog.Int("page", pageCount))
 
 		req, err := http.NewRequest("GET", nextURL, nil)
 		if err != nil {
@@ -504,6 +504,6 @@ func (c *Client) GetFollowings(accessToken string) ([]SCUser, error) {
 		}
 	}
 
-	log.Printf("[SC-API] Successfully fetched %d followed users in %d pages", len(allUsers), pageCount)
+	slog.Info("successfully fetched followed users", slog.Int("user_count", len(allUsers)), slog.Int("page_count", pageCount))
 	return allUsers, nil
 }

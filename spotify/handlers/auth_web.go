@@ -1,13 +1,13 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/spotify/auth"
 )
 
@@ -15,7 +15,7 @@ import (
 func GetAuthzURLWeb(c *gin.Context) {
 	url, err := auth.SpotifyAuthzWeb(c)
 	if err != nil {
-		logger.LogError(err)
+		slog.Error("failed to get authz URL", slog.Any("error", err))
 		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
@@ -26,7 +26,7 @@ func GetAuthzURLWeb(c *gin.Context) {
 func CallbackWeb(c *gin.Context) {
 	err := auth.SpotifyCallbackWeb(c)
 	if err != nil {
-		logger.LogError(err)
+		slog.Error("callback failed", slog.Any("error", err))
 		c.Redirect(http.StatusSeeOther, os.Getenv("SPOTIFY_AUTHZ_WEB_ERROR_URL"))
 	} else {
 		c.Redirect(http.StatusMovedPermanently, os.Getenv("SPOTIFY_AUTHZ_WEB_SUCCESS_URL"))
@@ -44,7 +44,7 @@ func GetAuthStatusWeb(c *gin.Context) {
 			"reason":        "session_expired",
 		})
 	} else if err != nil {
-		logger.LogError(err)
+		slog.Error("failed to check auth status", slog.Any("error", err))
 		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{

@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"log"
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
@@ -28,7 +28,7 @@ func AuthzWeb(c *gin.Context) (string, error) {
 	session.Set("sc_state", state)
 	err := session.Save()
 	if err != nil {
-		log.Printf("[SC-AUTH-WEB] ERROR: Failed to save session: %v", err)
+		slog.Error("failed to save session", slog.Any("error", err))
 		return "", err
 	}
 
@@ -49,13 +49,13 @@ func CallbackWeb(c *gin.Context) error {
 	session := sessions.Default(c)
 	v := session.Get("sc_state")
 	if v == nil {
-		log.Printf("[SC-AUTH-WEB] ERROR: Session state is nil, query state: %s", qState)
+		slog.Error("session state is nil", slog.String("query_state", qState))
 		return model.ErrFailedGetSession
 	}
 
 	state := v.(string)
 	if state != qState {
-		log.Printf("[SC-AUTH-WEB] ERROR: State mismatch. Expected: %s, Got: %s", state, qState)
+		slog.Error("state mismatch", slog.String("expected", state), slog.String("got", qState))
 		return model.ErrInvalidState
 	}
 

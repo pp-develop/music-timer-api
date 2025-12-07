@@ -2,7 +2,7 @@ package utils
 
 import (
 	"errors"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -37,7 +37,7 @@ type TokenPair struct {
 func getJWTSecret() string {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
+		slog.Debug("error loading .env file", slog.Any("error", err))
 	}
 
 	secret := os.Getenv("JWT_SECRET")

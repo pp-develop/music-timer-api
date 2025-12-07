@@ -1,7 +1,7 @@
 package json
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,7 +11,7 @@ import (
 
 func ReCreate(c *gin.Context) error {
 	start := time.Now()
-	log.Printf("[ReCreate] Start - %s", getMemStats())
+	slog.Info("recreate started", slog.String("mem_stats", getMemStats()))
 
 	db, ok := utils.GetDB(c)
 	if !ok {
@@ -23,18 +23,18 @@ func ReCreate(c *gin.Context) error {
 
 	// 既存ファイルを削除（ファイル数が減った場合に古いファイルが残るのを防ぐ）
 	if err := deleteAllTrackFiles(); err != nil {
-		log.Printf("[ReCreate] Error deleting old files: %v", err)
+		slog.Error("error deleting old files", slog.Any("error", err))
 		return err
 	}
-	log.Printf("[ReCreate] Deleted old files - %s", getMemStats())
+	slog.Debug("deleted old files", slog.String("mem_stats", getMemStats()))
 
 	// 新規作成
 	err := createJson(db)
 	if err != nil {
-		log.Printf("[ReCreate] Error creating JSON: %v", err)
+		slog.Error("error creating JSON", slog.Any("error", err))
 		return err
 	}
 
-	log.Printf("[ReCreate] Complete - duration=%v, %s", time.Since(start), getMemStats())
+	slog.Info("recreate complete", slog.Duration("duration", time.Since(start)), slog.String("mem_stats", getMemStats()))
 	return nil
 }

@@ -1,14 +1,13 @@
 package playlist
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/gin-gonic/gin"
 	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/spotify/track"
 	"github.com/pp-develop/music-timer-api/utils"
@@ -46,19 +45,19 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	if json.IncludeFavoriteTracks {
 		tracks, err = track.GetFavoriteTracks(dbInstance, specify_ms, json.ArtistIds, user.Id)
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to get favorite tracks", slog.Any("error", err))
 			return "", err
 		}
 	} else if len(json.ArtistIds) > 0 {
 		tracks, err = track.GetTracksFromArtists(dbInstance, specify_ms, json.ArtistIds, user.Id)
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to get tracks from artists", slog.Any("error", err))
 			return "", err
 		}
 	} else {
 		tracks, err = track.GetTracks(dbInstance, specify_ms, json.Market)
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to get tracks", slog.Any("error", err))
 			return "", err
 		}
 	}
@@ -77,7 +76,9 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	err = spotify.AddItemsPlaylist(ctx, string(playlist.ID), tracks, user)
 	if err != nil {
 		database.DeletePlaylists(dbInstance, string(playlist.ID), user.Id)
-		logger.LogError(spotify.UnfollowPlaylist(ctx, playlist.ID, user))
+		if unfollowErr := spotify.UnfollowPlaylist(ctx, playlist.ID, user); unfollowErr != nil {
+			slog.Error("failed to unfollow playlist", slog.Any("error", unfollowErr))
+		}
 		return "", err
 	}
 
@@ -88,7 +89,9 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 
 	if err = database.IncrementPlaylistCount(dbInstance, user.Id); err != nil {
 		// Non-fatal: log the error but don't fail the playlist creation
-		log.Printf("[WARN] Failed to increment playlist count for user %s: %v", user.Id, err)
+		slog.Warn("failed to increment playlist count",
+			slog.String("user_id", user.Id),
+			slog.Any("error", err))
 	}
 
 	return string(playlist.ID), nil

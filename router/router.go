@@ -1,7 +1,8 @@
 package router
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -15,7 +16,8 @@ import (
 func Create() *gin.Engine {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalln("Error loading .env file")
+		slog.Error("error loading .env file", slog.Any("error", err))
+		os.Exit(1)
 	}
 
 	router := gin.Default()

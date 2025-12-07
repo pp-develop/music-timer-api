@@ -3,7 +3,8 @@ package track
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/pp-develop/music-timer-api/model"
@@ -71,11 +72,11 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	select {
 	case tracks := <-c1:
 		finalTryCount := <-tryCountChan
-		log.Printf("試行回数: %d\n", finalTryCount) // 試行回数を出力
+		slog.Info("track selection completed", slog.Int("try_count", finalTryCount))
 		return tracks, nil
 	case err := <-errChan:
 		finalTryCount := <-tryCountChan
-		log.Printf("タイムアウト: 試行回数: %d\n", finalTryCount)
+		slog.Warn("track selection timeout", slog.Int("try_count", finalTryCount))
 		return nil, err
 	case <-ctx.Done(): // タイムアウト時
 		finalTryCount := <-tryCountChan
@@ -89,22 +90,20 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 		hasEnoughDuration := totalAvailableDuration >= specify_ms
 
 		if !hasEnoughDuration {
-			log.Printf("[タイムアウト] GetTracks: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d, マーケット=%s",
-				specify_ms/commontrack.MillisecondsPerMinute,
-				totalAvailableDuration/commontrack.MillisecondsPerMinute,
-				len(tracksToProcess),
-				finalTryCount,
-				market,
-			)
+			slog.Warn("not enough tracks",
+				slog.Int("required_min", specify_ms/commontrack.MillisecondsPerMinute),
+				slog.Int("available_min", totalAvailableDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(tracksToProcess)),
+				slog.Int("try_count", finalTryCount),
+				slog.String("market", market))
 			return nil, model.ErrNotEnoughTracks
 		} else {
-			log.Printf("[タイムアウト] GetTracks: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d, マーケット=%s",
-				specify_ms/commontrack.MillisecondsPerMinute,
-				len(tracksToProcess),
-				totalAvailableDuration/commontrack.MillisecondsPerMinute,
-				finalTryCount,
-				market,
-			)
+			slog.Warn("combination not found",
+				slog.Int("duration_min", specify_ms/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(tracksToProcess)),
+				slog.Int("total_duration_min", totalAvailableDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("try_count", finalTryCount),
+				slog.String("market", market))
 			return nil, model.ErrTimeoutCreatePlaylist
 		}
 	}

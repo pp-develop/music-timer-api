@@ -2,7 +2,7 @@ package search
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
 	"runtime"
 	"strings"
 	"time"
@@ -22,22 +22,22 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 	c.BindJSON(&requestBody)
 
 	market := strings.ToUpper(requestBody.Market)
-	log.Printf("[SaveTracks] Start - market: %s", market)
+	slog.Info("save tracks started", slog.String("market", market))
 
 	tracks, err := spotify.SearchTracks(market)
 	if err != nil {
-		log.Printf("[SaveTracks] Error fetching from Spotify API: %v", err)
+		slog.Error("error fetching from Spotify API", slog.Any("error", err))
 		return err
 	}
-	log.Printf("[SaveTracks] Fetched %d tracks from Spotify API", len(tracks))
+	slog.Debug("fetched tracks from Spotify API", slog.Int("track_count", len(tracks)))
 
 	savedCount, err := saveTracks(db, tracks, market, true)
 	if err != nil {
-		log.Printf("[SaveTracks] Error saving to DB: %v", err)
+		slog.Error("error saving to DB", slog.Any("error", err))
 		return err
 	}
 
-	log.Printf("[SaveTracks] Complete - fetched: %d, saved: %d, duration: %v", len(tracks), savedCount, time.Since(start))
+	slog.Info("save tracks complete", slog.Int("fetched", len(tracks)), slog.Int("saved", savedCount), slog.Duration("duration", time.Since(start)))
 
 	// 大量データ処理後にGCを実行してメモリを解放
 	runtime.GC()

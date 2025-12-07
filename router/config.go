@@ -1,7 +1,7 @@
 package router
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -16,7 +16,8 @@ import (
 func setupCORS(router *gin.Engine) {
 	environment := os.Getenv("ENVIRONMENT")
 	if environment == "" {
-		log.Fatalln("ENVIRONMENT variable must be set (production or development)")
+		slog.Error("ENVIRONMENT variable must be set (production or development)")
+		os.Exit(1)
 	}
 	isProduction := environment == "production"
 
@@ -48,11 +49,14 @@ func setupCORS(router *gin.Engine) {
 
 	// 最低1つのOriginが設定されていることを確認
 	if len(allowedOrigins) == 0 {
-		log.Fatalln("No valid origins configured for CORS. Check BASE_URL and API_URL environment variables.")
+		slog.Error("no valid origins configured for CORS",
+			slog.String("hint", "Check BASE_URL and API_URL environment variables"))
+		os.Exit(1)
 	}
 
-	log.Printf("[INFO] CORS configuration - Environment: %s, AllowedOrigins: %v",
-		environment, allowedOrigins)
+	slog.Info("CORS configuration",
+		slog.String("environment", environment),
+		slog.Any("allowed_origins", allowedOrigins))
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: allowedOrigins,
@@ -100,7 +104,9 @@ func setupSession(router *gin.Engine) {
 		Path:     "/",
 	})
 
-	log.Printf("[INFO] Session configuration - Environment: %s, Secure: %v, SameSite: %v",
-		os.Getenv("ENVIRONMENT"), isProduction, sameSiteMode)
+	slog.Info("session configuration",
+		slog.String("environment", os.Getenv("ENVIRONMENT")),
+		slog.Bool("secure", isProduction),
+		slog.Any("same_site", sameSiteMode))
 	router.Use(sessions.Sessions("mysession", store))
 }

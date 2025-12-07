@@ -1,7 +1,7 @@
 package playlist
 
 import (
-	"log"
+	"log/slog"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/api/soundcloud"
@@ -31,7 +31,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		return err
 	}
 
-	log.Printf("[SAVE-FAVORITE-TRACKS] Retrieved %d favorite tracks from SoundCloud", len(tracks))
+	slog.Info("retrieved favorite tracks from SoundCloud", slog.Int("track_count", len(tracks)))
 
 	// Clear existing favorites and save new ones
 	err = database.ClearSoundCloudFavoriteTracks(db, user.Id)

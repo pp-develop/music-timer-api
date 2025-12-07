@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -50,7 +50,7 @@ func GetTracksByArtistIds(db *sql.DB, artistIDs []string) ([]model.Track, error)
 		if tracksJSON != "" {
 			err = json.Unmarshal([]byte(tracksJSON), &tracks)
 			if err != nil {
-				log.Printf("Error unmarshaling track JSON: %v", err)
+				slog.Error("error unmarshaling track JSON", slog.Any("error", err))
 				return nil, err
 			}
 		}
@@ -131,7 +131,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 	err := db.QueryRow(`
         SELECT tracks FROM spotify_artists WHERE id = $1`, id).Scan(&trackJSON)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("Error fetching artist tracks for ID %s: %v", id, err)
+		slog.Error("error fetching artist tracks", slog.String("artist_id", id), slog.Any("error", err))
 		return err
 	}
 
@@ -139,7 +139,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 	if trackJSON != nil && *trackJSON != "" {
 		err = json.Unmarshal([]byte(*trackJSON), &existingTracks)
 		if err != nil {
-			log.Printf("Error unmarshaling existing tracks for artist ID %s: %v", id, err)
+			slog.Error("error unmarshaling existing tracks", slog.String("artist_id", id), slog.Any("error", err))
 			return err
 		}
 	}
@@ -159,7 +159,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
 	// 更新されたトラックリストをJSONBにエンコード
 	updatedTrackJSON, err := json.Marshal(existingTracks)
 	if err != nil {
-		log.Printf("Error marshaling updated tracks for artist ID %s: %v", id, err)
+		slog.Error("error marshaling updated tracks", slog.String("artist_id", id), slog.Any("error", err))
 		return err
 	}
 
@@ -172,7 +172,7 @@ func AddArtistTracks(db *sql.DB, id string, newTracks []model.Track) error {
             updated_at = NOW()`,
 		id, updatedTrackJSON)
 	if err != nil {
-		log.Printf("Error upserting artist tracks for artist ID %s: %v", id, err)
+		slog.Error("error upserting artist tracks", slog.String("artist_id", id), slog.Any("error", err))
 		return err
 	}
 

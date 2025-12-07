@@ -3,7 +3,7 @@ package spotify
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"os"
 	"runtime"
@@ -28,7 +28,9 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	start := time.Now()
 	query := getRandomQuery()
 
-	log.Printf("[SearchTracks] Start - query: %q, market: %q", query, market)
+	slog.Info("search tracks started",
+		slog.String("query", query),
+		slog.String("market", market))
 
 	// コンテキストとクライアント認証情報の初期化
 	ctx := context.Background()
@@ -39,7 +41,10 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	}
 	token, err := config.Token(ctx)
 	if err != nil {
-		log.Printf("[SearchTracks] Token acquisition failed - duration: %v, error: %v", time.Since(start), err)
+		slog.Error("token acquisition failed",
+			slog.String("query", query),
+			slog.Duration("duration", time.Since(start)),
+			slog.Any("error", err))
 		return nil, err
 	}
 
@@ -59,8 +64,11 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	// 検索とページング処理
 	results, err := client.Search(ctx, query, spotify.SearchTypeTrack, options...)
 	if err != nil {
-		log.Printf("[SearchTracks] Initial search failed - query: %q, market: %q, duration: %v, error: %v",
-			query, market, time.Since(start), err)
+		slog.Error("initial search failed",
+			slog.String("query", query),
+			slog.String("market", market),
+			slog.Duration("duration", time.Since(start)),
+			slog.Any("error", err))
 		return nil, err
 	}
 	fullTracks = append(fullTracks, results.Tracks.Tracks...)
@@ -76,26 +84,41 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 		// 次のページを取得
 		err = client.NextTrackResults(ctx, results)
 		if err != nil {
-			log.Printf("[SearchTracks] Paging failed - query: %q, market: %q, page: %d, fetched: %d, duration: %v, error: %v",
-				query, market, pageCount, len(fullTracks), time.Since(start), err)
+			slog.Error("paging failed",
+				slog.String("query", query),
+				slog.String("market", market),
+				slog.Int("page", pageCount),
+				slog.Int("fetched", len(fullTracks)),
+				slog.Duration("duration", time.Since(start)),
+				slog.Any("error", err))
 			return nil, err
 		}
 		fullTracks = append(fullTracks, results.Tracks.Tracks...)
 
 		// 進捗ログ（20ページごと = 約1000件ごと）
 		if pageCount%20 == 0 {
-			log.Printf("[SearchTracks] Progress - query: %q, page: %d, fetched: %d, duration: %v, %s",
-				query, pageCount, len(fullTracks), time.Since(start), getMemStats())
+			slog.Info("search tracks progress",
+				slog.String("query", query),
+				slog.Int("page", pageCount),
+				slog.Int("fetched", len(fullTracks)),
+				slog.Duration("duration", time.Since(start)),
+				slog.String("memory", getMemStats()))
 		}
 	}
 
 	// 上限に達した場合はログ出力
 	if pageCount >= maxPages {
-		log.Printf("[SearchTracks] Reached max pages limit - query: %q, maxPages: %d", query, maxPages)
+		slog.Warn("reached max pages limit",
+			slog.String("query", query),
+			slog.Int("max_pages", maxPages))
 	}
 
-	log.Printf("[SearchTracks] Complete - query: %q, market: %q, pages: %d, tracks: %d, duration: %v",
-		query, market, pageCount, len(fullTracks), time.Since(start))
+	slog.Info("search tracks completed",
+		slog.String("query", query),
+		slog.String("market", market),
+		slog.Int("pages", pageCount),
+		slog.Int("tracks", len(fullTracks)),
+		slog.Duration("duration", time.Since(start)))
 
 	return fullTracks, nil
 }

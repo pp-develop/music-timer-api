@@ -3,7 +3,7 @@ package playlist
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -26,11 +26,11 @@ type CreatePlaylistFromArtistsRequest struct {
 func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 	var json CreatePlaylistFromArtistsRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to bind JSON: %v", err)
+		slog.Error("failed to bind JSON", slog.Any("error", err))
 		return "", "", err
 	}
 
-	log.Printf("[PLAYLIST-FROM-ARTISTS] Creating playlist: duration=%d minutes, artists=%v", json.Minute, json.ArtistIds)
+	slog.Info("creating playlist from artists", slog.Int("duration_minutes", json.Minute), slog.Any("artist_ids", json.ArtistIds))
 
 	// Convert minutes to milliseconds
 	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
@@ -38,25 +38,25 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 	// Get authenticated user
 	user, err := auth.GetAuth(c)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Authentication failed: %v", err)
+		slog.Error("authentication failed", slog.Any("error", err))
 		return "", "", err
 	}
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
-		log.Println("[PLAYLIST-FROM-ARTISTS] Failed to get DB instance")
+		slog.Error("failed to get DB instance")
 		return "", "", model.ErrFailedGetDB
 	}
 
 	// Get tracks from specified artists
 	tracks, err := getTracksFromArtists(user.AccessToken, specifyMs, json.ArtistIds)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to get tracks: %v", err)
+		slog.Error("failed to get tracks", slog.Any("error", err))
 		return "", "", err
 	}
 
 	if len(tracks) == 0 {
-		log.Println("[PLAYLIST-FROM-ARTISTS] No tracks available for playlist creation")
+		slog.Error("no tracks available for playlist creation")
 		return "", "", model.ErrNotEnoughTracks
 	}
 
@@ -73,7 +73,7 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 
 	playlist, err := client.CreatePlaylist(user.AccessToken, title, description, trackIDs)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to create playlist: %v", err)
+		slog.Error("failed to create playlist", slog.Any("error", err))
 		return "", "", err
 	}
 
@@ -81,17 +81,17 @@ func CreatePlaylistFromArtists(c *gin.Context) (string, string, error) {
 	playlistID := strconv.Itoa(playlist.ID)
 	err = database.SaveSoundCloudPlaylist(dbInstance, playlistID, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to save playlist to database: %v", err)
+		slog.Error("failed to save playlist to database", slog.Any("error", err))
 		return "", "", err
 	}
 
 	// Increment playlist count
 	err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id)
 	if err != nil {
-		log.Printf("[PLAYLIST-FROM-ARTISTS] Failed to increment playlist count: %v", err)
+		slog.Warn("failed to increment playlist count", slog.Any("error", err))
 	}
 
-	log.Printf("[PLAYLIST-FROM-ARTISTS] Playlist created successfully: id=%s, secret_token=%s, tracks=%d", playlistID, playlist.SecretToken, len(trackIDs))
+	slog.Info("playlist created successfully", slog.String("playlist_id", playlistID), slog.String("secret_token", playlist.SecretToken), slog.Int("tracks", len(trackIDs)))
 	return playlistID, playlist.SecretToken, nil
 }
 
@@ -106,7 +106,7 @@ func getTracksFromArtists(accessToken string, specifyMs int, artistIds []string)
 	for _, artistID := range artistIds {
 		tracks, err := client.GetUserTracks(accessToken, artistID)
 		if err != nil {
-			log.Printf("[GET-TRACKS-FROM-ARTISTS] Failed to get tracks for artist %s: %v", artistID, err)
+			slog.Warn("failed to get tracks for artist", slog.String("artist_id", artistID), slog.Any("error", err))
 			continue // Skip this artist and continue with others
 		}
 
@@ -120,11 +120,11 @@ func getTracksFromArtists(accessToken string, specifyMs int, artistIds []string)
 	}
 
 	if len(allTracks) == 0 {
-		log.Println("[GET-TRACKS-FROM-ARTISTS] ERROR: No tracks found from specified artists!")
+		slog.Error("no tracks found from specified artists")
 		return nil, model.ErrNotEnoughTracks
 	}
 
-	log.Printf("[GET-TRACKS-FROM-ARTISTS] Found %d tracks from %d artists", len(allTracks), len(artistIds))
+	slog.Info("found tracks from artists", slog.Int("track_count", len(allTracks)), slog.Int("artist_count", len(artistIds)))
 
 	// Calculate total available duration
 	totalDuration := 0
@@ -178,19 +178,19 @@ func getTracksFromArtists(accessToken string, specifyMs int, artistIds []string)
 		hasEnoughDuration := totalDuration >= specifyMs
 
 		if !hasEnoughDuration {
-			log.Printf("[タイムアウト] GetTracksFromArtists: トラック不足 - 必要=%d分, 利用可能=%d分, トラック数=%d, 試行回数=%d",
-				specifyMs/commontrack.MillisecondsPerMinute,
-				totalDuration/commontrack.MillisecondsPerMinute,
-				len(allTracks),
-				finalTryCount,
+			slog.Warn("timeout: not enough tracks",
+				slog.Int("required_minutes", specifyMs/commontrack.MillisecondsPerMinute),
+				slog.Int("available_minutes", totalDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(allTracks)),
+				slog.Int("try_count", finalTryCount),
 			)
 			return nil, model.ErrNotEnoughTracks
 		} else {
-			log.Printf("[タイムアウト] GetTracksFromArtists: 組み合わせ未発見 - 再生時間=%d分, トラック数=%d, 総再生時間=%d分, 試行回数=%d",
-				specifyMs/commontrack.MillisecondsPerMinute,
-				len(allTracks),
-				totalDuration/commontrack.MillisecondsPerMinute,
-				finalTryCount,
+			slog.Warn("timeout: combination not found",
+				slog.Int("duration_minutes", specifyMs/commontrack.MillisecondsPerMinute),
+				slog.Int("track_count", len(allTracks)),
+				slog.Int("total_duration_minutes", totalDuration/commontrack.MillisecondsPerMinute),
+				slog.Int("try_count", finalTryCount),
 			)
 			return nil, model.ErrTimeoutCreatePlaylist
 		}

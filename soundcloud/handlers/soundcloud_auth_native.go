@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/soundcloud/auth"
 )
 
@@ -15,7 +15,7 @@ import (
 func GetAuthzURLNative(c *gin.Context) {
 	url, err := auth.AuthzNative(c)
 	if err != nil {
-		logger.LogError(err)
+		slog.Error("failed to get authz URL", slog.Any("error", err))
 		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
@@ -26,7 +26,7 @@ func GetAuthzURLNative(c *gin.Context) {
 func CallbackNative(c *gin.Context) {
 	tokenPair, err := auth.CallbackNative(c)
 	if err != nil {
-		logger.LogError(err)
+		slog.Error("callback failed", slog.Any("error", err))
 		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_ERROR_URL_NATIVE")+"?error=auth_failed")
 		return
 	}
@@ -53,7 +53,7 @@ func GetAuthStatusNative(c *gin.Context) {
 			"reason":        "session_expired",
 		})
 	} else if err != nil {
-		logger.LogError(err)
+		slog.Error("failed to check auth status", slog.Any("error", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 	} else {
 		c.JSON(http.StatusOK, gin.H{
@@ -67,7 +67,7 @@ func GetAuthStatusNative(c *gin.Context) {
 func RefreshTokenNative(c *gin.Context) {
 	tokenPair, err := auth.RefreshAccessToken(c)
 	if err != nil {
-		logger.LogError(err)
+		slog.Error("failed to refresh token", slog.Any("error", err))
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
 	}

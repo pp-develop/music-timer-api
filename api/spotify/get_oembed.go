@@ -3,7 +3,7 @@ package spotify
 import (
 	"encoding/json"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/pp-develop/music-timer-api/model"
@@ -22,20 +22,20 @@ func GetOembed(playlistId string) (model.Oembed, error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		log.Println(resp)
+		slog.Error("oembed request failed", slog.Any("error", err))
 		return response, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Println(resp)
+		slog.Error("oembed request returned non-200 status", slog.Int("status", resp.StatusCode))
 		return response, err
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		log.Println(body)
+		slog.Error("failed to unmarshal oembed response", slog.Any("error", err))
 		return response, err
 	}
 

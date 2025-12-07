@@ -3,7 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"runtime"
 	"sync"
 	"time"
@@ -80,7 +80,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 
 			// err = database.ClearArtistsTracks(db, artist.Id)
 			// if err != nil {
-			// 	log.Printf("Error clear artists table: %v", err)
+			// 	slog.Error("error clear artists table", slog.Any("error", err))
 			// 	errChan <- err
 			// 	return
 			// }
@@ -97,7 +97,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 				albumTracks, err := spotifyApi.GetAlbumTracks(token, album.ID.String())
 				if err != nil {
 					// todo:: 再考慮
-					log.Printf("Error retrieving album tracks: %v", err)
+					slog.Warn("error retrieving album tracks", slog.Any("error", err))
 					continue
 				}
 
@@ -113,7 +113,7 @@ func SaveTracksFromFollowedArtists(c *gin.Context) error {
 
 			// 一度に全てのトラックを追加
 			if err := database.AddArtistTracks(db, artist.Id, allTracks); err != nil {
-				log.Printf("Error updating artist tracks for artist ID %s: %v", artist.Id, err)
+				slog.Error("error updating artist tracks", slog.String("artist_id", artist.Id), slog.Any("error", err))
 				errChan <- err
 			}
 		}(artist)

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ import (
 func CreatePlaylistFromFavorites(c *gin.Context) {
 	playlistId, secretToken, err := playlist.CreatePlaylistFromFavorites(c)
 	if err != nil {
-		log.Printf("[HANDLER] Error creating playlist from favorites: %v", err)
+		slog.Error("error creating playlist from favorites", slog.Any("error", err))
 		c.Error(err)
 		return
 	}
@@ -27,7 +27,7 @@ func CreatePlaylistFromFavorites(c *gin.Context) {
 func CreatePlaylistFromArtists(c *gin.Context) {
 	playlistId, secretToken, err := playlist.CreatePlaylistFromArtists(c)
 	if err != nil {
-		log.Printf("[HANDLER] Error creating playlist from artists: %v", err)
+		slog.Error("error creating playlist from artists", slog.Any("error", err))
 		c.Error(err)
 		return
 	}
