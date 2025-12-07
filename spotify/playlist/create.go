@@ -85,9 +85,9 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	err = database.IncrementPlaylistCount(dbInstance, user.Id)
-	if err != nil {
-		// return "", err
+	if err = database.IncrementPlaylistCount(dbInstance, user.Id); err != nil {
+		// Non-fatal: log the error but don't fail the playlist creation
+		log.Printf("[WARN] Failed to increment playlist count for user %s: %v", user.Id, err)
 	}
 
 	return string(playlist.ID), nil

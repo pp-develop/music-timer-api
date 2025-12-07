@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 	"golang.org/x/oauth2/clientcredentials"
@@ -30,13 +29,6 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 	query := getRandomQuery()
 
 	log.Printf("[SearchTracks] Start - query: %q, market: %q", query, market)
-
-	// 環境変数をロード
-	err := godotenv.Load()
-	if err != nil {
-		log.Printf("[SearchTracks] Failed to load env - error: %v", err)
-		return nil, err
-	}
 
 	// コンテキストとクライアント認証情報の初期化
 	ctx := context.Background()
@@ -109,11 +101,6 @@ func SearchTracks(market string) ([]spotify.FullTrack, error) {
 }
 
 func SearchTracksByArtists(artistName string, market string) (*spotify.SearchResult, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
-
 	ctx := context.Background()
 	config := &clientcredentials.Config{
 		ClientID:     os.Getenv("SPOTIFY_ID"),
@@ -171,8 +158,6 @@ func randomOneOrTwo() int {
 }
 
 func getRandomQuery() string {
-	rand.Seed(time.Now().UnixNano())
-
 	// Getting random character
 	num := "0123"
 	shuffled_num := num[rand.Intn(len(num))]

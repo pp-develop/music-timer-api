@@ -86,10 +86,9 @@ func CreatePlaylistFromFavorites(c *gin.Context) (string, string, error) {
 		return "", "", err
 	}
 
-	// Increment playlist count
-	err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id)
-	if err != nil {
-		log.Printf("[PLAYLIST-FROM-FAVORITES] Failed to increment playlist count: %v", err)
+	// Increment playlist count (non-fatal)
+	if err = database.IncrementSoundCloudPlaylistCount(dbInstance, user.Id); err != nil {
+		log.Printf("[PLAYLIST-FROM-FAVORITES][WARN] Failed to increment playlist count: %v", err)
 	}
 
 	log.Printf("[PLAYLIST-FROM-FAVORITES] Playlist created successfully: id=%s, secret_token=%s, tracks=%d", playlistID, playlist.SecretToken, len(trackIDs))

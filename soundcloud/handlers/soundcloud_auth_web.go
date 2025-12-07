@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/soundcloud/auth"
@@ -25,14 +24,7 @@ func GetAuthzURLWeb(c *gin.Context) {
 
 // CallbackWeb handles the SoundCloud OAuth callback for web authentication
 func CallbackWeb(c *gin.Context) {
-	err := godotenv.Load()
-	if err != nil {
-		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-
-	err = auth.CallbackWeb(c)
+	err := auth.CallbackWeb(c)
 	if err != nil {
 		logger.LogError(err)
 		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_WEB_ERROR_URL"))

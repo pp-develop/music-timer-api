@@ -9,7 +9,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/api/soundcloud"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -18,11 +17,6 @@ import (
 
 // AuthzWeb generates SoundCloud authorization URL for web applications
 func AuthzWeb(c *gin.Context) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-
 	client := soundcloud.NewClient()
 	state := uuid.New().String()
 	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI")
@@ -32,7 +26,7 @@ func AuthzWeb(c *gin.Context) (string, error) {
 	// Store state in session for CSRF protection
 	session := sessions.Default(c)
 	session.Set("sc_state", state)
-	err = session.Save()
+	err := session.Save()
 	if err != nil {
 		log.Printf("[SC-AUTH-WEB] ERROR: Failed to save session: %v", err)
 		return "", err

@@ -6,10 +6,9 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 )
 
 // GetAuthzURLWeb returns the Spotify authorization URL for web authentication
@@ -25,19 +24,12 @@ func GetAuthzURLWeb(c *gin.Context) {
 
 // CallbackWeb handles the Spotify OAuth callback for web authentication
 func CallbackWeb(c *gin.Context) {
-	err := godotenv.Load()
+	err := auth.SpotifyCallbackWeb(c)
 	if err != nil {
 		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, "/")
-		return
-	}
-
-	err = auth.SpotifyCallbackWeb(c)
-	if err != nil {
-		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL"))
+		c.Redirect(http.StatusSeeOther, os.Getenv("SPOTIFY_AUTHZ_WEB_ERROR_URL"))
 	} else {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("AUTHZ_SUCCESS_URL"))
+		c.Redirect(http.StatusMovedPermanently, os.Getenv("SPOTIFY_AUTHZ_WEB_SUCCESS_URL"))
 	}
 }
 

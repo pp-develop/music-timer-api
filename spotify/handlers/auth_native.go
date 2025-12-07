@@ -6,10 +6,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
-	"github.com/pp-develop/music-timer-api/spotify/auth"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
+	"github.com/pp-develop/music-timer-api/spotify/auth"
 )
 
 // GetAuthzURLNative returns the Spotify authorization URL for native authentication
@@ -25,14 +24,6 @@ func GetAuthzURLNative(c *gin.Context) {
 
 // CallbackNative handles the Spotify OAuth callback for native authentication
 func CallbackNative(c *gin.Context) {
-	err := godotenv.Load()
-	if err != nil {
-		logger.LogError(err)
-		// エラー時はディープリンクでエラーを通知
-		c.Redirect(http.StatusSeeOther, os.Getenv("AUTHZ_ERROR_URL_NATIVE")+"?error=config_error")
-		return
-	}
-
 	tokenPair, err := auth.SpotifyCallbackNative(c)
 	if err != nil {
 		logger.LogError(err)

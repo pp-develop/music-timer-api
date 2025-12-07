@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -13,13 +12,8 @@ import (
 )
 
 func GestCreatePlaylist(c *gin.Context) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-
 	var json RequestJson
-	if err = c.ShouldBindJSON(&json); err != nil {
+	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
 	}
 	// 1minute = 60000ms

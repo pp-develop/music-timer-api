@@ -9,18 +9,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
 	"golang.org/x/oauth2"
 )
 
 func RefreshToken(user model.User) (*oauth2.Token, error) {
 	var response = &oauth2.Token{}
-
-	err := godotenv.Load()
-	if err != nil {
-		return response, err
-	}
 
 	values := url.Values{}
 	values.Add("refresh_token", user.RefreshToken)

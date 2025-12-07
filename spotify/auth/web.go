@@ -7,7 +7,6 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -17,11 +16,6 @@ import (
 
 // SpotifyAuthzWeb generates Spotify authorization URL for web applications
 func SpotifyAuthzWeb(c *gin.Context) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI")),
 		spotifyauth.WithScopes(
@@ -39,8 +33,7 @@ func SpotifyAuthzWeb(c *gin.Context) (string, error) {
 	// Store state in session for CSRF protection
 	session := sessions.Default(c)
 	session.Set("state", state.String())
-	err = session.Save()
-	if err != nil {
+	if err := session.Save(); err != nil {
 		log.Printf("[ERROR] Failed to save session: %v", err)
 		return "", err
 	}

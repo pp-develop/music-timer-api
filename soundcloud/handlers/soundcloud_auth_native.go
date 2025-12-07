@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/pkg/logger"
 	"github.com/pp-develop/music-timer-api/soundcloud/auth"
@@ -25,13 +24,6 @@ func GetAuthzURLNative(c *gin.Context) {
 
 // CallbackNative handles the SoundCloud OAuth callback for native authentication
 func CallbackNative(c *gin.Context) {
-	err := godotenv.Load()
-	if err != nil {
-		logger.LogError(err)
-		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_ERROR_URL_NATIVE")+"?error=config_error")
-		return
-	}
-
 	tokenPair, err := auth.CallbackNative(c)
 	if err != nil {
 		logger.LogError(err)

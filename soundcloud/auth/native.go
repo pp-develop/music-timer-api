@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/api/soundcloud"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -16,11 +15,6 @@ import (
 
 // AuthzNative generates SoundCloud authorization URL for native applications
 func AuthzNative(c *gin.Context) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-
 	client := soundcloud.NewClient()
 	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI_NATIVE")
 

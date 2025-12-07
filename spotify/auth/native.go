@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/joho/godotenv"
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
@@ -16,11 +15,6 @@ import (
 
 // SpotifyAuthzNative generates Spotify authorization URL for native applications
 func SpotifyAuthzNative(c *gin.Context) (string, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return "", err
-	}
-
 	auth := spotifyauth.New(
 		spotifyauth.WithRedirectURL(os.Getenv("SPOTIFY_REDIRECT_URI_NATIVE")),
 		spotifyauth.WithScopes(
