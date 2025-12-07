@@ -14,10 +14,10 @@ type RefreshToken struct {
 	Revoked   bool      `db:"revoked"`
 }
 
-// SaveRefreshToken saves a new refresh token to the database
-func SaveRefreshToken(db *sql.DB, jti, userID string, expiresAt time.Time) error {
+// SaveSpotifyRefreshToken saves a new refresh token to the database
+func SaveSpotifyRefreshToken(db *sql.DB, jti, userID string, expiresAt time.Time) error {
 	query := `
-		INSERT INTO jwt_refresh_tokens (jti, user_id, expires_at, created_at, revoked)
+		INSERT INTO spotify_jwt_refresh_tokens (jti, user_id, expires_at, created_at, revoked)
 		VALUES ($1, $2, $3, CURRENT_TIMESTAMP, false)
 	`
 
@@ -25,11 +25,11 @@ func SaveRefreshToken(db *sql.DB, jti, userID string, expiresAt time.Time) error
 	return err
 }
 
-// IsRefreshTokenValid checks if a refresh token exists and is valid
-func IsRefreshTokenValid(db *sql.DB, jti string) (bool, error) {
+// IsSpotifyRefreshTokenValid checks if a refresh token exists and is valid
+func IsSpotifyRefreshTokenValid(db *sql.DB, jti string) (bool, error) {
 	var count int
 	query := `
-		SELECT COUNT(*) FROM jwt_refresh_tokens
+		SELECT COUNT(*) FROM spotify_jwt_refresh_tokens
 		WHERE jti = $1
 		AND revoked = false
 		AND expires_at > CURRENT_TIMESTAMP
@@ -43,10 +43,10 @@ func IsRefreshTokenValid(db *sql.DB, jti string) (bool, error) {
 	return count > 0, nil
 }
 
-// RevokeRefreshToken marks a refresh token as revoked
-func RevokeRefreshToken(db *sql.DB, jti string) error {
+// RevokeSpotifyRefreshToken marks a refresh token as revoked
+func RevokeSpotifyRefreshToken(db *sql.DB, jti string) error {
 	query := `
-		UPDATE jwt_refresh_tokens
+		UPDATE spotify_jwt_refresh_tokens
 		SET revoked = true
 		WHERE jti = $1
 	`
@@ -55,10 +55,10 @@ func RevokeRefreshToken(db *sql.DB, jti string) error {
 	return err
 }
 
-// RevokeAllUserRefreshTokens revokes all refresh tokens for a user
-func RevokeAllUserRefreshTokens(db *sql.DB, userID string) error {
+// RevokeAllSpotifyUserRefreshTokens revokes all refresh tokens for a user
+func RevokeAllSpotifyUserRefreshTokens(db *sql.DB, userID string) error {
 	query := `
-		UPDATE jwt_refresh_tokens
+		UPDATE spotify_jwt_refresh_tokens
 		SET revoked = true
 		WHERE user_id = $1 AND revoked = false
 	`
@@ -67,10 +67,10 @@ func RevokeAllUserRefreshTokens(db *sql.DB, userID string) error {
 	return err
 }
 
-// CleanupExpiredTokens removes expired refresh tokens from the database
-func CleanupExpiredTokens(db *sql.DB) error {
+// CleanupExpiredSpotifyTokens removes expired refresh tokens from the database
+func CleanupExpiredSpotifyTokens(db *sql.DB) error {
 	query := `
-		DELETE FROM jwt_refresh_tokens
+		DELETE FROM spotify_jwt_refresh_tokens
 		WHERE expires_at < CURRENT_TIMESTAMP
 	`
 

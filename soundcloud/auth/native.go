@@ -80,7 +80,7 @@ func CallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 
 	// Save refresh token to database
 	jwtExpiresAt := time.Now().Add(30 * 24 * time.Hour) // 30 days
-	err = database.SaveRefreshToken(db, jti, user.Id, jwtExpiresAt)
+	err = database.SaveSoundCloudRefreshToken(db, jti, user.Id, jwtExpiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Check if refresh token is valid in database
-	valid, err := database.IsRefreshTokenValid(db, jti)
+	valid, err := database.IsSoundCloudRefreshTokenValid(db, jti)
 	if err != nil {
 		return nil, err
 	}
@@ -132,14 +132,14 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Revoke old refresh token
-	err = database.RevokeRefreshToken(db, jti)
+	err = database.RevokeSoundCloudRefreshToken(db, jti)
 	if err != nil {
 		return nil, err
 	}
 
 	// Save new refresh token
 	expiresAt := time.Now().Add(30 * 24 * time.Hour) // 30 days
-	err = database.SaveRefreshToken(db, newJTI, userID, expiresAt)
+	err = database.SaveSoundCloudRefreshToken(db, newJTI, userID, expiresAt)
 	if err != nil {
 		return nil, err
 	}

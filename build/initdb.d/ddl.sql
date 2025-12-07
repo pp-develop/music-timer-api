@@ -61,17 +61,17 @@ CREATE TABLE spotify_artists (
 );
 
 
-DROP TABLE IF EXISTS jwt_refresh_tokens CASCADE;
+DROP TABLE IF EXISTS spotify_jwt_refresh_tokens CASCADE;
 
-CREATE TABLE jwt_refresh_tokens (
+CREATE TABLE spotify_jwt_refresh_tokens (
     "jti" VARCHAR(255) PRIMARY KEY,
     "user_id" VARCHAR(255) NOT NULL,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "expires_at" TIMESTAMP NOT NULL,
     "revoked" BOOLEAN DEFAULT FALSE,
-    INDEX idx_user_id (user_id),
-    INDEX idx_expires_at (expires_at),
-    CONSTRAINT fk_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES spotify_users(id) ON DELETE CASCADE
+    INDEX idx_spotify_jwt_user_id (user_id),
+    INDEX idx_spotify_jwt_expires_at (expires_at),
+    CONSTRAINT fk_spotify_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES spotify_users(id) ON DELETE CASCADE
 );
 
 
@@ -116,4 +116,17 @@ CREATE TABLE soundcloud_artists (
     INDEX id_index (id),
     "tracks" JSONB,
     "updated_at" TIMESTAMP
+);
+
+DROP TABLE IF EXISTS soundcloud_jwt_refresh_tokens CASCADE;
+
+CREATE TABLE soundcloud_jwt_refresh_tokens (
+    "jti" VARCHAR(255) PRIMARY KEY,
+    "user_id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMP NOT NULL,
+    "revoked" BOOLEAN DEFAULT FALSE,
+    INDEX idx_soundcloud_jwt_user_id (user_id),
+    INDEX idx_soundcloud_jwt_expires_at (expires_at),
+    CONSTRAINT fk_soundcloud_jwt_refresh_token_user FOREIGN KEY (user_id) REFERENCES soundcloud_users(id) ON DELETE CASCADE
 );

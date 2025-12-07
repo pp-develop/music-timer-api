@@ -69,7 +69,7 @@ func SpotifyCallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 
 	// Save refresh token to database
 	expiresAt := time.Now().Add(30 * 24 * time.Hour) // 30 days
-	err = database.SaveRefreshToken(db, jti, user.ID, expiresAt)
+	err = database.SaveSpotifyRefreshToken(db, jti, user.ID, expiresAt)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Check if refresh token is valid in database
-	valid, err := database.IsRefreshTokenValid(db, jti)
+	valid, err := database.IsSpotifyRefreshTokenValid(db, jti)
 	if err != nil {
 		return nil, err
 	}
@@ -116,14 +116,14 @@ func RefreshAccessToken(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Revoke old refresh token
-	err = database.RevokeRefreshToken(db, jti)
+	err = database.RevokeSpotifyRefreshToken(db, jti)
 	if err != nil {
 		return nil, err
 	}
 
 	// Save new refresh token
 	expiresAt := time.Now().Add(30 * 24 * time.Hour) // 30 days
-	err = database.SaveRefreshToken(db, newJTI, userID, expiresAt)
+	err = database.SaveSpotifyRefreshToken(db, newJTI, userID, expiresAt)
 	if err != nil {
 		return nil, err
 	}
