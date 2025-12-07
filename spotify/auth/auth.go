@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"database/sql"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -61,6 +62,10 @@ func GetUserWithValidToken(c *gin.Context) (model.User, error) {
 
 	user, err = database.GetUser(dbInstance, userId)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// Session exists but user not in DB - treat as unauthenticated
+			return user, model.ErrFailedGetSession
+		}
 		return user, err
 	}
 

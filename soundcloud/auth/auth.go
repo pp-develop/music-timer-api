@@ -53,6 +53,10 @@ func GetAuth(c *gin.Context) (*model.SoundCloudUser, error) {
 func getUserWithTokenRefresh(db *sql.DB, userId string) (*model.SoundCloudUser, error) {
 	user, err := database.GetSoundCloudUser(db, userId)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			// Session exists but user not in DB - treat as unauthenticated
+			return nil, model.ErrFailedGetSession
+		}
 		slog.Error("failed to get user from database", slog.Any("error", err))
 		return nil, err
 	}

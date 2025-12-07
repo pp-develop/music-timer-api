@@ -35,23 +35,25 @@ func CallbackWeb(c *gin.Context) {
 
 // GetAuthStatusWeb returns the authentication status for web users
 func GetAuthStatusWeb(c *gin.Context) {
-	// Use CheckAuth for status check (no error log for unauthenticated)
 	user, err := auth.CheckAuth(c)
 
-	if err == model.ErrFailedGetSession {
+	if err != nil {
+		reason := "session_expired"
+		if err != model.ErrFailedGetSession {
+			slog.Error("auth check failed", slog.Any("error", err))
+			reason = "server_error"
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": false,
-			"reason":        "session_expired",
+			"reason":        reason,
 		})
-	} else if err != nil {
-		slog.Error("failed to check auth status", slog.Any("error", err))
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"authenticated": true,
-			"username":      user.Username,
-		})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"authenticated": true,
+		"username":      user.Username,
+	})
 }
 
 // DeleteSessionWeb deletes the SoundCloud user's session for web authentication

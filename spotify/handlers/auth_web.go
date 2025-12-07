@@ -37,21 +37,23 @@ func CallbackWeb(c *gin.Context) {
 func GetAuthStatusWeb(c *gin.Context) {
 	user, err := auth.Auth(c)
 
-	if err == model.ErrFailedGetSession {
-		// Return unauthenticated status as a successful response
+	if err != nil {
+		reason := "session_expired"
+		if err != model.ErrFailedGetSession {
+			slog.Error("auth check failed", slog.Any("error", err))
+			reason = "server_error"
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": false,
-			"reason":        "session_expired",
+			"reason":        reason,
 		})
-	} else if err != nil {
-		slog.Error("failed to check auth status", slog.Any("error", err))
-		c.Status(http.StatusInternalServerError)
-	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"authenticated": true,
-			"country":       user.Country,
-		})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"authenticated": true,
+		"country":       user.Country,
+	})
 }
 
 // DeleteSession deletes the user's session
