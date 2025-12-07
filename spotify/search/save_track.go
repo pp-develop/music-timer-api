@@ -19,7 +19,9 @@ func SaveTracks(c *gin.Context, db *sql.DB) error {
 	var requestBody struct {
 		Market string `json:"market"`
 	}
-	c.BindJSON(&requestBody)
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		slog.Warn("failed to bind JSON, using empty market", slog.Any("error", err))
+	}
 
 	market := strings.ToUpper(requestBody.Market)
 	slog.Info("save tracks started", slog.String("market", market))

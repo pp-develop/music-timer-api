@@ -7,6 +7,7 @@ import (
 	"github.com/pp-develop/music-timer-api/api/spotify"
 	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
+	commontrack "github.com/pp-develop/music-timer-api/pkg/common/track"
 	"github.com/pp-develop/music-timer-api/spotify/track"
 	"github.com/pp-develop/music-timer-api/utils"
 )
@@ -16,9 +17,7 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
 	}
-	// 1minute = 60000ms
-	oneminuteToMsec := 60000
-	specify_ms := json.Minute * oneminuteToMsec
+	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
