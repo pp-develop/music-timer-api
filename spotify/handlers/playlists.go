@@ -46,3 +46,23 @@ func DeletePlaylists(c *gin.Context) {
 	}
 	c.Status(http.StatusOK)
 }
+
+// CreatePlaylistFromFavorites creates a playlist from user's favorite tracks
+func CreatePlaylistFromFavorites(c *gin.Context) {
+	playlistId, err := playlist.CreatePlaylistFromFavorites(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.IndentedJSON(http.StatusCreated, playlistId)
+}
+
+// CreatePlaylistFromArtists creates a playlist from specified artists' tracks
+func CreatePlaylistFromArtists(c *gin.Context) {
+	playlistId, err := playlist.CreatePlaylistFromArtists(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.IndentedJSON(http.StatusCreated, playlistId)
+}

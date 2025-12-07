@@ -13,13 +13,14 @@ import (
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
-type CreatePlaylistRequest struct {
-	Minute int    `json:"minute" binding:"required,min=1"`
-	Market string `json:"market"`
+type CreatePlaylistFromArtistsRequest struct {
+	Minute    int      `json:"minute" binding:"required,min=1"`
+	ArtistIds []string `json:"artistIds" binding:"required,min=1"`
 }
 
-func CreatePlaylist(c *gin.Context) (string, error) {
-	var json CreatePlaylistRequest
+// CreatePlaylistFromArtists creates a playlist from specified artists' tracks
+func CreatePlaylistFromArtists(c *gin.Context) (string, error) {
+	var json CreatePlaylistFromArtistsRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
 	}
@@ -36,9 +37,9 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", model.ErrFailedGetDB
 	}
 
-	tracks, err := track.GetTracks(dbInstance, specifyMs, json.Market)
+	tracks, err := track.GetTracksFromArtists(dbInstance, specifyMs, json.ArtistIds, user.Id)
 	if err != nil {
-		slog.Error("failed to get tracks", slog.Any("error", err))
+		slog.Error("failed to get tracks from artists", slog.Any("error", err))
 		return "", err
 	}
 
@@ -67,7 +68,6 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 	}
 
 	if err = database.IncrementPlaylistCount(dbInstance, user.Id); err != nil {
-		// Non-fatal: log the error but don't fail the playlist creation
 		slog.Warn("failed to increment playlist count",
 			slog.String("user_id", user.Id),
 			slog.Any("error", err))

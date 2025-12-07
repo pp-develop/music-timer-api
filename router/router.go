@@ -91,6 +91,8 @@ func setupRoutes(router *gin.Engine) {
 			playlists.POST("", spotifyHandlers.CreatePlaylist)
 			playlists.DELETE("", spotifyHandlers.DeletePlaylists)
 			playlists.POST("/guest", spotifyHandlers.GestCreatePlaylist)
+			playlists.POST("/from-favorites", spotifyHandlers.CreatePlaylistFromFavorites)
+			playlists.POST("/from-artists", spotifyHandlers.CreatePlaylistFromArtists)
 		}
 	}
 

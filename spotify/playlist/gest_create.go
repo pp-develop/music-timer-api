@@ -12,12 +12,16 @@ import (
 	"github.com/pp-develop/music-timer-api/utils"
 )
 
+type GuestCreatePlaylistRequest struct {
+	Minute int `json:"minute" binding:"required,min=1"`
+}
+
 func GestCreatePlaylist(c *gin.Context) (string, error) {
-	var json RequestJson
+	var json GuestCreatePlaylistRequest
 	if err := c.ShouldBindJSON(&json); err != nil {
 		return "", err
 	}
-	specify_ms := json.Minute * commontrack.MillisecondsPerMinute
+	specifyMs := json.Minute * commontrack.MillisecondsPerMinute
 
 	dbInstance, ok := utils.GetDB(c)
 	if !ok {
@@ -25,7 +29,7 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	}
 
 	// DBからトラックを取得
-	tracks, err := track.GetTracks(dbInstance, specify_ms, "")
+	tracks, err := track.GetTracks(dbInstance, specifyMs, "")
 	if err != nil {
 		return "", err
 	}
@@ -43,7 +47,7 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	user.TokenExpiration = token.Expiry.Second()
 
 	ctx := c.Request.Context()
-	playlist, err := spotify.CreatePlaylist(ctx, user, specify_ms)
+	playlist, err := spotify.CreatePlaylist(ctx, user, specifyMs)
 	if err != nil {
 		return "", err
 	}
