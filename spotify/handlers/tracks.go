@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pp-develop/music-timer-api/database"
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/pp-develop/music-timer-api/spotify/json"
 	"github.com/pp-develop/music-timer-api/spotify/search"
@@ -55,3 +56,25 @@ func ResetTracks(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// GetFavoriteTracksExists checks if favorite tracks exist for the user
+func GetFavoriteTracksExists(c *gin.Context) {
+	dbInstance, ok := utils.GetDB(c)
+	if !ok {
+		c.Error(model.ErrFailedGetDB)
+		return
+	}
+
+	userId, err := utils.GetUserID(c)
+	if err != nil {
+		c.Error(model.ErrFailedGetSession)
+		return
+	}
+
+	exists, err := database.ExistsFavoriteTracks(dbInstance, userId)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"exists": exists})
+}

@@ -75,6 +75,7 @@ func setupRoutes(router *gin.Engine) {
 		{
 			tracks.POST("", spotifyHandlers.SaveTracks)
 			tracks.POST("/reset", spotifyHandlers.ResetTracks)
+			tracks.GET("/favorites/exists", spotifyHandlers.GetFavoriteTracksExists)
 
 			// Track initialization endpoints
 			tracksInit := tracks.Group("/init")
@@ -130,6 +131,8 @@ func setupRoutes(router *gin.Engine) {
 		// Track endpoints
 		tracks := soundcloud.Group("/tracks")
 		{
+			tracks.GET("/favorites/exists", soundcloudHandlers.GetFavoriteTracksExistsSoundCloud)
+
 			tracksInit := tracks.Group("/init")
 			{
 				tracksInit.POST("/followed-artists", soundcloudHandlers.InitFollowedArtistsTracksSoundCloud)

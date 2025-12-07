@@ -121,10 +121,22 @@ func UpdateFavoriteTracksUpdateAt(db *sql.DB, userId string, updatedAt time.Time
 
 func ClearFavoriteTracks(db *sql.DB, userId string) error {
 	_, err := db.Exec(`
-        UPDATE spotify_favorite_tracks SET tracks = '[]', updated_at = NOW()
-        WHERE user_id = $1`, userId)
+        DELETE FROM spotify_favorite_tracks WHERE user_id = $1`, userId)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func ExistsFavoriteTracks(db *sql.DB, userId string) (bool, error) {
+	var exists bool
+	err := db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM spotify_favorite_tracks
+			WHERE user_id = $1
+		)`, userId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }

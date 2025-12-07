@@ -10,6 +10,11 @@ import (
 )
 
 func SaveSoundCloudFavoriteTracks(db *sql.DB, userId string, tracks []model.Track) error {
+	// 空配列の場合は保存しない（レコードなし = お気に入りなし）
+	if len(tracks) == 0 {
+		return nil
+	}
+
 	favoriteTracksJSON, err := json.Marshal(tracks)
 	if err != nil {
 		return err
@@ -64,10 +69,22 @@ func UpdateSoundCloudFavoriteTracksUpdatedAt(db *sql.DB, userId string, updatedA
 
 func ClearSoundCloudFavoriteTracks(db *sql.DB, userId string) error {
 	_, err := db.Exec(`
-        UPDATE soundcloud_favorite_tracks SET tracks = '[]', updated_at = NOW()
-        WHERE user_id = $1`, userId)
+        DELETE FROM soundcloud_favorite_tracks WHERE user_id = $1`, userId)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func ExistsSoundCloudFavoriteTracks(db *sql.DB, userId string) (bool, error) {
+	var exists bool
+	err := db.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM soundcloud_favorite_tracks
+			WHERE user_id = $1
+		)`, userId).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+	return exists, nil
 }
