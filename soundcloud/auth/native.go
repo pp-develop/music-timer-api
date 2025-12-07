@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log/slog"
 	"os"
 	"strconv"
 	"time"
@@ -52,6 +53,7 @@ func CallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 	// Calculate token expiration
 	expiresIn := tokenResp.ExpiresIn
 	if expiresIn == 0 {
+		slog.Warn("token expiration not provided by API, using default 1 hour")
 		expiresIn = 3600 // Default 1 hour
 	}
 

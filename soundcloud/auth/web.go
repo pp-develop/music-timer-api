@@ -77,6 +77,7 @@ func CallbackWeb(c *gin.Context) error {
 	// Calculate token expiration
 	expiresIn := tokenResp.ExpiresIn
 	if expiresIn == 0 {
+		slog.Warn("token expiration not provided by API, using default 1 hour")
 		expiresIn = 3600 // Default 1 hour
 	}
 

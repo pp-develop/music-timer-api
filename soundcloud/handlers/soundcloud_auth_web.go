@@ -57,10 +57,13 @@ func GetAuthStatusWeb(c *gin.Context) {
 }
 
 // DeleteSessionWeb deletes the SoundCloud user's session for web authentication
+// Fail-safe: セッション削除失敗時もログアウト成功として扱う（クライアント側でセッションクリア）
 func DeleteSessionWeb(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Delete("userId")
 	session.Delete("service")
-	session.Save()
+	if err := session.Save(); err != nil {
+		slog.Error("failed to save session on delete", slog.Any("error", err))
+	}
 	c.Status(http.StatusOK)
 }

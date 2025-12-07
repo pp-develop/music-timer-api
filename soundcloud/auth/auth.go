@@ -74,6 +74,7 @@ func getUserWithTokenRefresh(db *sql.DB, userId string) (*model.SoundCloudUser, 
 		// Update tokens
 		expiresIn := tokenResp.ExpiresIn
 		if expiresIn == 0 {
+			slog.Warn("token expiration not provided by API on refresh, using default 1 hour")
 			expiresIn = 3600
 		}
 

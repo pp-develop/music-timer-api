@@ -50,6 +50,12 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 // OptionalAuthMiddleware は JWT とセッション認証の両方に対応するミドルウェアです
 // 認証情報がない場合でもリクエストを中断せず、あれば userID を設定します
 // 認証されていなくても動作するが、認証情報があれば活用するエンドポイントで使用します
+//
+// 設計上の注意（Fail-open）:
+// このミドルウェアは意図的に認証失敗時も処理を継続します（Fail-open設計）。
+// これは「認証はオプション」というエンドポイントの要件に基づいています。
+// 認証が必須のエンドポイントでは JWTAuthMiddleware を使用してください。
+// 各ハンドラー側で userID の有無をチェックし、必要に応じて認証を要求します。
 func OptionalAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// まず JWT 認証を試行
@@ -66,7 +72,8 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 					c.Set("service", service)
 					c.Set("authType", "jwt")
 				}
-				// JWT が無効でもエラーにはせず、処理を継続
+				// Fail-open: JWT が無効でもエラーにはせず、処理を継続
+				// 認証が必要な処理は各ハンドラー側で userID の有無をチェックする
 			}
 		}
 
