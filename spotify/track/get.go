@@ -109,12 +109,21 @@ func GetTracks(db *sql.DB, specify_ms int, market string) ([]model.Track, error)
 	}
 }
 
-// 特定のISRCに基づいてトラックをフィルタリングする関数
-func filterByISRC(tracks []model.Track, targetISRC string) []model.Track {
-	var filteredTracks []model.Track
+// filterByISRC はISRCの国コードプレフィックスに基づいてトラックをフィルタリングする
+// ISRCの形式: CC-XXX-YY-NNNNN（CCが国コード、例: JP, US, GB）
+// countryCode: 2文字の国コード（例: "JP"）
+func filterByISRC(tracks []model.Track, countryCode string) []model.Track {
+	if len(countryCode) < 2 {
+		return tracks // 無効な国コードの場合は全トラックを返す
+	}
 
+	// 大文字に正規化
+	countryCode = strings.ToUpper(countryCode)
+
+	var filteredTracks []model.Track
 	for _, track := range tracks {
-		if track.Isrc == targetISRC {
+		// ISRCの先頭2文字が国コード
+		if len(track.Isrc) >= 2 && strings.HasPrefix(strings.ToUpper(track.Isrc), countryCode) {
 			filteredTracks = append(filteredTracks, track)
 		}
 	}
