@@ -43,12 +43,13 @@ func GestCreatePlaylist(c *gin.Context) (string, error) {
 	user.RefreshToken = token.RefreshToken
 	user.TokenExpiration = token.Expiry.Second()
 
-	playlist, err := spotify.CreatePlaylist(user, specify_ms)
+	ctx := c.Request.Context()
+	playlist, err := spotify.CreatePlaylist(ctx, user, specify_ms)
 	if err != nil {
 		return "", err
 	}
 
-	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
+	err = spotify.AddItemsPlaylist(ctx, string(playlist.ID), tracks, user)
 	if err != nil {
 		return "", err
 	}

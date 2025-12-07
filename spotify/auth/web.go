@@ -72,7 +72,7 @@ func SpotifyCallbackWeb(c *gin.Context) error {
 	}
 
 	// Get user info and save token
-	user, err := spotify.GetMe(token)
+	user, err := spotify.GetMe(c.Request.Context(), token)
 	if err != nil {
 		return err
 	}

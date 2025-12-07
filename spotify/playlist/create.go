@@ -68,15 +68,16 @@ func CreatePlaylist(c *gin.Context) (string, error) {
 		return "", model.ErrNotEnoughTracks
 	}
 
-	playlist, err := spotify.CreatePlaylist(user, specify_ms)
+	ctx := c.Request.Context()
+	playlist, err := spotify.CreatePlaylist(ctx, user, specify_ms)
 	if err != nil {
 		return "", err
 	}
 
-	err = spotify.AddItemsPlaylist(string(playlist.ID), tracks, user)
+	err = spotify.AddItemsPlaylist(ctx, string(playlist.ID), tracks, user)
 	if err != nil {
 		database.DeletePlaylists(dbInstance, string(playlist.ID), user.Id)
-		logger.LogError(spotify.UnfollowPlaylist(playlist.ID, user))
+		logger.LogError(spotify.UnfollowPlaylist(ctx, playlist.ID, user))
 		return "", err
 	}
 

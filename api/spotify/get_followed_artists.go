@@ -7,12 +7,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetFollowedArtists(token *oauth2.Token) ([]spotify.FullArtist, error) {
+// GetFollowedArtists retrieves all artists followed by the current user
+func GetFollowedArtists(ctx context.Context, token *oauth2.Token) ([]spotify.FullArtist, error) {
 	var allArtists []spotify.FullArtist
 
-	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient, spotify.WithRetry(true))
+	client := NewClientWithToken(ctx, token)
 
 	artistPage, err := client.CurrentUsersFollowedArtists(ctx, spotify.Limit(50))
 	if err != nil {

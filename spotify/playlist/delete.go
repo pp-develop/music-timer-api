@@ -29,8 +29,9 @@ func DeletePlaylists(c *gin.Context) error {
 		return model.ErrNotFoundPlaylist
 	}
 
+	ctx := c.Request.Context()
 	for _, item := range playlists {
-		err := spotify.UnfollowPlaylist(sotifySdk.ID(item.ID), user)
+		err := spotify.UnfollowPlaylist(ctx, sotifySdk.ID(item.ID), user)
 		if err != nil {
 			return err
 		}

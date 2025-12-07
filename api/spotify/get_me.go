@@ -7,12 +7,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetMe(token *oauth2.Token) (*spotify.PrivateUser, error) {
-	var currentUser *spotify.PrivateUser
-
-	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient, spotify.WithRetry(true))
+// GetMe retrieves the current user's profile
+func GetMe(ctx context.Context, token *oauth2.Token) (*spotify.PrivateUser, error) {
+	client := NewClientWithToken(ctx, token)
 
 	currentUser, err := client.CurrentUser(ctx)
 	if err != nil {

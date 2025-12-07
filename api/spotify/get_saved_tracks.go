@@ -7,12 +7,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func GetSavedTracks(token *oauth2.Token) ([]spotify.SavedTrack, error) {
+// GetSavedTracks retrieves all saved tracks for the authenticated user
+func GetSavedTracks(ctx context.Context, token *oauth2.Token) ([]spotify.SavedTrack, error) {
 	var allTracks []spotify.SavedTrack
 
-	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-	client := spotify.New(httpClient, spotify.WithRetry(true))
+	client := NewClientWithToken(ctx, token)
 
 	tracksPage, err := client.CurrentUsersTracks(ctx, spotify.Limit(50))
 	if err != nil {

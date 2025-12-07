@@ -6,18 +6,11 @@ import (
 
 	"github.com/pp-develop/music-timer-api/model"
 	"github.com/zmb3/spotify/v2"
-	"golang.org/x/oauth2"
 )
 
-func AddItemsPlaylist(playlistId string, tracks []model.Track, user model.User) error {
-	ctx := context.Background()
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-		&oauth2.Token{
-			AccessToken:  user.AccessToken,
-			RefreshToken: user.RefreshToken,
-		},
-	))
-	client := spotify.New(httpClient, spotify.WithRetry(true))
+// AddItemsPlaylist adds tracks to an existing playlist
+func AddItemsPlaylist(ctx context.Context, playlistId string, tracks []model.Track, user model.User) error {
+	client := NewClientWithUser(ctx, user)
 
 	var ids []spotify.ID
 	for _, item := range tracks {

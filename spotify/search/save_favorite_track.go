@@ -31,7 +31,7 @@ func SaveFavoriteTracks(c *gin.Context) error {
 		RefreshToken: user.RefreshToken,
 	}
 
-	savedTracks, err := spotifyApi.GetSavedTracks(token)
+	savedTracks, err := spotifyApi.GetSavedTracks(c.Request.Context(), token)
 	if err != nil {
 		return err
 	}

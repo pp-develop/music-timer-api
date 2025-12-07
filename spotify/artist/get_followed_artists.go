@@ -17,7 +17,7 @@ func GetFollowedArtists(c *gin.Context) ([]model.Artists, error) {
 		return nil, err
 	}
 
-	followedArtists, err := spotifyApi.GetFollowedArtists(&oauth2.Token{
+	followedArtists, err := spotifyApi.GetFollowedArtists(c.Request.Context(), &oauth2.Token{
 		AccessToken:  user.AccessToken,
 		RefreshToken: user.RefreshToken,
 	})

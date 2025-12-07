@@ -50,7 +50,7 @@ func SpotifyCallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 	}
 
 	// Get user info and save token
-	user, err := spotify.GetMe(token)
+	user, err := spotify.GetMe(c.Request.Context(), token)
 	if err != nil {
 		return nil, err
 	}
