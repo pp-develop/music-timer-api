@@ -1,0 +1,15 @@
+{
+	default_sni 192.168.0.32
+}
+
+import common.caddy
+
+192.168.0.32 {
+	tls /etc/caddy/certs/192.168.0.32.pem /etc/caddy/certs/192.168.0.32-key.pem
+	import api
+
+	# Frontend (native app on local network)
+	handle {
+		reverse_proxy 192.168.0.32:8082
+	}
+}

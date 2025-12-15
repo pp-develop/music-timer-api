@@ -1,0 +1,15 @@
+{
+	default_sni localhost
+}
+
+import common.caddy
+
+localhost, 127.0.0.1 {
+	tls /etc/caddy/certs/localhost.pem /etc/caddy/certs/localhost-key.pem
+	import api
+
+	# Frontend
+	handle {
+		reverse_proxy host.docker.internal:19006
+	}
+}

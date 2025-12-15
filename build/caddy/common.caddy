@@ -1,0 +1,6 @@
+(api) {
+	# API routes
+	handle /api/* {
+		reverse_proxy app:8080
+	}
+}

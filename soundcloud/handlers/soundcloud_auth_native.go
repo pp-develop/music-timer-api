@@ -49,8 +49,12 @@ func GetAuthStatusNative(c *gin.Context) {
 	if err != nil {
 		reason := "session_expired"
 		if err != model.ErrFailedGetSession {
+			// セッション取得以外のエラー（サーバーエラー）
 			slog.Error("auth check failed", slog.Any("error", err))
 			reason = "server_error"
+		} else {
+			// トークン期限切れまたはセッションが見つからない（通常の動作）
+			slog.Info("token expired or session not found", slog.Any("error", err))
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"authenticated": false,
