@@ -62,7 +62,7 @@ func setupRoutes(router *gin.Engine) {
 			{
 				authNative.GET("/authz-url", spotifyHandlers.GetAuthzURLNative)
 				authNative.GET("/callback", spotifyHandlers.CallbackNative)
-				authNative.GET("/status", spotifyHandlers.GetAuthStatusNative)
+				authNative.GET("/status", middleware.OptionalAuthMiddleware(), spotifyHandlers.GetAuthStatusNative)
 				authNative.POST("/refresh", spotifyHandlers.RefreshTokenNative)
 			}
 		}
@@ -120,7 +120,7 @@ func setupRoutes(router *gin.Engine) {
 			{
 				authNative.GET("/authz-url", soundcloudHandlers.GetAuthzURLNative)
 				authNative.GET("/callback", soundcloudHandlers.CallbackNative)
-				authNative.GET("/status", soundcloudHandlers.GetAuthStatusNative)
+				authNative.GET("/status", middleware.OptionalAuthMiddleware(), soundcloudHandlers.GetAuthStatusNative)
 				authNative.POST("/refresh", soundcloudHandlers.RefreshTokenNative)
 			}
 		}
