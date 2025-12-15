@@ -22,7 +22,8 @@ services:
       - "443:443"
       - "80:80"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/Caddyfile.${CADDY_ENV:-web}:/etc/caddy/Caddyfile
+      - ./caddy/common.caddy:/etc/caddy/common.caddy
       - ./certs:/etc/caddy/certs
     depends_on:
       - app
