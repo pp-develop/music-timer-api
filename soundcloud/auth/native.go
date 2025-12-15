@@ -17,11 +17,13 @@ import (
 // AuthzNative generates SoundCloud authorization URL for native applications
 func AuthzNative(c *gin.Context) (string, error) {
 	client := soundcloud.NewClient()
-	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI_NATIVE")
+	// 共通のリダイレクトURIを使用（SoundCloudは1つのURIしか登録できないため）
+	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI")
 
-	// For native apps, we don't need CSRF protection with state
-	// as the response is returned directly via deep link
-	url := client.GetAuthURL(redirectURI, "native")
+	// stateにプラットフォーム識別子を埋め込む（native_<uuid>形式）
+	// callbackで識別してNativeフローを実行する
+	state := "native_" + uuid.New().String()
+	url := client.GetAuthURL(redirectURI, state)
 
 	return url, nil
 }
@@ -37,7 +39,8 @@ func CallbackNative(c *gin.Context) (*utils.TokenPair, error) {
 
 	// Exchange code for token
 	client := soundcloud.NewClient()
-	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI_NATIVE")
+	// 共通のリダイレクトURIを使用
+	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI")
 
 	tokenResp, err := client.ExchangeCode(code, redirectURI)
 	if err != nil {

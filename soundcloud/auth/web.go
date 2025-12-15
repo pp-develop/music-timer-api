@@ -18,7 +18,8 @@ import (
 // AuthzWeb generates SoundCloud authorization URL for web applications
 func AuthzWeb(c *gin.Context) (string, error) {
 	client := soundcloud.NewClient()
-	state := uuid.New().String()
+	// stateにプラットフォーム識別子を埋め込む（web_<uuid>形式）
+	state := "web_" + uuid.New().String()
 	redirectURI := os.Getenv("SOUNDCLOUD_REDIRECT_URI")
 
 	url := client.GetAuthURL(redirectURI, state)

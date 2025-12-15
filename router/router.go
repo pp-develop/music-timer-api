@@ -106,11 +106,14 @@ func setupRoutes(router *gin.Engine) {
 		// Authentication endpoints
 		auth := soundcloud.Group("/auth")
 		{
+			// 共通callback（SoundCloudは1つのリダイレクトURIしか登録できないため）
+			// stateパラメータのプレフィックスでWeb/Nativeを識別
+			auth.GET("/callback", soundcloudHandlers.Callback)
+
 			// Web authentication
 			authWeb := auth.Group("/web")
 			{
 				authWeb.GET("/authz-url", soundcloudHandlers.GetAuthzURLWeb)
-				authWeb.GET("/callback", soundcloudHandlers.CallbackWeb)
 				authWeb.GET("/status", soundcloudHandlers.GetAuthStatusWeb)
 				authWeb.DELETE("/session", soundcloudHandlers.DeleteSessionWeb)
 			}
@@ -119,7 +122,6 @@ func setupRoutes(router *gin.Engine) {
 			authNative := auth.Group("/native")
 			{
 				authNative.GET("/authz-url", soundcloudHandlers.GetAuthzURLNative)
-				authNative.GET("/callback", soundcloudHandlers.CallbackNative)
 				authNative.GET("/status", middleware.OptionalAuthMiddleware(), soundcloudHandlers.GetAuthStatusNative)
 				authNative.POST("/refresh", soundcloudHandlers.RefreshTokenNative)
 			}

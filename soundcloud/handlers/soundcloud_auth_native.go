@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pp-develop/music-timer-api/model"
@@ -20,26 +18,6 @@ func GetAuthzURLNative(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	}
-}
-
-// CallbackNative handles the SoundCloud OAuth callback for native authentication
-func CallbackNative(c *gin.Context) {
-	tokenPair, err := auth.CallbackNative(c)
-	if err != nil {
-		slog.Error("callback failed", slog.Any("error", err))
-		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_ERROR_URL_NATIVE")+"?error=auth_failed")
-		return
-	}
-
-	// Redirect with tokens via query parameters
-	redirectURL := fmt.Sprintf("%s?access_token=%s&refresh_token=%s&expires_in=%d",
-		os.Getenv("SOUNDCLOUD_AUTHZ_SUCCESS_URL_NATIVE"),
-		tokenPair.AccessToken,
-		tokenPair.RefreshToken,
-		tokenPair.ExpiresIn,
-	)
-
-	c.Redirect(http.StatusSeeOther, redirectURL)
 }
 
 // GetAuthStatusNative returns the authentication status for native users

@@ -3,7 +3,6 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -19,17 +18,6 @@ func GetAuthzURLWeb(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 	} else {
 		c.JSON(http.StatusOK, gin.H{"url": url})
-	}
-}
-
-// CallbackWeb handles the SoundCloud OAuth callback for web authentication
-func CallbackWeb(c *gin.Context) {
-	err := auth.CallbackWeb(c)
-	if err != nil {
-		slog.Error("callback failed", slog.Any("error", err))
-		c.Redirect(http.StatusSeeOther, os.Getenv("SOUNDCLOUD_AUTHZ_WEB_ERROR_URL"))
-	} else {
-		c.Redirect(http.StatusMovedPermanently, os.Getenv("SOUNDCLOUD_AUTHZ_WEB_SUCCESS_URL"))
 	}
 }
 
